@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { BarChart, TrendingUp, Users, Clock, DollarSign, Activity, Loader2 } from "lucide-react";
-import { firestoreService } from "@/services/firestoreService";
+import { mockDb } from "@/services/mockDb";
 import { DashboardStats } from "@/types/admin";
 
 export default function AnalyticsPage() {
@@ -16,7 +16,8 @@ export default function AnalyticsPage() {
 
     async function loadStats() {
         setLoading(true);
-        const data = await firestoreService.getDashboardStats();
+        // Using mockDb for consistent admin experience
+        const data = await mockDb.getDashboardStats();
         setStats(data);
         setLoading(false);
     }
