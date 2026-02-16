@@ -13,8 +13,20 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (Server-Side Rendering safe)
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
+let app: any;
+let auth: any;
+let db: any;
+
+if (firebaseConfig.apiKey) {
+    try {
+        app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        auth = getAuth(app);
+        db = getFirestore(app);
+    } catch (error) {
+        console.error("Firebase initialization failed:", error);
+    }
+} else {
+    console.warn("Firebase API keys missing. Authentication and Database features will not work.");
+}
 
 export { app, auth, db };
