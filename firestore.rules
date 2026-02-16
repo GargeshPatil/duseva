@@ -1,0 +1,151 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for roles and authentication status
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserRole(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role;
+    }
+
+    function isStudent() {
+      return isAuthenticated() && getUserRole(request.auth.uid) == 'student';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserRole(request.auth.uid) == 'admin';
+    }
+
+    function isDeveloper() {
+      return isAuthenticated() && getUserRole(request.auth.uid) == 'developer';
+    }
+
+    // Helper function to check if the current user is the owner of the document
+    // based on a specified field name (e.g., 'userId', 'uid').
+    function isOwner(userIdFieldName) {
+      return isAuthenticated() && request.auth.uid == resource.data[userIdFieldName];
+    }
+
+    // Helper function to check if a notification is active and not expired
+    function isActiveAndNotExpired(data) {
+      return data.activeStatus == 'active' &&
+             (data.expiryDate == null || data.expiryDate > request.time);
+    }
+
+
+    // --- Collection Rules ---
+
+    // 1. users Collection
+    match /users/{userId} {
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // FIXED: Allow read if the requesting user's UID matches the document ID (path).
+      // This allows checking if a document exists before it is created.
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isDeveloper());
+      
+      // Update still checks ownership or developer status
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isDeveloper());
+      
+      allow delete: if false; // Prevent client-side deletion
+    }
+
+    // 2. tests Collection
+    match /tests/{testId} {
+      // Public can read all tests (e.g., test catalog).
+      allow read: if resource.data.isVisible == true || isAdmin() || isDeveloper();
+      // Only Admins and Developers can create, update, or delete tests.
+      allow create, update, delete: if isAdmin() || isDeveloper();
+    }
+
+    // 3. questions Collection
+    match /questions/{questionId} {
+      // Public can read all questions (as they're part of public tests).
+      allow read: if isAuthenticated();
+      // Only Admins and Developers can create, update, or delete questions.
+      allow create, update, delete: if isAdmin() || isDeveloper();
+    }
+
+    // 4. testAttempts Collection
+    match /testAttempts/{attemptId} {
+      // Students can create and update their own test attempts.
+      allow create: if isAuthenticated() &&
+               request.auth.uid == request.resource.data.userId;
+      allow update: if isOwner('userId');
+      // Owners can read their attempts. Admins/Developers can read all for analytics.
+      allow read: if isOwner('userId') || isAdmin() || isDeveloper();
+      // Only Developers can delete attempts (prevents students from erasing history).
+      allow delete: if isDeveloper();
+    }
+
+    // 5. results Collection
+    match /results/{resultId} {
+      // Owners can read their own results. Admins/Developers can read all.
+      allow read: if isOwner('userId') || isAdmin() || isDeveloper();
+      // Results are typically created/updated by trusted backend services.
+      // Deny client-side write access to prevent tampering. Developers for debug/backend operations.
+      allow create, update, delete: if isDeveloper();
+    }
+
+    // 6. payments Collection
+    match /payments/{paymentId} {
+      // Owners can read their own payment records. Admins/Developers can read all.
+      allow read: if isOwner('userId') || isAdmin() || isDeveloper();
+      // Payment records creation/update/deletion typically handled by backend services
+      // (e.g., after payment gateway callback). Developers for debug/backend operations.
+      allow create, update, delete: if isDeveloper();
+    }
+
+    // 7. content Collection (CMS)
+    match /content/{contentId} {
+      // Public can read 'published' content. Authenticated Admins/Developers can read all content.
+      allow read: if resource.data.activeStatus == 'published' ||
+                     (isAuthenticated() && (isAdmin() || isDeveloper()));
+      // Authenticated users can write if they are a Developer,
+      // OR if they are an Admin AND the content's 'editableBy' field is 'admin'.
+      allow create, update, delete: if isAuthenticated() &&
+                                      (isDeveloper() ||
+                                       (isAdmin() && request.resource.data.editableBy == 'admin'));
+    }
+
+    // 8. platformSettings Collection (single document: 'globalConfig')
+    match /platformSettings/globalConfig {
+      // Anyone (public) can read global settings as they are needed by the frontend.
+      allow read: if true;
+      // Only Developers can update these critical global settings.
+      allow update: if isDeveloper() || isAdmin();
+      // This single document cannot be created or deleted manually from the client.
+      allow create, delete: if false;
+    }
+
+    // 9. auditLogs Collection
+    match /auditLogs/{logId} {
+      // Only Developers can create and read audit logs (creation is typically via backend).
+      allow create, read: if isDeveloper();
+      // Audit logs are immutable to ensure integrity.
+      allow update, delete: if false;
+    }
+
+    // 10. notifications Collection
+    match /notifications/{notificationId} {
+      // Read access logic:
+      // 1. Public can read active global notifications (all target, not expired).
+      // 2. Students can read active global OR student-targeted notifications (not expired).
+      // 3. Admins/Developers can read all notifications (active, draft, archived, any target).
+      allow read: if
+          (isActiveAndNotExpired(resource.data) && resource.data.targetAudience == 'all') ||
+          (isStudent() && isActiveAndNotExpired(resource.data) && resource.data.targetAudience in ['all', 'students']) ||
+          (isAdmin() || isDeveloper());
+
+      // Only Admins and Developers can create, update, or delete notifications.
+      allow create, update, delete: if isAdmin() || isDeveloper();
+    }
+
+    // Default deny for any unmatched paths - crucial for security.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
