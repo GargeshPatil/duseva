@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { ArrowLeft, Save, Plus, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Loader2, Library } from "lucide-react";
 import { firestoreService } from "@/services/firestoreService";
 import { Test, Question } from "@/types/admin";
 import Link from "next/link";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { QuestionSelector } from "@/components/admin/QuestionSelector";
 
 export default function TestEditorPage() {
     const params = useParams();
@@ -24,11 +26,14 @@ export default function TestEditorPage() {
         category: "Subject",
         price: "free",
         status: "draft",
-        questions: []
+        questions: [],
+        questionIds: [],
+        stream: "General"
     });
 
     const [questions, setQuestions] = useState<Question[]>([]);
     const [loadingQuestions, setLoadingQuestions] = useState(false);
+    const [isSelectorOpen, setIsSelectorOpen] = useState(false);
 
     const [loading, setLoading] = useState(!isNew);
     const [saving, setSaving] = useState(false);
@@ -40,37 +45,71 @@ export default function TestEditorPage() {
     }, [testId]);
 
     async function loadTest() {
-        // In a real app, we'd fetch specific test. MockDb returns all, so we filter.
-        // Optimization: Add getTest(id) to service later. For now, reusing getTests is inefficient but works.
-        const tests = await firestoreService.getTests();
-        const found = tests.find(t => t.id === testId);
+        // Optimization: In real app, use getTest(id)
+        const found = await firestoreService.getTest(testId);
         if (found) {
             setTest(found);
+            loadQuestions(found);
         } else {
             router.push("/admin/tests");
         }
         setLoading(false);
-        loadQuestions();
     }
 
-    async function loadQuestions() {
+    async function loadQuestions(testObj: Partial<Test>) {
         setLoadingQuestions(true);
-        if (!isNew && testId) {
-            const qs = await firestoreService.getQuestions(testId);
-            setQuestions(qs);
+        let qs: Question[] = [];
+
+        if (testObj.questionIds && testObj.questionIds.length > 0) {
+            qs = await firestoreService.getQuestions({ ids: testObj.questionIds! });
+        } else if (!isNew && testId) {
+            // Fallback for legacy tests
+            qs = await firestoreService.getQuestions({ testId });
         }
+        setQuestions(qs);
         setLoadingQuestions(false);
     }
 
     async function handleSave() {
         setSaving(true);
+        // Ensure questionIds are up to date with the questions state (if we allowed removing from list)
+        // But currently we sync test.questionIds.
+
+        const payload = {
+            ...test,
+            questionIds: test.questionIds // Ensure this is saved
+        };
+
         if (isNew) {
-            await firestoreService.createTest(test as any);
+            await firestoreService.createTest(payload as any);
         } else {
-            await firestoreService.updateTest(testId, test as any);
+            await firestoreService.updateTest(testId, payload as any);
         }
         setSaving(false);
         router.push("/admin/tests");
+    }
+
+    async function handleQuestionsSelected(ids: string[]) {
+        setTest(prev => ({ ...prev, questionIds: ids }));
+        setIsSelectorOpen(false);
+
+        // Reload questions to show them in UI
+        if (ids.length > 0) {
+            setLoadingQuestions(true);
+            const qs = await firestoreService.getQuestions({ ids });
+            setQuestions(qs);
+            setLoadingQuestions(false);
+        } else {
+            setQuestions([]);
+        }
+    }
+
+    function removeQuestion(qId: string) {
+        setQuestions(prev => prev.filter(q => q.id !== qId));
+        setTest(prev => ({
+            ...prev,
+            questionIds: prev.questionIds?.filter(id => id !== qId) || []
+        }));
     }
 
     if (loading) return (
@@ -80,7 +119,7 @@ export default function TestEditorPage() {
     );
 
     return (
-        <div className="space-y-6 animate-in fade-in max-w-4xl mx-auto">
+        <div className="space-y-6 animate-in fade-in max-w-4xl mx-auto pb-20">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Link href="/admin/tests">
@@ -136,18 +175,23 @@ export default function TestEditorPage() {
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-semibold text-slate-900">Questions ({questions.length})</h3>
-                            <Link href={`/admin/questions/new?testId=${testId}`}>
-                                <Button variant="outline" size="sm" className="gap-2">
-                                    <Plus className="h-4 w-4" /> Add Question
+                            <div className="flex gap-2">
+                                <Button onClick={() => setIsSelectorOpen(true)} variant="outline" size="sm" className="gap-2 border-dashed border-blue-300 text-blue-600 bg-blue-50 hover:bg-blue-100">
+                                    <Library className="h-4 w-4" /> Select from Bank
                                 </Button>
-                            </Link>
+                                <Link href={`/admin/questions/new?testId=${testId}`}>
+                                    <Button variant="outline" size="sm" className="gap-2 hidden sm:flex">
+                                        <Plus className="h-4 w-4" /> Create New
+                                    </Button>
+                                </Link>
+                            </div>
                         </div>
 
                         {loadingQuestions ? (
                             <div className="text-center py-8 text-slate-500">Loading questions...</div>
                         ) : questions.length === 0 ? (
                             <div className="p-8 text-center bg-slate-50 rounded-lg border border-dashed border-slate-300 text-slate-500">
-                                No questions added yet. Click "Add Question" to start.
+                                No questions selected. Click "Select from Bank" to choose existing questions.
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -161,18 +205,21 @@ export default function TestEditorPage() {
                                                     <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-600">
                                                         {q.options.length} options
                                                     </span>
-                                                    <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-100">
-                                                        Ans: {q.options[q.correctOption]}
+                                                    <span className={`text-xs px-2 py-0.5 rounded border ${q.difficulty === 'Hard' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}`}>
+                                                        {q.difficulty || 'Medium'}
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Link href={`/admin/questions/${q.id}`}>
-                                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600">
-                                                    <ArrowLeft className="h-3 w-3 rotate-180" /> {/* Edit Icon replacement if needed or just use edit */}
-                                                </Button>
-                                            </Link>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 w-7 p-0 text-slate-400 hover:text-red-600"
+                                                onClick={() => removeQuestion(q.id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         </div>
                                     </div>
                                 ))}
@@ -187,6 +234,19 @@ export default function TestEditorPage() {
                         <h3 className="font-semibold text-slate-900 border-b border-slate-100 pb-2">Configuration</h3>
 
                         <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Stream</label>
+                                <select
+                                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm"
+                                    value={test.stream || "General"}
+                                    onChange={(e) => setTest({ ...test, stream: e.target.value as any })}
+                                >
+                                    <option value="General">General</option>
+                                    <option value="Science">Science</option>
+                                    <option value="Commerce">Commerce</option>
+                                    <option value="Humanities">Humanities</option>
+                                </select>
+                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
                                 <select
@@ -217,6 +277,7 @@ export default function TestEditorPage() {
                                     type="number"
                                     value={test.duration}
                                     onChange={(e) => setTest({ ...test, duration: parseInt(e.target.value) })}
+                                    min={5}
                                 />
                             </div>
                             <div>
@@ -254,6 +315,17 @@ export default function TestEditorPage() {
                     </div>
                 </div>
             </div>
+
+            <Sheet open={isSelectorOpen} onOpenChange={setIsSelectorOpen} side="right" className="w-[100vw] sm:max-w-xl">
+                <SheetContent className="p-0 h-full">
+                    <QuestionSelector
+                        selectedIds={test.questionIds || []}
+                        onSelectionChange={handleQuestionsSelected}
+                        onClose={() => setIsSelectorOpen(false)}
+                    />
+                </SheetContent>
+            </Sheet>
         </div>
     );
 }
+

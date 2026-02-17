@@ -11,7 +11,8 @@ import {
     LogOut,
     Layers,
     PenTool,
-    BarChart
+    BarChart,
+    Library
 } from "lucide-react";
 
 export function AdminSidebar() {
@@ -30,11 +31,11 @@ export function AdminSidebar() {
 
     const navItems = [
         { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-        { label: "Test Management", href: "/admin/tests", icon: FileText },
+        { label: "Tests", href: "/admin/tests", icon: FileText },
+        { label: "Question Bank", href: "/admin/questions", icon: Library }, // New
+        { label: "Users", href: "/admin/users", icon: Users },
         { label: "Content (CMS)", href: "/admin/cms", icon: PenTool },
-        { label: "Media Library", href: "/admin/media", icon: Layers },
-        { label: "User Management", href: "/admin/users", icon: Users },
-        { label: "Payments", href: "/admin/payments", icon: BarChart }, // Reusing BarChart for now or generic
+        { label: "Media", href: "/admin/media", icon: Layers }, // Changed icon to Layers to match mobile/consistency
         { label: "Analytics", href: "/admin/analytics", icon: BarChart },
         { label: "Settings", href: "/admin/settings", icon: Settings },
     ];

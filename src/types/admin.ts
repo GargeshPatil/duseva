@@ -19,7 +19,11 @@ export interface Question {
     options: string[];
     correctOption: number; // Index 0-3
     explanation?: string;
-    testId: string;
+    testId?: string; // Optional (deprecated for new questions, kept for backward compat)
+    stream?: 'Science' | 'Commerce' | 'Humanities' | 'General';
+    tags?: string[];
+    difficulty?: 'Easy' | 'Medium' | 'Hard';
+    subject?: string;
 }
 
 export interface Test {
@@ -30,12 +34,15 @@ export interface Test {
     totalMarks: number;
     difficulty: 'Easy' | 'Medium' | 'Hard';
     category: 'Subject' | 'General' | 'Full Mock';
+    stream?: 'Science' | 'Commerce' | 'Humanities' | 'General'; // New field for mock discovery
     price: 'free' | 'paid';
     priceAmount?: number;
-    questions: Question[]; // For simplicity in mock
+    questions?: Question[]; // Legacy: embedded questions
+    questionIds?: string[]; // New: references to QuestionBank
     attempts: number;
     createdDate: string;
     status: 'draft' | 'published';
+    sections?: any[]; // Keep existing structure if any
 }
 
 export interface CMSContent {

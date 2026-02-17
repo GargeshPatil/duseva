@@ -49,6 +49,7 @@ export default function TestPage() {
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [accessDenied, setAccessDenied] = useState(false);
+    const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
     useEffect(() => {
         if (test && user) {
@@ -115,7 +116,7 @@ export default function TestPage() {
         );
     }
 
-    const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+
 
     // ... existing auth checks ...
 

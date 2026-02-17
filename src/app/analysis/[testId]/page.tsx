@@ -51,7 +51,7 @@ export default function AnalysisPage() {
         // Parallel fetch
         const [fetchedTest, fetchedQuestions, fetchedAttempt] = await Promise.all([
           firestoreService.getTest(testId),
-          firestoreService.getQuestions(testId),
+          firestoreService.getQuestions({ testId }),
           firestoreService.getLastTestAttempt(user.uid, testId)
         ]);
 

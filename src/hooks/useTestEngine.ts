@@ -101,7 +101,12 @@ export function useTestEngine(testId: string) {
 
                 if (foundTest) {
                     setTest(foundTest);
-                    const qs = await firestoreService.getQuestions(testId);
+                    let qs: Question[] = [];
+                    if (foundTest.questionIds && foundTest.questionIds.length > 0) {
+                        qs = await firestoreService.getQuestions({ ids: foundTest.questionIds! });
+                    } else {
+                        qs = await firestoreService.getQuestions({ testId });
+                    }
                     setQuestions(qs);
 
                     // 2. Recovery Logic

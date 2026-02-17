@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageCircle, Instagram, Mail, Phone, MapPin } from "lucide-react";
+import { MessageCircle, Instagram, Mail, MapPin } from "lucide-react";
 
 export function Footer() {
     return (
@@ -60,7 +60,7 @@ export function Footer() {
 
                 {/* Bottom Bar */}
                 <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs md:text-sm text-slate-500">
-                    <div>© {new Date().getFullYear()} DU Seva. All rights reserved.</div>
+                    <div>© 2026 DU Seva. All rights reserved.</div>
                     <div className="flex gap-6 items-center">
                         <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" /> New Delhi, India</span>
                         <span className="w-1 h-1 bg-slate-300 rounded-full hidden md:block"></span>

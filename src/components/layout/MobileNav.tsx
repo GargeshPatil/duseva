@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, FileText, BarChart2, Menu, LogOut, Settings, BookOpen } from "lucide-react";
 import { useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 

@@ -11,16 +11,16 @@ export default function MediaLibraryPage() {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
 
-    useEffect(() => {
-        loadAssets();
-    }, []);
-
     async function loadAssets() {
         setLoading(true);
         const data = await mockDb.getMediaAssets();
         setAssets(data);
         setLoading(false);
     }
+
+    useEffect(() => {
+        loadAssets();
+    }, []);
 
     async function handleUpload() {
         setUploading(true);

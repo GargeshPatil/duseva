@@ -9,9 +9,17 @@ interface SheetProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     children: React.ReactNode;
+    side?: "left" | "right";
+    className?: string;
 }
 
-export function Sheet({ open, onOpenChange, children }: SheetProps) {
+export function Sheet({ open, onOpenChange, children, side = "right", className }: SheetProps) {
+    const variants = {
+        initial: { x: side === "left" ? "-100%" : "100%" },
+        animate: { x: 0 },
+        exit: { x: side === "left" ? "-100%" : "100%" }
+    };
+
     return (
         <AnimatePresence>
             {open && (
@@ -23,13 +31,14 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
                         onClick={() => onOpenChange(false)}
                         className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
                     />
-                    <div className="fixed inset-0 z-50 flex justify-end pointer-events-none">
+                    <div className={`fixed inset-0 z-50 flex ${side === "left" ? "justify-start" : "justify-end"} pointer-events-none`}>
                         <motion.div
-                            initial={{ x: "100%" }}
-                            animate={{ x: 0 }}
-                            exit={{ x: "100%" }}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            variants={variants}
                             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                            className="pointer-events-auto h-full w-3/4 max-w-sm bg-white shadow-xl flex flex-col"
+                            className={cn("pointer-events-auto h-full w-3/4 max-w-sm bg-white shadow-xl flex flex-col", className)}
                         >
                             {children}
                         </motion.div>

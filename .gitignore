@@ -44,3 +44,7 @@ Keys/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local logs
+lint_results*.txt
+build_log.txt

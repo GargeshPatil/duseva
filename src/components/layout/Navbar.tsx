@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Button } from '../ui/Button';
+import { Button, getButtonClasses } from '../ui/Button';
 import { Menu, X, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -46,23 +46,23 @@ export function Navbar() {
 
                 {/* Desktop Actions */}
                 <div className="hidden md:flex items-center gap-4">
-                    <Link href="/contact">
-                        <Button variant="ghost" size="sm" className="font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50">
-                            Contact Us
-                        </Button>
+                    <Link
+                        href="/contact"
+                        className={getButtonClasses({ variant: 'ghost', size: 'sm', className: "font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50" })}
+                    >
+                        Contact Us
                     </Link>
-                    <Link href="/auth/login">
-                        <Button variant="ghost" size="sm" className="font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50">
-                            Login
-                        </Button>
+                    <Link
+                        href="/auth/login"
+                        className={getButtonClasses({ variant: 'ghost', size: 'sm', className: "font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50" })}
+                    >
+                        Login
                     </Link>
-                    <Link href="/mocks">
-                        <Button
-                            size="md"
-                            className="font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 bg-blue-600 hover:bg-blue-700 text-white px-6 h-10 rounded-full transition-all hover:-translate-y-0.5"
-                        >
-                            Give a Mock
-                        </Button>
+                    <Link
+                        href="/mocks"
+                        className={getButtonClasses({ size: 'md', className: "font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 bg-blue-600 hover:bg-blue-700 text-white px-6 h-10 rounded-full transition-all hover:-translate-y-0.5" })}
+                    >
+                        Give a Mock
                     </Link>
                 </div>
 
@@ -97,14 +97,26 @@ export function Navbar() {
                                 </Link>
                             ))}
                             <div className="border-t border-slate-100 my-2 pt-2 space-y-3">
-                                <Link href="/contact" onClick={() => setIsOpen(false)}>
-                                    <Button variant="outline" className="w-full justify-center">Contact Us</Button>
+                                <Link
+                                    href="/contact"
+                                    onClick={() => setIsOpen(false)}
+                                    className={getButtonClasses({ variant: 'outline', className: "w-full justify-center" })}
+                                >
+                                    Contact Us
                                 </Link>
-                                <Link href="/auth/login" onClick={() => setIsOpen(false)}>
-                                    <Button variant="outline" className="w-full justify-center">Login</Button>
+                                <Link
+                                    href="/auth/login"
+                                    onClick={() => setIsOpen(false)}
+                                    className={getButtonClasses({ variant: 'outline', className: "w-full justify-center" })}
+                                >
+                                    Login
                                 </Link>
-                                <Link href="/mocks" onClick={() => setIsOpen(false)}>
-                                    <Button className="w-full justify-center bg-blue-600 hover:bg-blue-700 shadow-md">Give a Mock</Button>
+                                <Link
+                                    href="/mocks"
+                                    onClick={() => setIsOpen(false)}
+                                    className={getButtonClasses({ className: "w-full justify-center bg-blue-600 hover:bg-blue-700 shadow-md" })}
+                                >
+                                    Give a Mock
                                 </Link>
                             </div>
                         </div>

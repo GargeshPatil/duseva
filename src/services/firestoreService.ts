@@ -12,6 +12,7 @@ import {
     deleteDoc,
     where,
     limit,
+    documentId,
     getCountFromServer
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
@@ -265,6 +266,8 @@ export const firestoreService = {
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
                     status: data.isPublished ? 'published' : 'draft',
+                    stream: data.stream,
+                    questionIds: data.questionIds || [],
                     sections: data.sections || []
                 } as Test;
             });
@@ -295,6 +298,8 @@ export const firestoreService = {
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
                     status: data.isPublished ? 'published' : 'draft',
+                    stream: data.stream,
+                    questionIds: data.questionIds || [],
                     sections: data.sections || []
                 } as Test;
             }
@@ -317,6 +322,7 @@ export const firestoreService = {
                 totalMarks: testData.totalMarks,
                 difficulty: testData.difficulty,
                 category: testData.category,
+                stream: testData.stream || 'General', // Default to General
                 isPaid: testData.price === 'paid',
                 price: testData.price === 'paid' ? 99 : 0, // Default price logic, update as needed
                 isVisible: true,
@@ -324,7 +330,8 @@ export const firestoreService = {
                 createdAt: Timestamp.now(),
                 updatedAt: Timestamp.now(),
                 sections: [],
-                attemptsCount: 0
+                attemptsCount: 0,
+                questionIds: testData.questionIds || []
             };
 
             const docRef = await addDoc(testsRef, newTest);
@@ -351,6 +358,8 @@ export const firestoreService = {
             if (updates.difficulty) firestoreUpdates.difficulty = updates.difficulty;
             if (updates.status) firestoreUpdates.isPublished = updates.status === 'published';
             if (updates.price) firestoreUpdates.isPaid = updates.price === 'paid';
+            if (updates.stream) firestoreUpdates.stream = updates.stream;
+            if (updates.questionIds) firestoreUpdates.questionIds = updates.questionIds;
 
             await updateDoc(testRef, firestoreUpdates);
             return true;
@@ -371,19 +380,61 @@ export const firestoreService = {
     },
 
     // --- Questions ---
-    async getQuestions(testId?: string): Promise<Question[]> {
+    async getQuestions(filters?: { testId?: string, stream?: string, subject?: string, search?: string, limit?: number, ids?: string[] }): Promise<Question[]> {
         try {
             const questionsRef = collection(db, "questions");
-            let q;
 
-            if (testId) {
-                // Requires index if we sort by createdAt
-                // For simplicity without index, just filter
-                q = query(questionsRef, where("testId", "==", testId));
-            } else {
-                q = query(questionsRef, orderBy("createdAt", "desc"), limit(100)); // Limit for performance
+            // 1. Fetch by IDs (Chunking)
+            if (filters?.ids && filters.ids.length > 0) {
+                const chunks = [];
+                for (let i = 0; i < filters.ids.length; i += 10) {
+                    chunks.push(filters.ids.slice(i, i + 10));
+                }
+
+                const promises = chunks.map(chunk => {
+                    const q = query(questionsRef, where(documentId(), "in", chunk));
+                    return getDocs(q);
+                });
+
+                const snapshots = await Promise.all(promises);
+                const allDocs = snapshots.flatMap(snap => snap.docs);
+
+                // Sort to match input order if needed, or by created? 
+                // For now, just return them.
+                return allDocs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        text: data.text,
+                        options: data.options || [],
+                        correctOption: data.correctOption,
+                        explanation: data.explanation,
+                        testId: data.testId,
+                        stream: data.stream,
+                        subject: data.subject,
+                        tags: data.tags || [],
+                        difficulty: data.difficulty,
+                    } as Question;
+                });
             }
 
+            // 2. Standard Filtering
+            let constraints: any[] = [];
+
+            if (filters?.testId) {
+                constraints.push(where("testId", "==", filters.testId));
+            }
+            if (filters?.stream) {
+                constraints.push(where("stream", "==", filters.stream));
+            }
+            if (filters?.subject) {
+                constraints.push(where("subject", "==", filters.subject));
+            }
+
+            constraints.push(orderBy("createdAt", "desc"));
+            constraints.push(limit(filters?.limit || 100));
+
+            const q = query(questionsRef, ...constraints);
             const querySnapshot = await getDocs(q);
 
             return querySnapshot.docs.map(doc => {
@@ -395,7 +446,10 @@ export const firestoreService = {
                     correctOption: data.correctOption,
                     explanation: data.explanation,
                     testId: data.testId,
-                    // Add other fields as needed
+                    stream: data.stream,
+                    subject: data.subject,
+                    tags: data.tags || [],
+                    difficulty: data.difficulty,
                 } as Question;
             });
         } catch (error) {
@@ -410,6 +464,11 @@ export const firestoreService = {
 
             const newQuestion = {
                 ...questionData,
+                stream: questionData.stream || null,
+                subject: questionData.subject || null,
+                tags: questionData.tags || [],
+                difficulty: questionData.difficulty || 'Medium',
+                testId: questionData.testId || null, // Optional now
                 createdAt: Timestamp.now(),
                 updatedAt: Timestamp.now()
             };
