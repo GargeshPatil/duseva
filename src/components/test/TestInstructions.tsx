@@ -112,16 +112,16 @@ export function TestInstructions({
             </main>
 
             {/* Footer Action */}
-            <footer className="h-20 bg-white border-t border-slate-200 flex items-center justify-between px-6 md:px-10 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <div className="flex items-center gap-3">
+            <footer className="bg-white border-t border-slate-200 flex flex-col md:flex-row items-center justify-between px-6 md:px-10 py-4 md:py-0 md:h-20 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] gap-4">
+                <div className="flex items-start md:items-center gap-3 w-full md:w-auto">
                     <input
                         type="checkbox"
                         id="agree"
                         checked={agreed}
                         onChange={(e) => setAgreed(e.target.checked)}
-                        className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        className="mt-1 md:mt-0 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
-                    <label htmlFor="agree" className="text-sm md:text-base font-medium text-slate-700 cursor-pointer select-none">
+                    <label htmlFor="agree" className="text-sm md:text-base font-medium text-slate-700 cursor-pointer select-none leading-tight">
                         I have read and understood the instructions.
                     </label>
                 </div>
@@ -131,7 +131,7 @@ export function TestInstructions({
                     onClick={onStartTest}
                     disabled={!agreed}
                     className={`
-                        min-w-[180px] font-bold text-lg transition-all
+                        w-full md:w-auto min-w-[180px] font-bold text-lg transition-all h-12 md:h-11
                         ${agreed ? "bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/20" : "bg-slate-300 cursor-not-allowed"}
                     `}
                 >

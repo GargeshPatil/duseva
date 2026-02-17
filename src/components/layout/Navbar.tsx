@@ -26,12 +26,8 @@ export function Navbar() {
 
                 {/* Logo Area */}
                 <Link href="/" className="flex items-center gap-3 group">
-                    <div className="relative h-10 w-10 md:h-12 md:w-12 transition-transform group-hover:scale-105">
+                    <div className="relative h-24 w-24 md:h-32 md:w-32 transition-transform group-hover:scale-105">
                         <Image src="/du-logo.png" alt="DU Seva Logo" fill className="object-contain" />
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="font-bold text-slate-900 text-lg leading-none tracking-tight">DU Seva</span>
-                        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">CUET Prep</span>
                     </div>
                 </Link>
 
