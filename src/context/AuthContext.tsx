@@ -10,7 +10,7 @@ import {
     GoogleAuthProvider,
     signInWithPopup
 } from "firebase/auth";
-import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, Timestamp, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/config";
 
 // Define the shape of the user data stored in Firestore
@@ -23,6 +23,9 @@ export interface UserData {
     lastLoginAt: Timestamp;
     purchasedTests: Record<string, any>; // Map for purchased tests
     performanceSummary: Record<string, any>; // Map for performance summary
+    stream?: 'Science' | 'Commerce' | 'Humanities';
+    targetUniversity?: string;
+    onboardingCompleted?: boolean;
 }
 
 interface AuthContextType {
@@ -43,35 +46,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!auth) {
+            setLoading(false);
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setLoading(true);
             if (currentUser) {
                 setUser(currentUser);
-                // Fetch user data from Firestore
+                // Real-time listener for user data
                 const userDocRef = doc(db, "users", currentUser.uid);
 
-                try {
-                    const userDoc = await getDoc(userDocRef);
+                // Return the unsubscribe function from onSnapshot? 
+                // We are inside onAuthStateChanged, which is an observer. 
+                // We need to manage the snapshot subscription carefully to avoid leaks.
+                // But onAuthStateChanged can trigger multiple times.
 
-                    if (userDoc.exists()) {
-                        setUserData(userDoc.data() as UserData);
+                // Ideally we should start the listener in a separate useEffect dependent on 'user' state,
+                // but 'user' is set here. 
 
-                        // Update last login
-                        try {
-                            await setDoc(userDocRef, {
-                                lastLoginAt: Timestamp.now()
-                            }, { merge: true });
-                        } catch (e) {
-                            console.error("Error updating last login:", e);
-                        }
-                    } else {
-                        // Handle case where auth exists but firestore doc doesn't (maybe manually deleted or Google Sign In first time)
-                        // We'll handle creation in the sign-in/up methods, but for safety:
-                        console.warn("User authenticated but no Firestore document found.");
-                    }
-                } catch (error) {
-                    console.error("Error fetching user data:", error);
-                }
+                // Let's rely on standard pattern: 
+                // 1. setUser(currentUser)
+                // 2. A separate useEffect listens to 'user' changes and sets up onSnapshot.
             } else {
                 setUser(null);
                 setUserData(null);
@@ -81,6 +78,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return () => unsubscribe();
     }, []);
+
+    // New effect for real-time user data
+    useEffect(() => {
+        if (!user) {
+            setUserData(null);
+            return;
+        }
+
+        console.log("Setting up real-time listener for user:", user.uid);
+        const userDocRef = doc(db, "users", user.uid);
+        const unsubscribeSnapshot = onSnapshot(userDocRef, async (docSnap) => {
+            console.log("User Snapshot Fired!", docSnap.exists(), "Source:", docSnap.metadata.hasPendingWrites ? "Local" : "Server");
+            if (docSnap.exists()) {
+                const data = docSnap.data() as UserData;
+                console.log("Purchased Tests in Snapshot:", data.purchasedTests);
+                setUserData(data);
+            } else {
+                console.warn("User authenticated but no Firestore document found.");
+            }
+        }, (error) => {
+            console.error("Error fetching user data:", error);
+        });
+
+        return () => {
+            console.log("Unsubscribing from user listener");
+            unsubscribeSnapshot();
+        };
+    }, [user]);
+
+    // Independent One-time update for lastLogin (optional, can be skipped for now to strictly fix the issue)
+    useEffect(() => {
+        if (user) {
+            const userDocRef = doc(db, "users", user.uid);
+            // Fire and forget update
+            setDoc(userDocRef, { lastLoginAt: Timestamp.now() }, { merge: true }).catch(console.error);
+        }
+    }, [user?.uid]); // Only run when UID changes (login)
+
 
     const signup = async (email: string, password: string, name: string) => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
