@@ -21,23 +21,25 @@ export function Testimonials() {
     ];
 
     return (
-        <section id="testimonials" className="py-20 bg-white border-t border-slate-100">
+        <section id="testimonials" className="py-24 bg-white border-t border-slate-100">
             <div className="container">
-                <h2 className="text-3xl md:text-4xl font-bold text-slate-900 text-center mb-16">
+                <h2 className="text-3xl md:text-5xl font-bold text-slate-900 text-center mb-16 tracking-tight">
                     Trusted by Top Scorer Students
                 </h2>
 
                 <div className="grid md:grid-cols-3 gap-8">
                     {testimonials.map((t, i) => (
-                        <div key={i} className="bg-slate-50 p-8 rounded-2xl relative">
-                            <div className="text-4xl text-blue-200 absolute top-4 left-6">"</div>
-                            <p className="text-slate-700 mb-6 relative z-10 pt-4">
+                        <div key={i} className="bg-slate-50 p-8 rounded-2xl relative border border-slate-100 hover:border-blue-100 transition-colors">
+                            <div className="text-6xl text-blue-100 absolute top-4 left-6 font-serif select-none">&quot;</div>
+                            <p className="text-slate-700 mb-8 relative z-10 pt-6 text-lg font-medium leading-relaxed">
                                 {t.quote}
                             </p>
-                            <div>
-                                <div className="font-bold text-slate-900">{t.author}</div>
-                                <div className="text-xs text-secondary font-semibold mb-1">{t.score}</div>
-                                <div className="text-sm text-slate-500">{t.role}</div>
+                            <div className="border-t border-slate-200 pt-6">
+                                <div className="font-bold text-slate-900 text-lg">{t.author}</div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm text-primary font-bold bg-blue-50 px-2 py-0.5 rounded-full">{t.score}</span>
+                                </div>
+                                <div className="text-sm text-slate-500 font-medium">{t.role}</div>
                             </div>
                         </div>
                     ))}

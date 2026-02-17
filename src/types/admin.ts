@@ -8,6 +8,9 @@ export interface User {
     avgScore: number;
     isActive: boolean;
     paymentStatus: 'free' | 'paid';
+    stream?: 'Science' | 'Commerce' | 'Humanities';
+    targetUniversity?: string;
+    onboardingCompleted?: boolean;
 }
 
 export interface Question {
@@ -28,6 +31,7 @@ export interface Test {
     difficulty: 'Easy' | 'Medium' | 'Hard';
     category: 'Subject' | 'General' | 'Full Mock';
     price: 'free' | 'paid';
+    priceAmount?: number;
     questions: Question[]; // For simplicity in mock
     attempts: number;
     createdDate: string;
@@ -85,4 +89,45 @@ export interface AuditLog {
     userName: string;
     details: string;
     timestamp: string;
+}
+
+export interface QuestionStatus {
+    questionId: string;
+    status: 'not_visited' | 'not_answered' | 'answered' | 'marked_for_review' | 'answered_marked_for_review';
+    visited: boolean;
+}
+
+export interface TestAttempt {
+    id: string;
+    userId: string;
+    testId: string;
+    startTime: string; // ISO string
+    endTime?: string;
+    answers: Record<string, number>; // questionId -> optionIndex
+    timeRemaining: number; // in seconds
+    status: 'in_progress' | 'completed' | 'abandoned';
+    currentQuestionIndex: number;
+    questionStatus: Record<string, QuestionStatus>; // questionId -> status
+    tabSwitches?: number; // Track focus loss
+    resultData?: Omit<TestResult, 'id'>; // Store full result details
+}
+
+export interface TestResult {
+    id: string;
+    attemptId: string;
+    userId: string;
+    testId: string;
+    score: number;
+    totalQuestions: number;
+    correctAnswers: number;
+    incorrectAnswers: number;
+    unanswered: number;
+    accuracy: number;
+    timeTaken: number; // seconds
+    completedAt: string;
+    improvement?: {
+        scoreDiff: number;
+        accuracyDiff: number;
+        timeDiff: number; // seconds
+    };
 }

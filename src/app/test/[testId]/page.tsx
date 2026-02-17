@@ -1,181 +1,344 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { useTestEngine } from "@/hooks/useTestEngine";
+import { TestInstructions } from "@/components/test/TestInstructions";
+import { QuestionPalette } from "@/components/test/QuestionPalette";
 import { Button } from "@/components/ui/Button";
 import { Timer } from "@/components/test/Timer";
-import { QuestionPalette } from "@/components/test/QuestionPalette";
 import {
     ChevronLeft,
     ChevronRight,
     Flag,
-    Save,
     RotateCcw,
-    AlertTriangle
+    AlertTriangle,
+    Loader2,
+    Lock
 } from "lucide-react";
-
-// Mock Data
-const MOCK_QUESTIONS = [
-    { id: 1, text: "The concept of 'judicial review' in India is borrowed from which constitution?", options: ["UK", "USA", "Germany", "Japan"], correct: 1 },
-    { id: 2, text: "Which of the following is NOT a fundamental right?", options: ["Right to Equality", "Right to Property", "Right to Freedom", "Right against Exploitation"], correct: 1 },
-    { id: 3, text: "Who is known as the father of the Indian Constitution?", options: ["Jawaharlal Nehru", "B.R. Ambedkar", "Mahatma Gandhi", "Sardar Patel"], correct: 1 },
-    { id: 4, text: "The Preamble to the Indian Constitution was amended by which Amendment Act?", options: ["42nd Amendment", "44th Amendment", "86th Amendment", "None of the above"], correct: 0 },
-    { id: 5, text: "Which article deals with the 'Right to Education'?", options: ["Article 21A", "Article 19", "Article 32", "Article 14"], correct: 0 },
-];
+import { PaymentModal } from "@/components/dashboard/PaymentModal";
 
 export default function TestPage() {
+    const params = useParams();
+    const testId = params.testId as string;
+    const { user, userData, loading: authLoading } = useAuth();
     const router = useRouter();
 
-    // State
-    const [currentQIndex, setCurrentQIndex] = useState(0);
-    const [answers, setAnswers] = useState<Record<number, number>>({}); // qId -> optionIndex
-    const [markedForReview, setMarkedForReview] = useState<number[]>([]);
-    const [visited, setVisited] = useState<number[]>([1]); // 1-based IDs
+    const {
+        test,
+        questions,
+        currentQIndex,
+        currentQuestion,
+        answers,
+        questionStatus,
+        timeRemaining,
+        isTestStarted,
+        loading: engineLoading,
+        integrity,
+        actions
+    } = useTestEngine(testId);
 
-    const currentQ = MOCK_QUESTIONS[currentQIndex];
-    const qNum = currentQIndex + 1;
-
-    // Mark visited when changing questions
+    // Auth Protection
     useEffect(() => {
-        if (!visited.includes(qNum)) {
-            setVisited(prev => [...prev, qNum]);
+        if (!authLoading && !user) {
+            router.push(`/auth/login?redirect=/test/${testId}`);
         }
-    }, [qNum, visited]);
+    }, [authLoading, user, router, testId]);
 
-    // Handlers
-    const handleOptionSelect = (optionIndex: number) => {
-        setAnswers(prev => ({ ...prev, [qNum]: optionIndex }));
-    };
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [accessDenied, setAccessDenied] = useState(false);
 
-    const handleNext = () => {
-        if (currentQIndex < MOCK_QUESTIONS.length - 1) {
-            setCurrentQIndex(prev => prev + 1);
+    useEffect(() => {
+        if (test && user) {
+            const isPurchased = test.price === 'free' || !!(userData as any)?.purchasedTests?.[test.id];
+            if (test.price === 'paid' && !isPurchased) {
+                setAccessDenied(true);
+                setShowPaymentModal(true);
+            }
         }
-    };
+    }, [test, user, userData]);
 
-    const handlePrev = () => {
-        if (currentQIndex > 0) {
-            setCurrentQIndex(prev => prev - 1);
-        }
-    };
+    if (authLoading || engineLoading || !test) {
+        return (
+            <div className="h-screen flex flex-col items-center justify-center bg-white">
+                <Loader2 className="h-10 w-10 animate-spin text-blue-600 mb-4" />
+                <p className="text-slate-500 font-medium">Loading Exam Environment...</p>
+            </div>
+        );
+    }
 
-    const handleMarkReview = () => {
-        setMarkedForReview(prev => {
-            if (prev.includes(qNum)) return prev.filter(id => id !== qNum);
-            return [...prev, qNum];
-        });
-    };
+    if (accessDenied) {
+        return (
+            <div className="h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
+                <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
+                    <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Lock className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-900 mb-2">Premium Test Locked</h1>
+                    <p className="text-slate-500 mb-8">
+                        This test is part of our premium collection. Unlock it to start your attempt.
+                    </p>
+                    <Button
+                        onClick={() => setShowPaymentModal(true)}
+                        className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                        size="lg"
+                    >
+                        Unlock Now
+                    </Button>
+                    <button
+                        onClick={() => router.push('/dashboard/tests')}
+                        className="mt-4 text-slate-500 hover:text-slate-800 text-sm font-medium"
+                    >
+                        Back to Dashboard
+                    </button>
+                </div>
 
-    const handleClear = () => {
-        const newAnswers = { ...answers };
-        delete newAnswers[qNum];
-        setAnswers(newAnswers);
-    };
+                {test && (
+                    <PaymentModal
+                        isOpen={showPaymentModal}
+                        onClose={() => {
+                            // If they close without paying, we keep them on denied screen or redirect?
+                            // Better UX: keep on denied screen, modal just toggles visibility
+                            setShowPaymentModal(false);
+                        }}
+                        test={test}
+                        onUnlock={() => {
+                            setAccessDenied(false); // Optimistic unlock
+                            // Reload to sync state properly
+                            window.location.reload();
+                        }}
+                    />
+                )}
+            </div>
+        );
+    }
 
-    const handleSubmit = () => {
-        if (confirm("Are you sure you want to submit the test?")) {
-            router.push(`/analysis/1`);
-        }
-    };
+    // 1. INSTRUCTIONS VIEW
+    if (!isTestStarted) {
+        return (
+            <TestInstructions
+                testTitle={test.title}
+                durationMinutes={test.duration}
+                totalQuestions={questions.length}
+                totalMarks={test.totalMarks}
+                onStartTest={actions.startTest}
+            />
+        );
+    }
+
+    // 2. EXAM INTERFACE VIEW
+    const qNum = currentQIndex + 1;
+    const isMarked = questionStatus[currentQuestion.id]?.status.includes('marked');
 
     return (
-        <div className="flex flex-col h-screen">
-            {/* Top Bar */}
-            <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
-                <h1 className="font-bold text-lg text-slate-800">General Test - Mock 3</h1>
+        <div
+            className="flex flex-col h-screen bg-slate-50 overflow-hidden select-none"
+            {...integrity.handlers}
+            onContextMenu={(e) => {
+                if (integrity.handlers.onContextMenu) integrity.handlers.onContextMenu(e);
+            }}
+        >
+            {/* Integrity Warning Overlay */}
+            {integrity.showTabWarning && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center border-l-4 border-amber-500 animate-in fade-in zoom-in duration-200">
+                        <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                            <AlertTriangle className="h-6 w-6 text-amber-600" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 mb-2">Exam Focus Warning</h3>
+                        <p className="text-slate-600 mb-6">
+                            You have moved away from the test window. This action has been recorded.
+                            Please stay on the exam screen to avoid disqualification.
+                        </p>
+                        <Button
+                            onClick={integrity.dismissTabWarning}
+                            className="bg-amber-600 hover:bg-amber-700 text-white w-full"
+                        >
+                            I Understand, Return to Test
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Top Bar - Fixed */}
+            <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 shadow-sm z-30 sticky top-0">
                 <div className="flex items-center gap-4">
-                    <Timer durationInSeconds={3600} onTimeUp={handleSubmit} />
-                    <Button onClick={handleSubmit} variant="primary" className="bg-green-600 hover:bg-green-700">Submit Test</Button>
+                    <div className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded border border-primary/20">CUET MOCK</div>
+                    <h1 className="font-bold text-slate-800 truncate max-w-[200px] md:max-w-md hidden md:block text-lg">
+                        {test.title}
+                    </h1>
+                </div>
+
+                <div className="flex items-center gap-6">
+                    <div className="flex flex-col items-end">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Time Left</span>
+                        <div className={`
+                            font-mono text-xl font-bold rounded px-3 py-0.5 border transition-all duration-300 tabular-nums
+                            ${timeRemaining < 300
+                                ? "bg-red-50 text-red-600 border-red-200 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.2)]"
+                                : "bg-slate-50 text-slate-900 border-slate-200"
+                            }
+                        `}>
+                            {String(Math.floor(timeRemaining / 60)).padStart(2, '0')}:
+                            {String(timeRemaining % 60).padStart(2, '0')}
+                        </div>
+                    </div>
+
+                    <Button
+                        onClick={() => {
+                            if (confirm("Are you sure you want to finish the test? You cannot return once submitted.")) {
+                                actions.submitTest();
+                            }
+                        }}
+                        variant="primary"
+                        className="bg-green-600 hover:bg-green-700 shadow-md shadow-green-600/10 font-bold px-6"
+                    >
+                        Submit Test
+                    </Button>
                 </div>
             </header>
 
-            {/* Main Content */}
-            <div className="flex flex-1 overflow-hidden">
-                {/* Question Area */}
-                <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-                    <div className="max-w-3xl mx-auto">
-                        {/* Question Header */}
-                        <div className="flex items-center justify-between mb-6">
-                            <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">Question {qNum} of {MOCK_QUESTIONS.length}</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-green-600">+5 Marks</span>
-                                <span className="text-sm font-medium text-red-500">-1 Mark</span>
+            {/* Main Content Areas */}
+            <div className="flex flex-1 overflow-hidden relative">
+                {/* Left: Question Area */}
+                <main className="flex-1 flex flex-col h-full relative z-0">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-32 scroll-smooth">
+                        <div className="max-w-4xl mx-auto">
+                            {/* Question Header */}
+                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg">Q{qNum}</span>
+                                    <span className="text-sm font-medium text-slate-400">Question ID: {currentQuestion.id}</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs font-bold">
+                                    <span className="bg-green-50 text-green-700 px-2.5 py-1 rounded border border-green-200">+5 Marks</span>
+                                    <span className="bg-red-50 text-red-700 px-2.5 py-1 rounded border border-red-200">-1 Mark</span>
+                                </div>
+                            </div>
+
+                            {/* Question Text */}
+                            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 mb-8">
+                                <h2 className="text-lg md:text-xl font-medium text-slate-900 leading-relaxed select-text font-serif">
+                                    {currentQuestion.text}
+                                </h2>
+                            </div>
+
+                            {/* Options */}
+                            <div className="grid gap-4">
+                                {currentQuestion.options.map((opt, idx) => {
+                                    const isSelected = answers[currentQuestion.id] === idx;
+                                    return (
+                                        <div
+                                            key={idx}
+                                            onClick={() => actions.handleOptionSelect(idx)}
+                                            className={`
+                                                relative p-4 md:p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-start gap-5 group
+                                                ${isSelected
+                                                    ? "border-primary bg-blue-50/50 shadow-md ring-1 ring-primary/20"
+                                                    : "border-slate-200 hover:border-blue-300 hover:bg-slate-50 hover:shadow-sm"
+                                                }
+                                            `}
+                                        >
+                                            <div className={`
+                                                shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-all
+                                                ${isSelected
+                                                    ? "bg-primary border-primary text-white scale-110"
+                                                    : "border-slate-300 text-slate-500 group-hover:border-primary group-hover:text-primary"
+                                                }
+                                            `}>
+                                                {String.fromCharCode(65 + idx)}
+                                            </div>
+                                            <span className={`text-base md:text-lg leading-relaxed ${isSelected ? "text-primary-900 font-medium" : "text-slate-700"}`}>
+                                                {opt}
+                                            </span>
+
+                                            {isSelected && (
+                                                <div className="absolute top-4 right-4">
+                                                    <div className="w-3 h-3 bg-primary rounded-full"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
+                    </div>
 
-                        {/* Question Text */}
-                        <h2 className="text-xl md:text-2xl font-medium text-slate-900 mb-8 leading-relaxed">
-                            {currentQ.text}
-                        </h2>
-
-                        {/* Options */}
-                        <div className="space-y-4">
-                            {currentQ.options.map((opt, idx) => {
-                                const isSelected = answers[qNum] === idx;
-                                return (
-                                    <div
-                                        key={idx}
-                                        onClick={() => handleOptionSelect(idx)}
-                                        className={`
-                      p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-4 group
-                      ${isSelected
-                                                ? "border-blue-500 bg-blue-50"
-                                                : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
-                                            }
-                    `}
-                                    >
-                                        <div className={`
-                      w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold
-                      ${isSelected ? "bg-blue-500 border-blue-500 text-white" : "border-slate-400 text-slate-500 group-hover:border-blue-400 group-hover:text-blue-500"}
-                    `}>
-                                            {String.fromCharCode(65 + idx)}
-                                        </div>
-                                        <span className={`text-lg ${isSelected ? "text-blue-900 font-medium" : "text-slate-700"}`}>
-                                            {opt}
-                                        </span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Action Bar */}
-                        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 py-6 border-t border-slate-100">
-                            <div className="flex items-center gap-3">
+                    {/* Bottom Action Bar */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] z-20">
+                        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto">
                                 <Button
-                                    onClick={handleMarkReview}
+                                    onClick={actions.handleMarkForReview}
                                     variant="outline"
-                                    className={markedForReview.includes(qNum) ? "bg-purple-50 text-purple-700 border-purple-200" : ""}
+                                    className={`
+                                        flex-1 md:flex-none
+                                        ${isMarked ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100" : ""}
+                                    `}
                                 >
                                     <Flag className="h-4 w-4 mr-2" />
-                                    {markedForReview.includes(qNum) ? "Unmark Review" : "Mark for Review"}
+                                    {isMarked ? "Marked" : "Review"}
                                 </Button>
-                                <Button onClick={handleClear} variant="ghost" className="text-slate-500 hover:text-red-600">
-                                    <RotateCcw className="h-4 w-4 mr-2" /> Clear Response
+                                <Button
+                                    onClick={actions.handleClearResponse}
+                                    variant="ghost"
+                                    className="flex-1 md:flex-none text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                >
+                                    <RotateCcw className="h-4 w-4 mr-2" /> Clear
                                 </Button>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <Button onClick={handlePrev} disabled={currentQIndex === 0} variant="secondary">
-                                    <ChevronLeft className="h-4 w-4 mr-2" /> Previous
+                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                <Button
+                                    onClick={actions.handlePrev}
+                                    disabled={currentQIndex === 0}
+                                    variant="secondary"
+                                    className="pl-3 flex-1 md:flex-none"
+                                >
+                                    <ChevronLeft className="h-4 w-4 mr-1" /> Previous
                                 </Button>
-                                <Button onClick={handleNext} disabled={currentQIndex === MOCK_QUESTIONS.length - 1}>
-                                    Save & Next <ChevronRight className="h-4 w-4 ml-2" />
+                                <Button
+                                    onClick={actions.handleNext}
+                                    disabled={currentQIndex === questions.length - 1}
+                                    className="bg-primary hover:bg-blue-700 text-white pr-4 pl-6 shadow-lg shadow-blue-500/20 w-full md:w-auto font-bold"
+                                >
+                                    Save & Next <ChevronRight className="h-4 w-4 ml-1" />
                                 </Button>
                             </div>
                         </div>
                     </div>
                 </main>
 
-                {/* Sidebar Palette */}
-                <aside className="w-80 border-l border-slate-200 bg-slate-50 p-4 hidden lg:block overflow-y-auto">
-                    <QuestionPalette
-                        totalQuestions={MOCK_QUESTIONS.length}
-                        currentQuestion={qNum}
-                        answers={answers}
-                        markedForReview={markedForReview}
-                        visited={visited}
-                        onQuestionSelect={(n) => setCurrentQIndex(n - 1)}
-                    />
+                {/* Right: Question Palette (Hidden on mobile initially, can be toggled) */}
+                <aside className="w-80 border-l border-slate-200 bg-white hidden lg:flex flex-col h-full z-20 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
+                    <div className="p-4 border-b border-slate-200 font-bold text-slate-700 bg-slate-50 flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                            {/* User profile image placeholder */}
+                            <span className="text-slate-500 font-bold">
+                                {(userData?.name || user?.displayName || 'C').charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                        <div className="overflow-hidden">
+                            <p className="truncate text-sm">{userData?.name || user?.displayName || 'Candidate'}</p>
+                            <p className="text-xs text-slate-500">ID: {user?.uid?.substring(0, 8)}...</p>
+                            {integrity.tabSwitches > 0 && (
+                                <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-1 py-0.5 rounded border border-amber-200 mt-1 inline-block">
+                                    Warnings: {integrity.tabSwitches}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-hidden">
+                        <QuestionPalette
+                            totalQuestions={questions.length}
+                            currentQuestionIndex={currentQIndex}
+                            questions={questions}
+                            questionStatus={questionStatus}
+                            onQuestionSelect={actions.handleJump}
+                        />
+                    </div>
                 </aside>
             </div>
         </div>

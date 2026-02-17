@@ -20,15 +20,14 @@ export default function CMSPage() {
     const isDeveloper = userData?.role === 'developer';
 
     useEffect(() => {
+        async function loadContent() {
+            setLoading(true);
+            const data = await firestoreService.getCMSContent();
+            setContent(data);
+            setLoading(false);
+        }
         loadContent();
     }, []);
-
-    async function loadContent() {
-        setLoading(true);
-        const data = await firestoreService.getCMSContent();
-        setContent(data);
-        setLoading(false);
-    }
 
     async function handleUpdate(id: string, value: string) {
         const newContent = content.map(c => c.id === id ? { ...c, value } : c);

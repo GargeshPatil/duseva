@@ -2,6 +2,7 @@
 import {
     collection,
     getDocs,
+    getDoc,
     doc,
     updateDoc,
     query,
@@ -10,13 +11,188 @@ import {
     addDoc,
     deleteDoc,
     where,
-    limit
+    limit,
+    getCountFromServer
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { User, Test, Question, CMSContent, SiteSettings, AuditLog, DashboardStats, Transaction } from "@/types/admin";
+import { User, Test, Question, CMSContent, SiteSettings, AuditLog, DashboardStats, Transaction, TestAttempt, TestResult } from "@/types/admin";
 import { UserData } from "@/context/AuthContext";
 
 export const firestoreService = {
+    // --- Test Engine ---
+    async startTestAttempt(userId: string, testId: string, durationMinutes: number): Promise<string | null> {
+        try {
+            const attemptsRef = collection(db, "testAttempts");
+
+            // Check if there's an active attempt first?
+            const q = query(
+                attemptsRef,
+                where("userId", "==", userId),
+                where("testId", "==", testId),
+                where("status", "==", "in_progress")
+            );
+            const snapshot = await getDocs(q);
+
+            if (!snapshot.empty) {
+                console.log("Resuming existing attempt:", snapshot.docs[0].id);
+                return snapshot.docs[0].id;
+            }
+
+            const newAttempt: Omit<TestAttempt, 'id'> = {
+                userId,
+                testId,
+                startTime: new Date().toISOString(),
+                answers: {},
+                timeRemaining: durationMinutes * 60,
+                status: 'in_progress',
+                currentQuestionIndex: 0,
+                questionStatus: {}
+            };
+
+            const docRef = await addDoc(attemptsRef, newAttempt);
+            return docRef.id;
+        } catch (error) {
+            console.error("Error starting test attempt:", error);
+            return null;
+        }
+    },
+
+    async updateTestAttempt(attemptId: string, data: Partial<TestAttempt>): Promise<boolean> {
+        try {
+            const attemptRef = doc(db, "testAttempts", attemptId);
+            await updateDoc(attemptRef, data);
+            return true;
+        } catch (error) {
+            console.error("Error updating test attempt:", error);
+            return false;
+        }
+    },
+
+    async submitTestAttempt(
+        attemptId: string,
+        resultData: Omit<TestResult, 'id'>,
+        finalAnswers?: Record<string, number>,
+        finalStatus?: Record<string, any>
+    ): Promise<boolean> {
+        try {
+            const attemptRef = doc(db, "testAttempts", attemptId);
+
+            // We update the attempt with the final score, status, AND the final answers/state
+            // This ensures that even if the periodic sync missed the last few seconds, we have the latest data.
+            const updatePayload: any = {
+                status: 'completed',
+                endTime: new Date().toISOString(),
+                score: resultData.score,
+                timeTaken: resultData.timeTaken,
+                resultData: resultData
+            };
+
+            if (finalAnswers) updatePayload.answers = finalAnswers;
+            if (finalStatus) updatePayload.questionStatus = finalStatus;
+
+            await updateDoc(attemptRef, updatePayload);
+
+            return true;
+        } catch (error) {
+            console.error("Error submitting test:", error);
+            return false;
+        }
+    },
+
+    async getTestAttempt(attemptId: string): Promise<TestAttempt | null> {
+        try {
+            const docRef = doc(db, "testAttempts", attemptId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                return { id: docSnap.id, ...docSnap.data() } as TestAttempt;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error fetching test attempt:", error);
+            return null;
+        }
+    },
+
+    async getLastTestAttempt(userId: string, testId: string): Promise<TestAttempt | null> {
+        try {
+            const attemptsRef = collection(db, "testAttempts");
+            // Index required: userId ASC, testId ASC, startTime DESC
+            // If index missing, might fail. 
+            // Workaround: Filter by user and test, then sort in memory if needed, or rely on simple query?
+            // "where" clauses can be combined. sorting by startTime requires index.
+
+            const q = query(
+                attemptsRef,
+                where("userId", "==", userId),
+                where("testId", "==", testId),
+                where("status", "==", "completed"),
+                orderBy("startTime", "desc"),
+                limit(1)
+            );
+
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
+                return { id: doc.id, ...doc.data() } as TestAttempt;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error fetching last test attempt:", error);
+            return null;
+        }
+    },
+
+    async getUserAttempts(userId: string, status?: 'completed' | 'in_progress'): Promise<TestAttempt[]> {
+        try {
+            const attemptsRef = collection(db, "testAttempts");
+            let q;
+
+            if (status) {
+                q = query(
+                    attemptsRef,
+                    where("userId", "==", userId),
+                    where("status", "==", status),
+                    orderBy("startTime", "desc")
+                );
+            } else {
+                q = query(
+                    attemptsRef,
+                    where("userId", "==", userId),
+                    orderBy("startTime", "desc")
+                );
+            }
+
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TestAttempt));
+        } catch (error) {
+            console.error("Error fetching user attempts:", error);
+            return [];
+        }
+    },
+
+    async getActiveAttempt(userId: string): Promise<TestAttempt | null> {
+        try {
+            const attemptsRef = collection(db, "testAttempts");
+            const q = query(
+                attemptsRef,
+                where("userId", "==", userId),
+                where("status", "==", "in_progress"),
+                limit(1)
+            );
+
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
+                return { id: doc.id, ...doc.data() } as TestAttempt;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error fetching active attempt:", error);
+            return null;
+        }
+    },
+
     // --- Users ---
     async getUsers(): Promise<User[]> {
         try {
@@ -59,10 +235,18 @@ export const firestoreService = {
     },
 
     // --- Tests ---
-    async getTests(): Promise<Test[]> {
+    async getTests(publicOnly: boolean = false): Promise<Test[]> {
         try {
             const testsRef = collection(db, "tests");
-            const q = query(testsRef, orderBy("createdAt", "desc"));
+            let q;
+
+            if (publicOnly) {
+                // Students MUST filter by isVisible == true to pass security rules
+                q = query(testsRef, where("isVisible", "==", true), orderBy("createdAt", "desc"));
+            } else {
+                q = query(testsRef, orderBy("createdAt", "desc"));
+            }
+
             const querySnapshot = await getDocs(q);
 
             return querySnapshot.docs.map(doc => {
@@ -76,7 +260,8 @@ export const firestoreService = {
                     difficulty: (data.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard',
                     category: (data.category || 'Subject') as 'Subject' | 'General' | 'Full Mock',
                     price: data.isPaid ? 'paid' : 'free',
-                    questions: [], // Questions loaded separately or on demand
+                    priceAmount: data.price ? Number(data.price) : (data.isPaid ? 99 : 0),
+                    questions: [],
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
                     status: data.isPublished ? 'published' : 'draft',
@@ -86,6 +271,37 @@ export const firestoreService = {
         } catch (error) {
             console.error("Error fetching tests:", error);
             return [];
+        }
+    },
+
+    async getTest(testId: string): Promise<Test | null> {
+        try {
+            const docRef = doc(db, "tests", testId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                return {
+                    id: docSnap.id,
+                    title: data.title,
+                    description: data.description,
+                    duration: data.durationMinutes,
+                    totalMarks: data.totalMarks,
+                    difficulty: (data.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard',
+                    category: (data.category || 'Subject') as 'Subject' | 'General' | 'Full Mock',
+                    price: data.isPaid ? 'paid' : 'free',
+                    priceAmount: data.price ? Number(data.price) : (data.isPaid ? 99 : 0),
+                    questions: [],
+                    attempts: data.attemptsCount || 0,
+                    createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
+                    status: data.isPublished ? 'published' : 'draft',
+                    sections: data.sections || []
+                } as Test;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error fetching test:", error);
+            return null;
         }
     },
 
@@ -269,27 +485,12 @@ export const firestoreService = {
     // --- Settings & Audit ---
     async getSettings(): Promise<SiteSettings> {
         try {
-            const settingsRef = doc(db, "settings", "global");
-            const docSnap = await getDocs(collection(db, "settings"));
-            // Assuming single doc or specific ID 'global'
-            // For robustness, let's try to get 'global' doc, if not exists, return default
-            // Actually, getDocs on collection is better if we don't know ID, but 'global' is standard.
+            // Try to find global settings, or specific document ID 'globalConfig' based on rules
+            const settingsRef = doc(db, "platformSettings", "globalConfig");
+            const docSnap = await getDoc(settingsRef);
 
-            // Let's just mock a default for now if standard implies
-            // But better: try to fetch 'global'.
-            // Actually, let's use getDoc on 'global' ID.
-            // Wait, import getDoc is missing? 
-            // I see getDocs, doc, updateDoc... but getDoc?
-            // I'll check imports.
-
-            // If getDoc is missing, I should add it to imports.
-            // Or use getDocs(query(collection(db, "settings"), limit(1))).
-
-            const q = query(collection(db, "settings"), limit(1));
-            const snapshot = await getDocs(q);
-
-            if (!snapshot.empty) {
-                const data = snapshot.docs[0].data();
+            if (docSnap.exists()) {
+                const data = docSnap.data();
                 return {
                     siteName: data.siteName || "CUET Mock Platform",
                     supportEmail: data.supportEmail || "support@example.com",
@@ -317,19 +518,10 @@ export const firestoreService = {
 
     async updateSettings(settings: SiteSettings): Promise<boolean> {
         try {
-            // We need to know the ID. If we fetched it, we should store ID. 
-            // But SiteSettings interface doesn't have ID.
-            // We'll perform a query to find the doc to update, or create 'global'.
-
-            const q = query(collection(db, "settings"), limit(1));
-            const snapshot = await getDocs(q);
-
-            if (!snapshot.empty) {
-                const docId = snapshot.docs[0].id;
-                await updateDoc(doc(db, "settings", docId), { ...settings });
-            } else {
-                await addDoc(collection(db, "settings"), { ...settings });
-            }
+            const settingsRef = doc(db, "platformSettings", "globalConfig");
+            // Use setDoc with merge to ensure it exists
+            const { setDoc } = await import("firebase/firestore");
+            await setDoc(settingsRef, settings, { merge: true });
             return true;
         } catch (error) {
             console.error("Error updating settings:", error);
@@ -363,27 +555,31 @@ export const firestoreService = {
     // --- Analytics / Dashboard ---
     async getDashboardStats(): Promise<DashboardStats> {
         try {
-            const { getCountFromServer } = await import("firebase/firestore");
-
             const usersColl = collection(db, "users");
             const testsColl = collection(db, "tests");
 
             const totalUsersSnap = await getCountFromServer(usersColl);
             const totalTestsSnap = await getCountFromServer(testsColl);
 
-            // Active users? e.g. lastLoginAt > 30 days ago. 
-            // For now, let's just count all for simplicity or use a simple query if indexed.
-            const activeUsersSnap = await getCountFromServer(query(usersColl, where("isActive", "==", true)));
+            // Active users logic
+            // Note: This needs an index. If failed, it returns 0 or error.
+            let activeUsers = 0;
+            try {
+                const activeUsersSnap = await getCountFromServer(query(usersColl, where("isActive", "==", true)));
+                activeUsers = activeUsersSnap.data().count;
+            } catch {
+                // Fallback if index missing
+                console.warn("Could not count active users (index missing?)");
+            }
 
-            // Revenue? Needs transactions collection aggregation.
-            // Fallback:
+            // Revenue?
             const revenue = 0;
 
             const recentUsers = await this.getUsers();
 
             return {
                 totalUsers: totalUsersSnap.data().count,
-                activeUsers: activeUsersSnap.data().count,
+                activeUsers: activeUsers,
                 activeTests: totalTestsSnap.data().count,
                 revenue: revenue,
                 recentRegistrations: recentUsers.slice(0, 5)

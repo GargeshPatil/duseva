@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import Image from "next/image";
+
+// ... (existing imports)
 
 export default function AuthLayout({
     children,
@@ -9,9 +11,8 @@ export default function AuthLayout({
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
             <div className="mb-8 text-center">
-                <Link href="/" className="inline-flex items-center gap-2 text-primary">
-                    <BookOpen className="h-8 w-8" />
-                    <span className="text-2xl font-bold">CUET Prep</span>
+                <Link href="/" className="inline-block relative h-24 w-24 hover:scale-105 transition-transform">
+                    <Image src="/du-logo.png" alt="DU Seva Logo" fill className="object-contain" priority />
                 </Link>
             </div>
             {children}

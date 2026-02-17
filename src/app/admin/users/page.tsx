@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Search, Ban, CheckCircle, Mail, Loader2, RefreshCw } from "lucide-react";
+import { Search, Mail, Loader2, RefreshCw } from "lucide-react";
 import { firestoreService } from "@/services/firestoreService";
 import { User } from "@/types/admin";
 import { Input } from "@/components/ui/Input";
@@ -17,16 +17,16 @@ export default function UserManagementPage() {
 
     const isDeveloper = userData?.role === 'developer';
 
-    useEffect(() => {
-        loadUsers();
-    }, []);
-
     async function loadUsers() {
         setLoading(true);
         const data = await firestoreService.getUsers();
         setUsers(data);
         setLoading(false);
     }
+
+    useEffect(() => {
+        loadUsers();
+    }, []);
 
     async function handleRoleUpdate(uid: string, newRole: string) {
         if (!isDeveloper) return;
@@ -39,7 +39,7 @@ export default function UserManagementPage() {
 
         if (success) {
             // Optimistic update
-            setUsers(users.map(u => u.id === uid ? { ...u, role: newRole as any } : u));
+            setUsers(users.map(u => u.id === uid ? { ...u, role: newRole as User['role'] } : u));
         } else {
             alert("Failed to update role. Please try again.");
         }
