@@ -24,13 +24,11 @@ export default function AdminLayout({
         }
     }, [user, userData, loading, router]);
 
-    // Show loading state while checking auth, fetching user data, or redirecting
-    if (loading || !user || !userData || !['admin', 'developer'].includes(userData.role)) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-slate-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-            </div>
-        );
+    // Show nothing while checking auth to let GlobalAuthLoader handle the UI
+    if (loading) return null;
+
+    if (!user || !userData || !['admin', 'developer'].includes(userData.role)) {
+        return null; // Redirecting in useEffect
     }
 
     return (

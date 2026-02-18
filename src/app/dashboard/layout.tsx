@@ -24,13 +24,7 @@ export default function DashboardLayout({
         }
     }, [user, userData, loading, router]);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            </div>
-        );
-    }
+    if (loading) return null;
 
     return (
         <div className="min-h-screen bg-slate-50">

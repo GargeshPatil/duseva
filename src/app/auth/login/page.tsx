@@ -10,28 +10,23 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
     const router = useRouter();
-    const { login, loginWithGoogle, user, userData, loading: authLoading } = useAuth();
+    const { login, loginWithGoogle, user, userData } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
     // Redirect based on role
     useEffect(() => {
-        if (!authLoading && user && userData) {
+        if (user && userData) {
+            // Optional: The GlobalLoader will often cover this transition, 
+            // but keeping this redirect logic here helps if the global loader unmounts 
+            // slightly before the route change is fully processed by Next.js router.
             if (userData.role === 'admin' || userData.role === 'developer') {
                 router.push("/admin");
             } else {
                 router.push("/dashboard");
             }
         }
-    }, [user, userData, router, authLoading]);
-
-    if (authLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-white">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            </div>
-        );
-    }
+    }, [user, userData, router]);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
