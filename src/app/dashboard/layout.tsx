@@ -1,12 +1,37 @@
+"use client";
+
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const { user, userData, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading && user && userData) {
+            if (['admin', 'developer'].includes(userData.role)) {
+                router.push("/admin");
+            }
+        }
+    }, [user, userData, loading, router]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-slate-50">
             <Sidebar />

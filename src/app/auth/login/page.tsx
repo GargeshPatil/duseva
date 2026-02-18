@@ -10,20 +10,28 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
     const router = useRouter();
-    const { login, loginWithGoogle, user, userData } = useAuth();
+    const { login, loginWithGoogle, user, userData, loading: authLoading } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
     // Redirect based on role
     useEffect(() => {
-        if (user && userData) {
+        if (!authLoading && user && userData) {
             if (userData.role === 'admin' || userData.role === 'developer') {
                 router.push("/admin");
             } else {
                 router.push("/dashboard");
             }
         }
-    }, [user, userData, router]);
+    }, [user, userData, router, authLoading]);
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+        );
+    }
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
