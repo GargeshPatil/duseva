@@ -8,6 +8,10 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+
+// ... imports
+
 export default function DashboardLayout({
     children,
 }: {
@@ -24,7 +28,12 @@ export default function DashboardLayout({
         }
     }, [user, userData, loading, router]);
 
-    if (loading) return null;
+    if (loading) return null; // Global loader handles initial auth check
+
+    // Prevent flash of dashboard for admins by showing loading screen while redirecting
+    if (user && userData && ['admin', 'developer'].includes(userData.role)) {
+        return <LoadingScreen />;
+    }
 
     return (
         <div className="min-h-screen bg-slate-50">

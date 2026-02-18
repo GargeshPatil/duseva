@@ -8,6 +8,10 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+
+// ... imports
+
 export default function LoginPage() {
     const router = useRouter();
     const { login, loginWithGoogle, user, userData } = useAuth();
@@ -17,9 +21,6 @@ export default function LoginPage() {
     // Redirect based on role
     useEffect(() => {
         if (user && userData) {
-            // Optional: The GlobalLoader will often cover this transition, 
-            // but keeping this redirect logic here helps if the global loader unmounts 
-            // slightly before the route change is fully processed by Next.js router.
             if (userData.role === 'admin' || userData.role === 'developer') {
                 router.push("/admin");
             } else {
@@ -27,6 +28,11 @@ export default function LoginPage() {
             }
         }
     }, [user, userData, router]);
+
+    // Show loading screen if user is already logged in to prevent form flash
+    if (user && userData) {
+        return <LoadingScreen />;
+    }
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();

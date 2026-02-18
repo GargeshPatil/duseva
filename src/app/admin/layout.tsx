@@ -6,6 +6,10 @@ import { useAuth } from "@/context/AuthContext";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+
+// ... imports
+
 export default function AdminLayout({
     children,
 }: {
@@ -28,7 +32,7 @@ export default function AdminLayout({
     if (loading) return null;
 
     if (!user || !userData || !['admin', 'developer'].includes(userData.role)) {
-        return null; // Redirecting in useEffect
+        return <LoadingScreen />;
     }
 
     return (
