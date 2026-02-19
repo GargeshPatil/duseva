@@ -52,7 +52,7 @@ export default function QuestionEditorPage() {
             if (found) {
                 setQuestion(found);
             } else {
-                router.push("/admin/questions");
+                router.push("/admin/management?tab=questions");
             }
         }
         setLoading(false);
@@ -71,7 +71,7 @@ export default function QuestionEditorPage() {
             await firestoreService.updateQuestion(questionId, question as any);
         }
         setSaving(false);
-        router.push("/admin/questions");
+        router.push("/admin/management?tab=questions");
     }
 
     function handleOptionChange(index: number, value: string) {
@@ -90,7 +90,7 @@ export default function QuestionEditorPage() {
         <div className="space-y-6 animate-in fade-in max-w-4xl mx-auto">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Link href="/admin/questions">
+                    <Link href="/admin/management?tab=questions">
                         <Button variant="ghost" size="sm" className="gap-2 text-slate-500">
                             <ArrowLeft className="h-4 w-4" /> Back
                         </Button>

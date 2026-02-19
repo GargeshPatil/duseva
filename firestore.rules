@@ -44,7 +44,7 @@ service cloud.firestore {
       
       // FIXED: Allow read if the requesting user's UID matches the document ID (path).
       // This allows checking if a document exists before it is created.
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isDeveloper());
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isDeveloper() || isAdmin());
       
       // Update still checks ownership or developer status
       allow update: if isAuthenticated() && (request.auth.uid == userId || isDeveloper());

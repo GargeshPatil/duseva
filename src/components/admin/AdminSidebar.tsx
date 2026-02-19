@@ -31,11 +31,10 @@ export function AdminSidebar() {
 
     const navItems = [
         { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-        { label: "Tests", href: "/admin/tests", icon: FileText },
-        { label: "Question Bank", href: "/admin/questions", icon: Library }, // New
+        { label: "Test Management", href: "/admin/management", icon: Library }, // Unified Hub
         { label: "Users", href: "/admin/users", icon: Users },
         { label: "Content (CMS)", href: "/admin/cms", icon: PenTool },
-        { label: "Media", href: "/admin/media", icon: Layers }, // Changed icon to Layers to match mobile/consistency
+        { label: "Media", href: "/admin/media", icon: Layers },
         { label: "Analytics", href: "/admin/analytics", icon: BarChart },
         { label: "Settings", href: "/admin/settings", icon: Settings },
     ];

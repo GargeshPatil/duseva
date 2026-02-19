@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/Button";
-import { ArrowRight, CheckCircle2, Loader2, Play } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { mockDb } from "@/services/mockDb";
 import { useAuth } from "@/context/AuthContext";

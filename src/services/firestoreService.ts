@@ -13,11 +13,34 @@ import {
     where,
     limit,
     documentId,
-    getCountFromServer
+    getCountFromServer,
+    QueryConstraint,
+    arrayUnion,
+    writeBatch
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { User, Test, Question, CMSContent, SiteSettings, AuditLog, DashboardStats, Transaction, TestAttempt, TestResult } from "@/types/admin";
+import { User, Test, Question, CMSContent, SiteSettings, AuditLog, DashboardStats, Transaction, TestAttempt, TestResult, Bundle } from "@/types/admin";
 import { UserData } from "@/context/AuthContext";
+
+// Helper to remove undefined fields recursively
+function cleanData(data: any): any {
+    if (data === null || data === undefined) return null;
+    if (typeof data !== 'object') return data;
+    if (data instanceof Date) return data;
+    if (data.toMillis && typeof data.toMillis === 'function') return data; // Timestamp
+
+    if (Array.isArray(data)) {
+        return data.map(item => cleanData(item)).filter(item => item !== undefined);
+    }
+
+    const cleaned: any = {};
+    for (const key in data) {
+        if (data[key] !== undefined) {
+            cleaned[key] = cleanData(data[key]);
+        }
+    }
+    return cleaned;
+}
 
 export const firestoreService = {
     // --- Test Engine ---
@@ -242,8 +265,8 @@ export const firestoreService = {
             let q;
 
             if (publicOnly) {
-                // Students MUST filter by isVisible == true to pass security rules
-                q = query(testsRef, where("isVisible", "==", true), orderBy("createdAt", "desc"));
+                // Students MUST filter by isPublished == true to pass security rules
+                q = query(testsRef, where("isPublished", "==", true), orderBy("createdAt", "desc"));
             } else {
                 q = query(testsRef, orderBy("createdAt", "desc"));
             }
@@ -266,7 +289,7 @@ export const firestoreService = {
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
                     status: data.isPublished ? 'published' : 'draft',
-                    stream: data.stream,
+                    streams: data.streams || (data.stream ? [data.stream] : []),
                     questionIds: data.questionIds || [],
                     sections: data.sections || []
                 } as Test;
@@ -298,7 +321,7 @@ export const firestoreService = {
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
                     status: data.isPublished ? 'published' : 'draft',
-                    stream: data.stream,
+                    streams: data.streams || (data.stream ? [data.stream] : []),
                     questionIds: data.questionIds || [],
                     sections: data.sections || []
                 } as Test;
@@ -322,7 +345,7 @@ export const firestoreService = {
                 totalMarks: testData.totalMarks,
                 difficulty: testData.difficulty,
                 category: testData.category,
-                stream: testData.stream || 'General', // Default to General
+                streams: testData.streams || ['General'], // Default to General
                 isPaid: testData.price === 'paid',
                 price: testData.price === 'paid' ? 99 : 0, // Default price logic, update as needed
                 isVisible: true,
@@ -334,7 +357,7 @@ export const firestoreService = {
                 questionIds: testData.questionIds || []
             };
 
-            const docRef = await addDoc(testsRef, newTest);
+            const docRef = await addDoc(testsRef, cleanData(newTest));
             return docRef.id;
         } catch (error) {
             console.error("Error creating test:", error);
@@ -358,10 +381,10 @@ export const firestoreService = {
             if (updates.difficulty) firestoreUpdates.difficulty = updates.difficulty;
             if (updates.status) firestoreUpdates.isPublished = updates.status === 'published';
             if (updates.price) firestoreUpdates.isPaid = updates.price === 'paid';
-            if (updates.stream) firestoreUpdates.stream = updates.stream;
+            if (updates.streams) firestoreUpdates.streams = updates.streams;
             if (updates.questionIds) firestoreUpdates.questionIds = updates.questionIds;
 
-            await updateDoc(testRef, firestoreUpdates);
+            await updateDoc(testRef, cleanData(firestoreUpdates));
             return true;
         } catch (error) {
             console.error("Error updating test:", error);
@@ -378,6 +401,71 @@ export const firestoreService = {
             return false;
         }
     },
+
+    // --- Bundles ---
+    async getBundles(activeOnly: boolean = false): Promise<Bundle[]> {
+        try {
+            const bundlesRef = collection(db, "bundles");
+            let q;
+            if (activeOnly) {
+                q = query(bundlesRef, where("isActive", "==", true), orderBy("createdAt", "desc"));
+            } else {
+                q = query(bundlesRef, orderBy("createdAt", "desc"));
+            }
+
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bundle));
+        } catch (error) {
+            console.error("Error fetching bundles:", error);
+            return [];
+        }
+    },
+
+    async getBundle(id: string): Promise<Bundle | null> {
+        try {
+            const docRef = doc(db, "bundles", id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                return { id: docSnap.id, ...docSnap.data() } as Bundle;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error fetching bundle:", error);
+            return null;
+        }
+    },
+
+    async createBundle(bundleData: Partial<Bundle>): Promise<string | null> {
+        try {
+            const bundlesRef = collection(db, "bundles");
+            const newBundle = {
+                ...bundleData,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                isActive: bundleData.isActive ?? true
+            };
+            const docRef = await addDoc(bundlesRef, newBundle);
+            return docRef.id;
+        } catch (error) {
+            console.error("Error creating bundle:", error);
+            return null;
+        }
+    },
+
+    async updateBundle(id: string, updates: Partial<Bundle>): Promise<boolean> {
+        try {
+            const bundleRef = doc(db, "bundles", id);
+            await updateDoc(bundleRef, {
+                ...updates,
+                updatedAt: new Date().toISOString()
+            });
+            return true;
+        } catch (error) {
+            console.error("Error updating bundle:", error);
+            return false;
+        }
+    },
+
 
     // --- Questions ---
     async getQuestions(filters?: { testId?: string, stream?: string, subject?: string, search?: string, limit?: number, ids?: string[] }): Promise<Question[]> {
@@ -419,7 +507,7 @@ export const firestoreService = {
             }
 
             // 2. Standard Filtering
-            let constraints: any[] = [];
+            const constraints: QueryConstraint[] = [];
 
             if (filters?.testId) {
                 constraints.push(where("testId", "==", filters.testId));
@@ -473,7 +561,7 @@ export const firestoreService = {
                 updatedAt: Timestamp.now()
             };
 
-            const docRef = await addDoc(questionsRef, newQuestion);
+            const docRef = await addDoc(questionsRef, cleanData(newQuestion));
             return docRef.id;
         } catch (error) {
             console.error("Error creating question:", error);
@@ -481,13 +569,98 @@ export const firestoreService = {
         }
     },
 
+    async batchCreateQuestions(
+        questions: Partial<Question>[],
+        onProgress?: (progress: number) => void
+    ): Promise<{ success: number; failed: number; errors: string[] }> {
+        try {
+            const batchLimit = 450; // Firestore limit is 500, keeping safety margin
+            const totalQuestions = questions.length;
+            const chunks = [];
+            for (let i = 0; i < totalQuestions; i += batchLimit) {
+                chunks.push(questions.slice(i, i + batchLimit));
+            }
+
+            let successCount = 0;
+            const errors: string[] = [];
+            let processedCount = 0;
+
+            for (const chunk of chunks) {
+                const batch = await import("firebase/firestore").then(mod => mod.writeBatch(db));
+                const questionsRef = collection(db, "questions");
+
+                chunk.forEach(q => {
+                    const newRef = doc(questionsRef); // Generate ID automatically
+                    const newQuestion = {
+                        ...q,
+                        stream: q.stream || null,
+                        subject: q.subject || null,
+                        tags: q.tags || [],
+                        difficulty: q.difficulty || 'Medium',
+                        testId: q.testId || null,
+                        createdAt: Timestamp.now(),
+                        updatedAt: Timestamp.now()
+                    };
+                    batch.set(newRef, cleanData(newQuestion));
+                });
+
+                try {
+                    await batch.commit();
+                    successCount += chunk.length;
+                } catch (err) {
+                    console.error("Batch commit failed:", err);
+                    errors.push(`Batch failed: ${(err as Error).message}`);
+                }
+
+                processedCount += chunk.length;
+                if (onProgress) {
+                    onProgress(Math.min(100, Math.round((processedCount / totalQuestions) * 100)));
+                }
+            }
+
+            return { success: successCount, failed: totalQuestions - successCount, errors };
+        } catch (error) {
+            console.error("Error in batch create:", error);
+            return { success: 0, failed: questions.length, errors: [(error as Error).message] };
+        }
+    },
+
+    async getQuestionSignatures(): Promise<{ id: string; text: string; subject?: string }[]> {
+        try {
+            const questionsRef = collection(db, "questions");
+            // Select only necessary fields to reduce bandwidth if possible, 
+            // but Firestore client SDK doesn't support 'select' fields efficiently in terms of read costs (reads whole doc anyway mostly).
+            // However, downloading less data is faster.
+            // We'll perform a query to get checks. 
+            // Ideally we'd validte on server, but client-side:
+
+            // Optimization: If questions count > 2000, this might be slow to download all.
+            // But strict requirement is duplicate detection.
+            // Let's assume reasonable size for now.
+            const q = query(questionsRef, orderBy("createdAt", "desc"));
+            const snapshot = await getDocs(q);
+
+            return snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    text: (data.text || "").trim().toLowerCase(),
+                    subject: (data.subject || "").trim().toLowerCase()
+                };
+            });
+        } catch (error) {
+            console.error("Error fetching question signatures:", error);
+            return [];
+        }
+    },
+
     async updateQuestion(id: string, updates: Partial<Question>): Promise<boolean> {
         try {
             const questionRef = doc(db, "questions", id);
-            await updateDoc(questionRef, {
+            await updateDoc(questionRef, cleanData({
                 ...updates,
                 updatedAt: Timestamp.now()
-            });
+            }));
             return true;
         } catch (error) {
             console.error("Error updating question:", error);
@@ -501,6 +674,36 @@ export const firestoreService = {
             return true;
         } catch (error) {
             console.error("Error deleting question:", error);
+            return false;
+        }
+    },
+
+
+    async batchDeleteQuestions(questionIds: string[]): Promise<boolean> {
+        try {
+            const batch = writeBatch(db);
+            questionIds.forEach(id => {
+                const ref = doc(db, "questions", id);
+                batch.delete(ref);
+            });
+            await batch.commit();
+            return true;
+        } catch (error) {
+            console.error("Error batch deleting questions:", error);
+            return false;
+        }
+    },
+
+    async addQuestionsToTest(testId: string, questionIds: string[]): Promise<boolean> {
+        try {
+            const testRef = doc(db, "tests", testId);
+            await updateDoc(testRef, {
+                questionIds: arrayUnion(...questionIds),
+                updatedAt: Timestamp.now()
+            });
+            return true;
+        } catch (error) {
+            console.error("Error adding questions to test:", error);
             return false;
         }
     },

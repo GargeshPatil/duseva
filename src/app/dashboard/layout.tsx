@@ -30,6 +30,11 @@ export default function DashboardLayout({
 
     if (loading) return null; // Global loader handles initial auth check
 
+    // Wait for user profile to load before showing dashboard to prevent role-based flashes
+    if (user && !userData) {
+        return <LoadingScreen />;
+    }
+
     // Prevent flash of dashboard for admins by showing loading screen while redirecting
     if (user && userData && ['admin', 'developer'].includes(userData.role)) {
         return <LoadingScreen />;

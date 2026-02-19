@@ -8,7 +8,6 @@ import {
     Target,
     Trophy,
     ArrowRight,
-    Play,
     FileText,
     TrendingUp,
     AlertCircle

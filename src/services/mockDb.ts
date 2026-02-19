@@ -12,17 +12,17 @@ const INITIAL_TESTS: Test[] = [
     {
         id: '1', title: 'English Language - Mock 1', description: 'Comprehensive English mock test covering reading comprehension and grammar.',
         duration: 45, totalMarks: 200, difficulty: 'Medium', category: 'Subject', price: 'free',
-        questions: [], attempts: 120, createdDate: '2025-01-10', status: 'published'
+        questions: [], attempts: 120, createdDate: '2025-01-10', status: 'published', streams: ['General', 'Humanities']
     },
     {
         id: '2', title: 'General Test - Full Mock', description: 'Full syllabus General Test including GK, Current Affairs, and Logical Reasoning.',
         duration: 60, totalMarks: 250, difficulty: 'Hard', category: 'General', price: 'paid',
-        questions: [], attempts: 85, createdDate: '2025-01-25', status: 'published'
+        questions: [], attempts: 85, createdDate: '2025-01-25', status: 'published', streams: ['General']
     },
     {
         id: '3', title: 'Physics Domain - Chapterwise', description: 'Focusing on Electrostatics and Current Electricity.',
         duration: 60, totalMarks: 200, difficulty: 'Hard', category: 'Subject', price: 'paid',
-        questions: [], attempts: 45, createdDate: '2025-02-05', status: 'draft'
+        questions: [], attempts: 45, createdDate: '2025-02-05', status: 'draft', streams: ['Science']
     },
 ];
 

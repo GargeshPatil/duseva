@@ -6,119 +6,17 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
 import { TestCard } from "@/components/dashboard/TestCard";
-import { useAuth } from "@/context/AuthContext"; // Assuming useAuth exists
-// Mock data for tests - in real implementation fetch from DB
-const MOCK_TESTS = [
-    {
-        id: "t1",
-        title: "Accountancy Full Syllabus Mock 1",
-        subject: "Accountancy",
-        questionCount: 50,
-        duration: 60,
-        difficulty: "Medium" as const,
-        type: "free" as const,
-        description: "Comprehensive mock test covering the entire Class 12th Accountancy syllabus.",
-        totalMarks: 200,
-        instructions: ["Attempt all questions", "No negative marking"],
-        price: "free" as const,
-        questions: Array(50).fill({}),
-        category: "Full Mock" as const,
-        createdDate: new Date().toISOString(),
-        status: "published" as const
-    },
-    {
-        id: "t2",
-        title: "Economics Chapter Wise Test",
-        subject: "Economics",
-        questionCount: 40,
-        duration: 45,
-        difficulty: "Hard" as const,
-        type: "premium" as const,
-        description: "Focus on Microeconomics and Macroeconomics key concepts.",
-        totalMarks: 200,
-        instructions: ["Attempt all questions"],
-        price: "paid" as const,
-        priceAmount: 49,
-        questions: Array(40).fill({}),
-        category: "Subject" as const,
-        createdDate: new Date().toISOString(),
-        status: "published" as const
-    },
-    {
-        id: "t3",
-        title: "General Test Layout Practice",
-        subject: "General Test",
-        questionCount: 60,
-        duration: 60,
-        difficulty: "Easy" as const,
-        type: "free" as const,
-        description: "Practice General Knowledge, Current Affairs, and Numerical Ability.",
-        totalMarks: 250,
-        instructions: ["Attempt all questions"],
-        price: "free" as const,
-        questions: Array(60).fill({}),
-        category: "General" as const,
-        createdDate: new Date().toISOString(),
-        status: "published" as const
-    },
-    {
-        id: "t4",
-        title: "English Language Comprehensive",
-        subject: "English",
-        questionCount: 50,
-        duration: 45,
-        difficulty: "Medium" as const,
-        type: "premium" as const,
-        description: "Reading Comprehension and Grammar practice.",
-        totalMarks: 200,
-        instructions: ["Attempt all questions"],
-        price: "paid" as const,
-        priceAmount: 49,
-        questions: Array(50).fill({}),
-        category: "Subject" as const,
-        createdDate: new Date().toISOString(),
-        status: "published" as const
-    },
-    {
-        id: "t5",
-        title: "Physics Mechanics Drill",
-        subject: "Physics",
-        questionCount: 40,
-        duration: 60,
-        difficulty: "Hard" as const,
-        type: "premium" as const,
-        description: "Intensive practice on Mechanics and Properties of Matter.",
-        totalMarks: 200,
-        instructions: ["Attempt all questions"],
-        price: "paid" as const,
-        priceAmount: 49,
-        questions: Array(40).fill({}),
-        category: "Subject" as const,
-        createdDate: new Date().toISOString(),
-        status: "published" as const
-    },
-    {
-        id: "t6",
-        title: "History: Ancient India",
-        subject: "History",
-        questionCount: 50,
-        duration: 45,
-        difficulty: "Medium" as const,
-        type: "free" as const,
-        description: "Deep dive into Harappan Civilization and Vedic Age.",
-        totalMarks: 200,
-        instructions: ["Attempt all questions"],
-        price: "free" as const,
-        questions: Array(50).fill({}),
-        category: "Subject" as const,
-        createdDate: new Date().toISOString(),
-        status: "published" as const
-    },
-];
+import { firestoreService } from "@/services/firestoreService";
+import { Test, Bundle } from "@/types/admin";
+import { Package, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 export default function MocksPage() {
     const [view, setView] = useState<'stream-selection' | 'directory'>('stream-selection');
     const [selectedStream, setSelectedStream] = useState<string | null>(null);
+    const [tests, setTests] = useState<Test[]>([]);
+    const [bundles, setBundles] = useState<Bundle[]>([]);
+    const [loading, setLoading] = useState(true);
 
     // Persist choice in localStorage
     useEffect(() => {
@@ -127,7 +25,24 @@ export default function MocksPage() {
             setSelectedStream(savedStream);
             setView('directory');
         }
+        loadData();
     }, []);
+
+    async function loadData() {
+        setLoading(true);
+        try {
+            const [testsData, bundlesData] = await Promise.all([
+                firestoreService.getTests(),
+                firestoreService.getBundles(true) // Fetch active bundles
+            ]);
+            setTests(testsData);
+            setBundles(bundlesData);
+        } catch (error) {
+            console.error("Failed to load data:", error);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const handleStreamSelect = (stream: string) => {
         localStorage.setItem("user_stream_preference", stream);
@@ -141,18 +56,20 @@ export default function MocksPage() {
         setView('stream-selection');
     };
 
-    // Filter logic (simplified for demo)
-    const filteredTests = MOCK_TESTS.filter(test => {
+    // Filter logic
+    const filteredTests = tests.filter(test => {
         if (!selectedStream) return true;
+        // Check if the test's streams array includes the selected stream
+        // Or if it's "General" (often applicable to all) or if the test is "General" stream
+        // Also handle legacy 'stream' field via the mapped 'streams' array
 
-        // Simple mapping for demo
-        if (selectedStream === 'Commerce' && ['Accountancy', 'Economics', 'English', 'General Test'].includes(test.subject)) return true;
-        if (selectedStream === 'Science' && ['Physics', 'Chemistry', 'Maths', 'English', 'General Test'].includes(test.subject)) return true;
-        if (selectedStream === 'Humanities' && ['History', 'Pol Science', 'Sociology', 'English', 'General Test'].includes(test.subject)) return true;
-        if (selectedStream === 'General' && ['English', 'General Test'].includes(test.subject)) return true;
+        const testStreams = test.streams || [];
+        return testStreams.includes(selectedStream) || testStreams.includes('General');
+    }).sort((a, b) => (a.price === 'free' ? -1 : 1)); // Show free first
 
-        return false;
-    }).sort((a, b) => (a.type === 'free' ? -1 : 1)); // Show free first
+    // Filter bundles (optional: if bundles are stream-specific? For now show all or filter if possible)
+    // Bundles don't have streams yet in schema, so show all or maybe add logic later.
+    const filteredBundles = bundles;
 
     return (
         <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
@@ -176,7 +93,7 @@ export default function MocksPage() {
                                     { id: 'Commerce', label: 'Commerce', desc: 'Accountancy, BST, Economics' },
                                     { id: 'Science', label: 'Science', desc: 'Physics, Chemistry, Maths, Bio' },
                                     { id: 'Humanities', label: 'Humanities', desc: 'History, Pol Sci, Geography' },
-                                    { id: 'General', label: 'General Test & English', desc: 'Language & General Awareness' }
+                                    { id: 'General', label: 'General Test & English', desc: 'Language & General Awareness' } // "General" usually maps to General Test stream or similar
                                 ].map((stream) => (
                                     <button
                                         key={stream.id}
@@ -194,7 +111,7 @@ export default function MocksPage() {
                             key="directory"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="space-y-8"
+                            className="space-y-12"
                         >
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div>
@@ -202,31 +119,75 @@ export default function MocksPage() {
                                         Mock Tests for <span className="text-blue-600">{selectedStream}</span>
                                         <button onClick={handleClearPreference} className="text-xs text-slate-400 font-normal underline hover:text-slate-600">Change</button>
                                     </h1>
-                                    <p className="text-slate-500 mt-1">Showing {filteredTests.length} available tests</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    {/* Placeholder for more filters */}
-                                    {/* <Button variant="outline" size="sm">Filter</Button> */}
+                                    <p className="text-slate-500 mt-1">
+                                        {loading ? "Loading available tests..." : `Showing ${filteredTests.length} available tests`}
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredTests.map((test) => (
-                                    <TestCard
-                                        key={test.id}
-                                        test={{ ...test, attempts: 0 }} // Mocking attempts for display
-                                        onStart={() => window.location.href = `/test/${test.id}`} // Simple redirect for now
-                                    />
-                                ))}
+                            {loading ? (
+                                <div className="py-20 flex justify-center">
+                                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Bundles Section */}
+                                    {filteredBundles.length > 0 && (
+                                        <div className="space-y-4">
+                                            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                                <Package className="h-5 w-5 text-indigo-600" /> Value Bundles
+                                            </h2>
+                                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {filteredBundles.map(bundle => (
+                                                    <div key={bundle.id} className="bg-white rounded-xl border border-indigo-100 shadow-sm p-5 hover:shadow-md transition-all relative overflow-hidden">
+                                                        <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded-bl-lg font-bold">
+                                                            SAVE BIG
+                                                        </div>
+                                                        <h3 className="font-bold text-slate-900 text-lg mb-2">{bundle.name}</h3>
+                                                        <p className="text-slate-500 text-sm mb-4 line-clamp-2">{bundle.description}</p>
+                                                        <div className="flex justify-between items-center mt-auto">
+                                                            <div>
+                                                                <span className="text-xl font-bold text-slate-900">₹{bundle.price}</span>
+                                                                {bundle.originalPrice && (
+                                                                    <span className="text-sm text-slate-400 line-through ml-2">₹{bundle.originalPrice}</span>
+                                                                )}
+                                                            </div>
+                                                            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                                                                View Bundle
+                                                            </Button>
+                                                        </div>
+                                                        <div className="mt-4 pt-3 border-t border-slate-50 text-xs text-slate-500 flex gap-2">
+                                                            <span className="bg-slate-100 px-2 py-1 rounded">{bundle.includedTests.length} Tests</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
 
-                                {filteredTests.length === 0 && (
-                                    <div className="col-span-full py-20 text-center text-slate-400">
-                                        No mock tests found for this stream yet. Check back soon!
+                                    {/* Tests Grid */}
+                                    <div className="space-y-4">
+                                        {filteredBundles.length > 0 && <h2 className="text-lg font-semibold text-slate-900">Individual Tests</h2>}
+                                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            {filteredTests.map((test) => (
+                                                <TestCard
+                                                    key={test.id}
+                                                    test={{ ...test, attempts: 0 }}
+                                                    onStart={() => window.location.href = `/test/${test.id}`}
+                                                />
+                                            ))}
+
+                                            {filteredTests.length === 0 && (
+                                                <div className="col-span-full py-20 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
+                                                    No mock tests found for {selectedStream} yet. Check back soon!
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
+                                </>
+                            )}
 
-                            <div className="text-center pt-12">
+                            <div className="text-center pt-12 pb-8">
                                 <p className="text-slate-500 mb-4">Want to explore all subjects?</p>
                                 <Button variant="outline" onClick={handleClearPreference}>View All Streams</Button>
                             </div>

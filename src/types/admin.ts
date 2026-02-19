@@ -24,6 +24,9 @@ export interface Question {
     tags?: string[];
     difficulty?: 'Easy' | 'Medium' | 'Hard';
     subject?: string;
+    streams?: string[];
+    marks?: number;
+    negativeMarks?: number;
 }
 
 export interface Test {
@@ -34,7 +37,7 @@ export interface Test {
     totalMarks: number;
     difficulty: 'Easy' | 'Medium' | 'Hard';
     category: 'Subject' | 'General' | 'Full Mock';
-    stream?: 'Science' | 'Commerce' | 'Humanities' | 'General'; // New field for mock discovery
+    streams: string[]; // Updated: Array to support multiple streams (Science, Commerce, Humanities, General, English)
     price: 'free' | 'paid';
     priceAmount?: number;
     questions?: Question[]; // Legacy: embedded questions
@@ -43,6 +46,21 @@ export interface Test {
     createdDate: string;
     status: 'draft' | 'published';
     sections?: any[]; // Keep existing structure if any
+    // Backwards compatibility for UI during migration (optional, but helpful if we don't fix all UI immediately, though we should)
+    // stream?: string; 
+}
+
+export interface Bundle {
+    id: string;
+    name: string;
+    description: string;
+    includedTests: string[]; // Array of Test IDs
+    price: number;
+    originalPrice?: number;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    coverImage?: string;
 }
 
 export interface CMSContent {

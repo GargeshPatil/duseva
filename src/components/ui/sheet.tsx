@@ -78,3 +78,15 @@ export function SheetTitle({ children, className }: { children: React.ReactNode,
         </h2>
     );
 }
+
+export function SheetDescription({ children, className }: { children: React.ReactNode, className?: string }) {
+    return (
+        <p className={cn("text-sm text-slate-500", className)}>
+            {children}
+        </p>
+    );
+}
+
+
+
+

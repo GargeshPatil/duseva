@@ -37,11 +37,10 @@ export function AdminMobileNav() {
 
     const navItems = [
         { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-        { label: "Tests", href: "/admin/tests", icon: FileText },
-        { label: "Question Bank", href: "/admin/questions", icon: Library },
+        { label: "Test Management", href: "/admin/management", icon: Library }, // Unified Hub
         { label: "Users", href: "/admin/users", icon: Users },
         { label: "Content (CMS)", href: "/admin/cms", icon: PenTool },
-        { label: "Media", href: "/admin/media", icon: FolderOpen },
+        { label: "Media", href: "/admin/media", icon: Layers },
         { label: "Analytics", href: "/admin/analytics", icon: BarChart },
         { label: "Settings", href: "/admin/settings", icon: Settings },
     ];
