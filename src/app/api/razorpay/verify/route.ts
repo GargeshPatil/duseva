@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { adminDb } from "@/lib/firebase/admin";
-import { Timestamp } from "firebase-admin/firestore";
+import { doc, setDoc, addDoc, collection, Timestamp } from "firebase/firestore";
 
 export async function POST(req: NextRequest) {
     try {
@@ -28,13 +28,8 @@ export async function POST(req: NextRequest) {
         console.log("Payment Verified Successfully. Updating Firestore...");
 
         // 1. Update user's purchasedTests
-        const userRef = adminDb.collection("users").doc(userId);
-
-        // Optimistic update for purchasedTests map
-        // We use set with merge: true to avoid overwriting other fields
-        // The key is the testId, value can be anything (e.g., true, purchase date, or full object)
-        // Using `purchaseDate: Timestamp.now()` as the value for better data
-        await userRef.set({
+        const userRef = doc(adminDb, "users", userId);
+        await setDoc(userRef, {
             purchasedTests: {
                 [testId]: {
                     purchaseDate: Timestamp.now(),
@@ -45,7 +40,7 @@ export async function POST(req: NextRequest) {
         }, { merge: true });
 
         // 2. Create a record in 'payments' collection
-        await adminDb.collection("payments").add({
+        await addDoc(collection(adminDb, "payments"), {
             userId: userId,
             testId: testId,
             amount: amount,

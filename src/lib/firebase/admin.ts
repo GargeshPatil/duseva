@@ -1,27 +1,25 @@
-import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
+// Server-side Firebase utilities using the client SDK
+// The client Firebase SDK works in Node.js server environments (API routes)
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
-const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
 
-if (!getApps().length) {
-    if (serviceAccountKey) {
-        try {
-            const serviceAccount = JSON.parse(serviceAccountKey);
-            initializeApp({
-                credential: cert(serviceAccount),
-            });
-        } catch (error) {
-            console.error("Error parsing FIREBASE_SERVICE_ACCOUNT_KEY:", error);
-        }
-    } else {
-        // Fallback for local development if GOOGLE_APPLICATION_CREDENTIALS is set
-        // or if deployed to environment with default credentials (like Vercel with specific setup or GCP)
-        // However, explicitly checking for the key is safer for this setup.
-        console.warn("FIREBASE_SERVICE_ACCOUNT_KEY not found. Admin SDK might not work.");
-        initializeApp();
-    }
+// Initialize a server-side Firebase app instance
+let serverApp: ReturnType<typeof initializeApp>;
+
+try {
+    serverApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+} catch (error) {
+    console.error("Server Firebase initialization failed:", error);
+    serverApp = getApp();
 }
 
-export const adminAuth = getAuth();
-export const adminDb = getFirestore();
+export const adminDb = getFirestore(serverApp);
