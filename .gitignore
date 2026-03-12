@@ -50,3 +50,4 @@ lint_results*.txt
 build_log.txt
 
 .vercel
+.env*.local

@@ -45,7 +45,7 @@ export default function MocksPage() {
         setLoading(true);
         try {
             const [testsData, bundlesData] = await Promise.all([
-                firestoreService.getTests(),
+                firestoreService.getTests(true),
                 firestoreService.getBundles(true)
             ]);
             setTests(testsData);
