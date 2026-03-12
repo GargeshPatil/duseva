@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
         console.log("Razorpay Order Created:", order.id);
 
         return NextResponse.json(order);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         console.error("Error creating Razorpay order:", error);
         // Log specific Razorpay error details if available

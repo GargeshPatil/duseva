@@ -2,7 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { firestoreService } from '@/services/firestoreService';
-import { Test, Question, QuestionStatus, TestAttempt, TestResult } from '@/types/admin';
+import {
+  Test,
+  Question,
+  QuestionStatus,
+  TestResult,
+  Passage
+} from '@/types/admin';
 
 export function useTestEngine(testId: string) {
     const router = useRouter();
@@ -11,6 +17,7 @@ export function useTestEngine(testId: string) {
     // Core State
     const [test, setTest] = useState<Test | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
+    const [passages, setPassages] = useState<Record<string, Passage>>({});
     const [currentQIndex, setCurrentQIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, number>>({});
     const [questionStatus, setQuestionStatus] = useState<Record<string, QuestionStatus>>({});
@@ -109,14 +116,32 @@ export function useTestEngine(testId: string) {
                     }
                     setQuestions(qs);
 
-                    // 2. Recovery Logic
+                    // Fetch associated passages
+                    const passageIds = Array.from(new Set(qs.filter(q => q.passageId).map(q => q.passageId as string)));
+                    if (passageIds.length > 0) {
+                        const fetchedPassages: Record<string, Passage> = {};
+                        await Promise.all(passageIds.map(async id => {
+                            const p = await firestoreService.getPassage(id);
+                            if (p) fetchedPassages[id] = p;
+                        }));
+                        setPassages(fetchedPassages);
+                    }
+
+                    // 2. Recovery & Shuffling Logic
                     const savedSession = localStorage.getItem(`test_session_${testId}_${user.uid}`);
+                    let orderedQs = [...qs];
 
                     if (savedSession) {
                         const session = JSON.parse(savedSession);
                         if (session.status === 'submitted' || session.status === 'completed') {
                             router.replace(`/analysis/${testId}`);
                             return;
+                        }
+
+                        // Restore specific order if it was shuffled
+                        if (session.shuffledQuestionIds && Array.isArray(session.shuffledQuestionIds)) {
+                            const idMap = new Map(qs.map(q => [q.id, q]));
+                            orderedQs = session.shuffledQuestionIds.map((id: string) => idMap.get(id)).filter(Boolean) as Question[];
                         }
 
                         setAnswers(session.answers || {});
@@ -143,7 +168,15 @@ export function useTestEngine(testId: string) {
                                 setIsTestStarted(true);
                             }
                         }
+                    } else if (foundTest.shuffleQuestions) {
+                        // Fresh start, shuffle questions if requested
+                        for (let i = orderedQs.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [orderedQs[i], orderedQs[j]] = [orderedQs[j], orderedQs[i]];
+                        }
                     }
+
+                    setQuestions(orderedQs);
                 }
             } catch (err) {
                 console.error("Test Init Error:", err);
@@ -198,10 +231,11 @@ export function useTestEngine(testId: string) {
             userId: user.uid,
             ...stateRef.current,
             startTime,
-            lastUpdated: Date.now()
+            lastUpdated: Date.now(),
+            shuffledQuestionIds: questions.map(q => q.id)
         };
         localStorage.setItem(`test_session_${testId}_${user.uid}`, JSON.stringify(session));
-    }, [testId, user, startTime]);
+    }, [testId, user, startTime, questions]);
 
     // 2. Firestore Sync (Periodic)
     const syncToFirestore = async () => {
@@ -251,12 +285,12 @@ export function useTestEngine(testId: string) {
             // Try Full Screen
             requestFullScreen();
 
-            if (Object.keys(questionStatus).length === 0) {
-                const initStatus: Record<string, QuestionStatus> = {};
+            const initialStatus = { ...questionStatus };
+            if (Object.keys(initialStatus).length === 0) {
                 questions.forEach(q => {
-                    initStatus[q.id] = { questionId: q.id, status: 'not_visited', visited: false };
+                    initialStatus[q.id] = { questionId: q.id, status: 'not_visited', visited: false };
                 });
-                setQuestionStatus(initStatus);
+                setQuestionStatus(initialStatus);
             }
 
             startTick(Date.now(), totalSeconds);
@@ -267,10 +301,11 @@ export function useTestEngine(testId: string) {
                 attemptId: activeAttemptId,
                 startTime: now,
                 answers: {},
-                questionStatus: {},
+                questionStatus: initialStatus,
                 timeRemaining: totalSeconds,
                 status: 'in_progress',
-                tabSwitches: 0
+                tabSwitches: 0,
+                shuffledQuestionIds: questions.map(q => q.id)
             }));
         }
         setLoading(false);
@@ -465,9 +500,11 @@ export function useTestEngine(testId: string) {
         }
     };
 
+    // --- Expose ---
     return {
         test,
         questions,
+        passages,
         currentQIndex,
         currentQuestion: questions[currentQIndex],
         answers,

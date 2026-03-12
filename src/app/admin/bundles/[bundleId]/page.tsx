@@ -3,17 +3,20 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { ArrowLeft, Save, Loader2, Check } from "lucide-react";
+
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { firestoreService } from "@/services/firestoreService";
 import { Bundle, Test } from "@/types/admin";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { BundleBasicInfo } from "@/components/admin/bundles/BundleBasicInfo";
+import { BundleTestSelection } from "@/components/admin/bundles/BundleTestSelection";
+import { BundlePricing } from "@/components/admin/bundles/BundlePricing";
+
 
 export default function BundleEditorPage() {
     const params = useParams();
     const router = useRouter();
-    const { user } = useAuth();
+
     const bundleId = params.bundleId as string;
     const isNew = bundleId === 'new';
 
@@ -123,106 +126,21 @@ export default function BundleEditorPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Details */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                        <h3 className="font-semibold text-slate-900 border-b border-slate-100 pb-2">Basic Information</h3>
-                        <div className="grid gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Bundle Name</label>
-                                <Input
-                                    value={bundle.name}
-                                    onChange={(e) => setBundle({ ...bundle, name: e.target.value })}
-                                    placeholder="e.g., Complete Science Mock Package"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                                <textarea
-                                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[100px]"
-                                    value={bundle.description}
-                                    onChange={(e) => setBundle({ ...bundle, description: e.target.value })}
-                                    placeholder="What does this bundle include?"
-                                />
-                            </div>
-                        </div>
-                    </div>
+                    <BundleBasicInfo bundle={bundle} setBundle={setBundle} />
 
                     {/* Test Selection */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                            <h3 className="font-semibold text-slate-900">Included Tests</h3>
-                            <span className="text-sm text-slate-500">{bundle.includedTests?.length || 0} selected</span>
-                        </div>
-
-                        <div className="relative">
-                            <Input
-                                placeholder="Search tests to include..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="mb-4"
-                            />
-                        </div>
-
-                        <div className="max-h-[400px] overflow-y-auto space-y-2 border border-slate-100 rounded-lg p-2">
-                            {filteredTests.map(test => {
-                                const isSelected = bundle.includedTests?.includes(test.id);
-                                return (
-                                    <div
-                                        key={test.id}
-                                        onClick={() => toggleTestSelection(test.id)}
-                                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors border ${isSelected
-                                            ? 'bg-blue-50 border-blue-200'
-                                            : 'hover:bg-slate-50 border-transparent hover:border-slate-200'
-                                            }`}
-                                    >
-                                        <div>
-                                            <p className={`font-medium text-sm ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>{test.title}</p>
-                                            <div className="flex gap-2 text-xs text-slate-500 mt-0.5">
-                                                <span>{test.questions?.length || 0} Qs</span>
-                                                <span>•</span>
-                                                <span>{test.category}</span>
-                                            </div>
-                                        </div>
-                                        {isSelected && (
-                                            <div className="bg-blue-600 rounded-full p-1 text-white">
-                                                <Check className="h-3 w-3" />
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                            {filteredTests.length === 0 && (
-                                <p className="text-center text-slate-500 py-4 text-sm">No tests found matching search.</p>
-                            )}
-                        </div>
-                    </div>
+                    <BundleTestSelection
+                        bundle={bundle}
+                        searchTerm={searchTerm}
+                        setSearchTerm={setSearchTerm}
+                        filteredTests={filteredTests}
+                        toggleTestSelection={toggleTestSelection}
+                    />
                 </div>
 
                 {/* Sidebar Settings */}
                 <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                        <h3 className="font-semibold text-slate-900 border-b border-slate-100 pb-2">Pricing</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Price (₹)</label>
-                                <Input
-                                    type="number"
-                                    value={bundle.price}
-                                    onChange={(e) => setBundle({ ...bundle, price: parseFloat(e.target.value) })}
-                                    min={0}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Original Price (₹)</label>
-                                <Input
-                                    type="number"
-                                    value={bundle.originalPrice}
-                                    onChange={(e) => setBundle({ ...bundle, originalPrice: parseFloat(e.target.value) })}
-                                    min={0}
-                                    placeholder="Optional (for strike-through)"
-                                />
-                            </div>
-                        </div>
-                    </div>
+                    <BundlePricing bundle={bundle} setBundle={setBundle} />
                 </div>
             </div>
         </div>

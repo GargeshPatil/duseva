@@ -3,6 +3,7 @@ import { Question } from "@/types/admin";
 import { normalizeTag } from "./tagNormalizer";
 
 export interface CSVRow {
+    questionType?: string; // mcq, match, passage
     questionText: string;
     optionA: string;
     optionB: string;
@@ -16,13 +17,17 @@ export interface CSVRow {
     marks?: string;
     negativeMarks?: string;
     streams?: string;
+    listA?: string; // For match questions
+    listB?: string; // For match questions
+    passageId?: string; // For passage questions
+    passageText?: string; // For linking new passage
 }
 
 // ... types updated below ...
 
 export interface ParsedRow {
     row: number; // CSV row index (1-based)
-    data: Partial<Question>;
+    data: Partial<Question> & { passageText?: string };
     valid: boolean;
     errors: string[];
     isDuplicate?: boolean;
@@ -50,12 +55,44 @@ export interface ParseError {
 function validateAndMapRow(row: CSVRow): { valid: boolean; data: Partial<Question>; errors: string[] } {
     const errors: string[] = [];
 
+    // Question Type
+    let qType: 'mcq' | 'match' | 'passage' = 'mcq';
+    if (row.questionType) {
+        const t = row.questionType.trim().toLowerCase();
+        if (['mcq', 'match', 'passage'].includes(t)) {
+            qType = t as 'mcq' | 'match' | 'passage';
+        } else {
+            errors.push(`Invalid Question Type '${t}'. Expected 'mcq', 'match', or 'passage'.`);
+        }
+    }
+
     // 1. Required Fields
     if (!row.questionText?.trim()) errors.push("Missing Question Text");
     if (!row.optionA?.trim() || !row.optionB?.trim() || !row.optionC?.trim() || !row.optionD?.trim()) {
         errors.push("Missing one or more Options (A-D)");
     }
     if (!row.correctAnswer?.trim()) errors.push("Missing Correct Answer");
+
+    let matchPairs: { left: string, right: string }[] | undefined = undefined;
+    if (qType === 'match') {
+        if (!row.listA?.trim() || !row.listB?.trim()) {
+            errors.push("Match questions require 'List A' and 'List B' columns.");
+        } else {
+            const listAItems = row.listA.split(',').map(s => s.trim()).filter(Boolean);
+            const listBItems = row.listB.split(',').map(s => s.trim()).filter(Boolean);
+            if (listAItems.length !== listBItems.length || listAItems.length === 0) {
+                errors.push("Match 'List A' and 'List B' must have the same number of comma-separated items.");
+            } else {
+                matchPairs = listAItems.map((left, index) => ({ left, right: listBItems[index] }));
+            }
+        }
+    }
+
+    if (qType === 'passage') {
+        if (!row.passageId?.trim() && !row.passageText?.trim()) {
+            errors.push("Passage questions require either 'Passage ID' or 'Passage Text'.");
+        }
+    }
 
     // 2. Correct Answer Validation
     let correctOption = -1;
@@ -86,6 +123,7 @@ function validateAndMapRow(row: CSVRow): { valid: boolean; data: Partial<Questio
 
     // Map to Question Object (Best Effort)
     const question: Partial<Question> = {
+        questionType: qType,
         text: row.questionText?.trim() || "",
         options: [
             row.optionA?.trim() || "",
@@ -103,6 +141,18 @@ function validateAndMapRow(row: CSVRow): { valid: boolean; data: Partial<Questio
         // We will store the primary stream in 'stream' for backward compat.
         stream: streams.length > 0 ? (normalizeTag(streams[0]) as Question['stream']) : undefined,
     };
+
+    if (qType === 'match' && matchPairs) {
+        question.matchPairs = matchPairs;
+    }
+    if (qType === 'passage') {
+        if (row.passageId?.trim()) {
+            question.passageId = row.passageId.trim();
+        } else if (row.passageText?.trim()) {
+            // Store temporarily for the uploader Modal to process
+            (question as any).passageText = row.passageText.trim();
+        }
+    }
 
     // Store normalized streams
     question.streams = streams.map(s => normalizeTag(s));

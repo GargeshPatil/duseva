@@ -1,14 +1,16 @@
-import React from "react";
-import { Question } from "@/types/admin";
-import { QuestionCard } from "./QuestionCard";
+import React, { useState } from "react";
+import { Question, Passage } from "@/types/admin";
+import { UnifiedQuestionCard } from "./UnifiedQuestionCard";
 import { Reorder } from "framer-motion";
 
 interface TestQuestionListProps {
     questions: Question[];
     setQuestions: (questions: Question[]) => void;
+    passages: Passage[];
 }
 
-export function TestQuestionList({ questions, setQuestions }: TestQuestionListProps) {
+export function TestQuestionList({ questions, setQuestions, passages }: TestQuestionListProps) {
+    const [expandedId, setExpandedId] = useState<string | null>(null);
     const handleQuestionChange = (index: number, updated: Question) => {
         const newQuestions = [...questions];
         newQuestions[index] = updated;
@@ -26,6 +28,7 @@ export function TestQuestionList({ questions, setQuestions }: TestQuestionListPr
         const source = questions[index];
         const copy: Question = {
             ...source,
+            // eslint-disable-next-line react-hooks/purity
             id: `temp_${Date.now()}_${Math.random()}`, // Temp ID, will be replaced on save
             text: `${source.text} (Copy)`
         };
@@ -38,21 +41,24 @@ export function TestQuestionList({ questions, setQuestions }: TestQuestionListPr
         <div className="space-y-6">
             <Reorder.Group axis="y" values={questions} onReorder={setQuestions} className="space-y-6">
                 {questions.map((q, index) => (
-                    <QuestionCard
+                    <UnifiedQuestionCard
                         key={q.id} // Important: Must be unique and stable. Temp IDs needed for new questions.
                         index={index}
                         question={q}
                         onChange={(updated) => handleQuestionChange(index, updated)}
                         onDelete={() => handleDelete(index)}
                         onDuplicate={() => handleDuplicate(index)}
+                        isExpanded={expandedId === q.id}
+                        onToggleExpand={() => setExpandedId(expandedId === q.id ? null : q.id)}
+                        passages={passages}
                     />
                 ))}
             </Reorder.Group>
 
             {questions.length === 0 && (
-                <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-slate-500">
+                <div className="text-center py-12 bg-surface-elevated rounded-xl border border-dashed border-border text-text-muted">
                     <p>No questions added yet.</p>
-                    <p className="text-sm mt-1">Click "Add Question" to start building your test.</p>
+                    <p className="text-sm mt-1">Click &quot;Add Question&quot; to start building your test.</p>
                 </div>
             )}
         </div>

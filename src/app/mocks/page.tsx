@@ -3,22 +3,35 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Button } from "@/components/ui/Button";
-import { motion, AnimatePresence } from "framer-motion";
-import { TestCard } from "@/components/dashboard/TestCard";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { firestoreService } from "@/services/firestoreService";
 import { Test, Bundle } from "@/types/admin";
-import { Package, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { StreamSelectionView } from "@/components/mocks/StreamSelectionView";
+import { MocksDirectoryView } from "@/components/mocks/MocksDirectoryView";
 
 export default function MocksPage() {
+    const router = useRouter();
+    const { user, userData, loading: authLoading } = useAuth();
+
     const [view, setView] = useState<'stream-selection' | 'directory'>('stream-selection');
     const [selectedStream, setSelectedStream] = useState<string | null>(null);
     const [tests, setTests] = useState<Test[]>([]);
     const [bundles, setBundles] = useState<Bundle[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Persist choice in localStorage
+    const { scrollYProgress } = useScroll();
+    const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+
+    useEffect(() => {
+        if (!authLoading && user && userData) {
+            if (userData.role === 'admin' || userData.role === 'developer') {
+                router.push("/admin");
+            }
+        }
+    }, [user, userData, authLoading, router]);
+
     useEffect(() => {
         const savedStream = localStorage.getItem("user_stream_preference");
         if (savedStream) {
@@ -33,7 +46,7 @@ export default function MocksPage() {
         try {
             const [testsData, bundlesData] = await Promise.all([
                 firestoreService.getTests(),
-                firestoreService.getBundles(true) // Fetch active bundles
+                firestoreService.getBundles(true)
             ]);
             setTests(testsData);
             setBundles(bundlesData);
@@ -56,146 +69,50 @@ export default function MocksPage() {
         setView('stream-selection');
     };
 
-    // Filter logic
     const filteredTests = tests.filter(test => {
         if (!selectedStream) return true;
-        // Check if the test's streams array includes the selected stream
-        // Or if it's "General" (often applicable to all) or if the test is "General" stream
-        // Also handle legacy 'stream' field via the mapped 'streams' array
-
         const testStreams = test.streams || [];
         return testStreams.includes(selectedStream) || testStreams.includes('General');
-    }).sort((a, b) => (a.price === 'free' ? -1 : 1)); // Show free first
+    }).sort((a, b) => {
+        if (a.price === 'free' && b.price !== 'free') return -1;
+        if (b.price === 'free' && a.price !== 'free') return 1;
+        return 0;
+    });
 
-    // Filter bundles (optional: if bundles are stream-specific? For now show all or filter if possible)
-    // Bundles don't have streams yet in schema, so show all or maybe add logic later.
     const filteredBundles = bundles;
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
+        <div className="min-h-screen flex flex-col font-sans bg-slate-950 text-white selection:bg-cta-primary/30 selection:text-white relative overflow-hidden">
             <Navbar />
 
-            <main className="flex-1 container px-4 md:px-6 py-12">
+            {/* Soft, Calming Ambient Background */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <motion.div
+                    style={{ y: yBg }}
+                    className="absolute inset-0 opacity-40"
+                >
+                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cta-primary/20 blur-[120px] mix-blend-screen animate-blob" />
+                    <div className="absolute top-[20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-purple-500/20 blur-[120px] mix-blend-screen animate-blob animation-delay-2000" />
+                    <div className="absolute bottom-[-20%] left-[20%] w-[60%] h-[50%] rounded-full bg-blue-500/20 blur-[120px] mix-blend-screen animate-blob animation-delay-4000" />
+                </motion.div>
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
+            </div>
+
+            <main className="flex-1 container px-4 md:px-6 py-24 relative z-10 w-full max-w-7xl mx-auto">
                 <AnimatePresence mode="wait">
                     {view === 'stream-selection' ? (
-                        <motion.div
-                            key="selection"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="max-w-4xl mx-auto text-center"
-                        >
-                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">Which stream are you preparing for?</h1>
-                            <p className="text-slate-600 mb-12 text-lg">We'll customize your mock test experience based on your selection.</p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                                {[
-                                    { id: 'Commerce', label: 'Commerce', desc: 'Accountancy, BST, Economics' },
-                                    { id: 'Science', label: 'Science', desc: 'Physics, Chemistry, Maths, Bio' },
-                                    { id: 'Humanities', label: 'Humanities', desc: 'History, Pol Sci, Geography' },
-                                    { id: 'General', label: 'General Test & English', desc: 'Language & General Awareness' } // "General" usually maps to General Test stream or similar
-                                ].map((stream) => (
-                                    <button
-                                        key={stream.id}
-                                        onClick={() => handleStreamSelect(stream.id)}
-                                        className="bg-white p-6 rounded-2xl border-2 border-slate-200 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 transition-all text-left group"
-                                    >
-                                        <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-2">{stream.label}</h3>
-                                        <p className="text-slate-500 text-sm">{stream.desc}</p>
-                                    </button>
-                                ))}
-                            </div>
-                        </motion.div>
+                        <StreamSelectionView onSelectStream={handleStreamSelect} />
                     ) : (
-                        <motion.div
-                            key="directory"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="space-y-12"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div>
-                                    <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                                        Mock Tests for <span className="text-blue-600">{selectedStream}</span>
-                                        <button onClick={handleClearPreference} className="text-xs text-slate-400 font-normal underline hover:text-slate-600">Change</button>
-                                    </h1>
-                                    <p className="text-slate-500 mt-1">
-                                        {loading ? "Loading available tests..." : `Showing ${filteredTests.length} available tests`}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {loading ? (
-                                <div className="py-20 flex justify-center">
-                                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                                </div>
-                            ) : (
-                                <>
-                                    {/* Bundles Section */}
-                                    {filteredBundles.length > 0 && (
-                                        <div className="space-y-4">
-                                            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                                                <Package className="h-5 w-5 text-indigo-600" /> Value Bundles
-                                            </h2>
-                                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                {filteredBundles.map(bundle => (
-                                                    <div key={bundle.id} className="bg-white rounded-xl border border-indigo-100 shadow-sm p-5 hover:shadow-md transition-all relative overflow-hidden">
-                                                        <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded-bl-lg font-bold">
-                                                            SAVE BIG
-                                                        </div>
-                                                        <h3 className="font-bold text-slate-900 text-lg mb-2">{bundle.name}</h3>
-                                                        <p className="text-slate-500 text-sm mb-4 line-clamp-2">{bundle.description}</p>
-                                                        <div className="flex justify-between items-center mt-auto">
-                                                            <div>
-                                                                <span className="text-xl font-bold text-slate-900">₹{bundle.price}</span>
-                                                                {bundle.originalPrice && (
-                                                                    <span className="text-sm text-slate-400 line-through ml-2">₹{bundle.originalPrice}</span>
-                                                                )}
-                                                            </div>
-                                                            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                                                                View Bundle
-                                                            </Button>
-                                                        </div>
-                                                        <div className="mt-4 pt-3 border-t border-slate-50 text-xs text-slate-500 flex gap-2">
-                                                            <span className="bg-slate-100 px-2 py-1 rounded">{bundle.includedTests.length} Tests</span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Tests Grid */}
-                                    <div className="space-y-4">
-                                        {filteredBundles.length > 0 && <h2 className="text-lg font-semibold text-slate-900">Individual Tests</h2>}
-                                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {filteredTests.map((test) => (
-                                                <TestCard
-                                                    key={test.id}
-                                                    test={{ ...test, attempts: 0 }}
-                                                    onStart={() => window.location.href = `/test/${test.id}`}
-                                                />
-                                            ))}
-
-                                            {filteredTests.length === 0 && (
-                                                <div className="col-span-full py-20 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
-                                                    No mock tests found for {selectedStream} yet. Check back soon!
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            <div className="text-center pt-12 pb-8">
-                                <p className="text-slate-500 mb-4">Want to explore all subjects?</p>
-                                <Button variant="outline" onClick={handleClearPreference}>View All Streams</Button>
-                            </div>
-                        </motion.div>
+                        <MocksDirectoryView
+                            selectedStream={selectedStream}
+                            loading={loading}
+                            filteredTests={filteredTests}
+                            filteredBundles={filteredBundles}
+                            onClearPreference={handleClearPreference}
+                        />
                     )}
                 </AnimatePresence>
             </main>
-
             <Footer />
         </div>
     );

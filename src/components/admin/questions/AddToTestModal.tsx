@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { firestoreService } from "@/services/firestoreService";
 import { Test } from "@/types/admin";
-import { Loader2, Search, Plus, FileText, Check } from "lucide-react";
+import { Loader2, Search, Check } from "lucide-react";
 
 interface AddToTestModalProps {
     isOpen: boolean;
@@ -86,7 +86,9 @@ export function AddToTestModal({ isOpen, onClose, questionIds, onSuccess }: AddT
             // 1. Create Test
             const testId = await firestoreService.createTest({
                 ...newTest,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 category: newTest.category as any,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 difficulty: newTest.difficulty as any,
                 streams: [newTest.stream]
             });

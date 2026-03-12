@@ -10,11 +10,11 @@ export function LoadingScreen() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white"
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background"
         >
-            <div className="relative w-32 h-12 mb-8">
+            <div className="relative w-[288px] h-[96px] mb-8">
                 <Image
-                    src="/du-logo.png"
+                    src="/du-logo-white.png"
                     alt="DU Seva Logo"
                     fill
                     className="object-contain"
@@ -25,7 +25,7 @@ export function LoadingScreen() {
             <div className="flex flex-col items-center gap-4">
                 <div className="relative w-16 h-16">
                     <motion.div
-                        className="absolute inset-0 border-4 border-slate-100 rounded-full"
+                        className="absolute inset-0 border-4 border-border rounded-full"
                     />
                     <motion.div
                         className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent"
@@ -44,10 +44,10 @@ export function LoadingScreen() {
                     transition={{ delay: 0.2 }}
                     className="flex flex-col items-center gap-1"
                 >
-                    <h3 className="text-lg font-semibold text-slate-900">
+                    <h3 className="text-lg font-semibold text-text-primary">
                         Signing you in
                     </h3>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-text-secondary">
                         Retrieving your profile...
                     </p>
                 </motion.div>

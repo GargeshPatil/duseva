@@ -38,7 +38,7 @@ export function Sheet({ open, onOpenChange, children, side = "right", className 
                             exit="exit"
                             variants={variants}
                             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                            className={cn("pointer-events-auto h-full w-3/4 max-w-sm bg-white shadow-xl flex flex-col", className)}
+                            className={cn("pointer-events-auto h-full w-3/4 max-w-sm bg-surface-card shadow-xl flex flex-col", className)}
                         >
                             {children}
                         </motion.div>
@@ -54,9 +54,9 @@ export function SheetContent({ children, className, onClose }: { children: React
         <div className={cn("flex flex-col h-full", className)}>
             <button
                 onClick={onClose}
-                className="absolute right-4 top-4 p-2 rounded-full hover:bg-slate-100 transition-colors z-10"
+                className="absolute right-4 top-4 p-2 rounded-full hover:bg-surface-elevated transition-colors z-10"
             >
-                <X className="h-5 w-5 text-slate-500" />
+                <X className="h-5 w-5 text-text-muted" />
             </button>
             {children}
         </div>
@@ -65,7 +65,7 @@ export function SheetContent({ children, className, onClose }: { children: React
 
 export function SheetHeader({ children, className }: { children: React.ReactNode, className?: string }) {
     return (
-        <div className={cn("p-6 border-b border-slate-100", className)}>
+        <div className={cn("p-6 border-b border-border", className)}>
             {children}
         </div>
     );
@@ -73,7 +73,7 @@ export function SheetHeader({ children, className }: { children: React.ReactNode
 
 export function SheetTitle({ children, className }: { children: React.ReactNode, className?: string }) {
     return (
-        <h2 className={cn("text-lg font-bold text-slate-900", className)}>
+        <h2 className={cn("text-lg font-bold text-text-primary", className)}>
             {children}
         </h2>
     );
@@ -81,7 +81,7 @@ export function SheetTitle({ children, className }: { children: React.ReactNode,
 
 export function SheetDescription({ children, className }: { children: React.ReactNode, className?: string }) {
     return (
-        <p className={cn("text-sm text-slate-500", className)}>
+        <p className={cn("text-sm text-text-secondary", className)}>
             {children}
         </p>
     );

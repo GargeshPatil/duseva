@@ -6,7 +6,12 @@ import { Test, TestAttempt } from "@/types/admin";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { FileText, ArrowRight, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  FileText,
+  ArrowRight,
+  Clock,
+  CheckCircle
+} from "lucide-react";
 
 export default function MyAttemptsPage() {
     const { user } = useAuth();

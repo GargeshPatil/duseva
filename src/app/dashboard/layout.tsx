@@ -1,12 +1,11 @@
 "use client";
 
-import { Sidebar } from "@/components/dashboard/Sidebar";
+import { PremiumDashboardNav } from "@/components/dashboard/PremiumDashboardNav";
 import { Header } from "@/components/dashboard/Header";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
 
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 
@@ -41,13 +40,15 @@ export default function DashboardLayout({
     }
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <Sidebar />
-            <div className="md:ml-64 flex flex-col min-h-screen pb-16 md:pb-0">
-                <Header />
-                <main className="flex-1 p-4 md:p-6">
-                    {children}
-                </main>
+        <div className="flex-1 flex flex-col h-screen overflow-hidden text-text-primary">
+            <PremiumDashboardNav />
+            <div className="flex-1 overflow-y-auto w-full relative">
+                <div className="flex flex-col w-full max-w-7xl mx-auto px-4 sm:px-6 min-h-full pb-16 md:pb-0 relative z-10">
+                    <Header />
+                    <main className="flex-1 py-8 text-text-primary">
+                        {children}
+                    </main>
+                </div>
             </div>
             <MobileNav />
         </div>

@@ -2,51 +2,37 @@
 
 @theme {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
 
-  /* Brand Colors - DU Seva Blue */
-  --color-primary: #2563eb;
-  /* Royal Blue */
-  --color-primary-foreground: #ffffff;
+  /* Unified Color Token System - Mapped to Tailwind */
+  --color-surface-base: var(--surface-base);
+  --color-surface-glass: var(--surface-glass);
+  --color-surface-card: var(--surface-card);
+  --color-surface-elevated: var(--surface-elevated);
 
-  --color-secondary: #f1f5f9;
-  /* Slate 100 */
-  --color-secondary-foreground: #0f172a;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
 
-  --color-accent: #f59e0b;
-  /* Amber 500 for distinctive actions/highlights */
-  --color-accent-foreground: #ffffff;
+  --color-cta-primary: var(--cta-primary);
+  --color-cta-hover: var(--cta-hover);
 
-  --color-muted: #f8fafc;
-  /* Slate 50 */
-  --color-muted-foreground: #64748b;
-  /* Slate 500 */
+  --color-border: var(--border);
 
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #ffffff;
+  --color-semantic-success: var(--semantic-success);
+  --color-semantic-warning: var(--semantic-warning);
+  --color-semantic-error: var(--semantic-error);
 
-  --color-border: #e2e8f0;
-  /* Slate 200 */
-  --color-input: #e2e8f0;
-  --color-ring: #2563eb;
+  /* Legacy Fallbacks */
+  --color-primary: var(--cta-primary);
+  --color-muted: var(--surface-elevated);
 
   /* Typography & Spacing */
   --radius-lg: 0.75rem;
-  /* 12px - Smooth cards */
   --radius-md: 0.5rem;
-  /* 8px - Buttons/Inputs */
   --radius-sm: 0.25rem;
-  /* 4px - Small badges */
-
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to sure everything still looks the same as it did with v3.
-  If we ever want to remove these styles, we can add `border-gray-200` to any element that needs a border,
-  or explicitly set the default border color in our config.
-*/
 @layer base {
 
   *,
@@ -59,9 +45,70 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --border: #e2e8f0;
+  /* LIGHT THEME (Default) */
+  /* Maximalist, vibrant, and gradient-driven */
+  --background: #fafafa;
+  --surface-base: #ffffff;
+  --surface-card: rgba(255, 255, 255, 0.7);
+  /* Ready for glassmorphism */
+  --surface-elevated: #eef2ff;
+  /* Matches gradient-base */
+  --surface-glass: rgba(255, 255, 255, 0.4);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  --border: #c7d2fe;
+  /* Matches gradient-accent-1 */
+
+  /* Vibrant, interactive primary */
+  --cta-primary: #6366f1;
+  --cta-hover: #4f46e5;
+
+  /* Gradients - The core identity */
+  --gradient-base: #eef2ff;
+  --gradient-accent-1: #c7d2fe;
+  --gradient-accent-2: #818cf8;
+  --gradient-warm: #bae6fd;
+  --grain-opacity: 0.04;
+  --gradient-blur: 80px;
+
+  /* Semantics */
+  --semantic-success: #10b981;
+  --semantic-warning: #f59e0b;
+  --semantic-error: #ef4444;
+}
+
+[data-theme="dark"] {
+  /* DARK THEME Override */
+  /* Immersive, glowing, maximalist dark mode */
+  --background: #030712;
+  /* Matches gradient-base */
+  --surface-base: #0f172a;
+  --surface-card: rgba(15, 23, 42, 0.6);
+  /* Deep glassmorphism */
+  --surface-elevated: #1e1b4b;
+  /* Subtle purple tint */
+  --surface-glass: rgba(30, 27, 75, 0.4);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+
+  --border: #312e81;
+  /* Matches gradient-accent-1 */
+
+  --cta-primary: #818cf8;
+  --cta-hover: #6366f1;
+
+  /* Gradients - deeper, very rich */
+  --gradient-base: #030712;
+  --gradient-accent-1: #312e81;
+  --gradient-accent-2: #4338ca;
+  --gradient-warm: #0369a1;
+  --grain-opacity: 0.06;
+  --gradient-blur: 120px;
 }
 
 @layer base {
@@ -71,7 +118,43 @@
 
   body {
     background-color: var(--background);
-    color: var(--foreground);
+    color: var(--text-primary);
     @apply antialiased;
   }
+
+  /* Global theme transitions */
+  *,
+  *::before,
+  *::after {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 250ms;
+  }
+}
+
+/* Custom Scrollbar styling (Global, outside layer base for Tailwind compatibility) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }

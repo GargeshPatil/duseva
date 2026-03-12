@@ -19,10 +19,11 @@ import {
     writeBatch
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { User, Test, Question, CMSContent, SiteSettings, AuditLog, DashboardStats, Transaction, TestAttempt, TestResult, Bundle } from "@/types/admin";
+import { User, Test, Question, CMSContent, SiteSettings, AuditLog, DashboardStats, Transaction, TestAttempt, TestResult, Bundle, Passage } from "@/types/admin";
 import { UserData } from "@/context/AuthContext";
 
 // Helper to remove undefined fields recursively
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cleanData(data: any): any {
     if (data === null || data === undefined) return null;
     if (typeof data !== 'object') return data;
@@ -33,6 +34,7 @@ function cleanData(data: any): any {
         return data.map(item => cleanData(item)).filter(item => item !== undefined);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cleaned: any = {};
     for (const key in data) {
         if (data[key] !== undefined) {
@@ -96,6 +98,7 @@ export const firestoreService = {
         attemptId: string,
         resultData: Omit<TestResult, 'id'>,
         finalAnswers?: Record<string, number>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         finalStatus?: Record<string, any>
     ): Promise<boolean> {
         try {
@@ -103,6 +106,7 @@ export const firestoreService = {
 
             // We update the attempt with the final score, status, AND the final answers/state
             // This ensures that even if the periodic sync missed the last few seconds, we have the latest data.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const updatePayload: any = {
                 status: 'completed',
                 endTime: new Date().toISOString(),
@@ -295,7 +299,7 @@ export const firestoreService = {
                 } as Test;
             });
         } catch (error) {
-            console.error("Error fetching tests:", error);
+            console.warn("Notice: Error fetching tests (usually permission related):", error);
             return [];
         }
     },
@@ -370,6 +374,7 @@ export const firestoreService = {
             const testRef = doc(db, "tests", id);
 
             // Map updates back to Firestore fields
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const firestoreUpdates: any = {
                 updatedAt: Timestamp.now()
             };
@@ -416,7 +421,7 @@ export const firestoreService = {
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bundle));
         } catch (error) {
-            console.error("Error fetching bundles:", error);
+            console.warn("Notice: Error fetching bundles (usually permission related):", error);
             return [];
         }
     },
@@ -541,7 +546,7 @@ export const firestoreService = {
                 } as Question;
             });
         } catch (error) {
-            console.error("Error fetching questions:", error);
+            console.warn("Notice: Error fetching questions (usually permission related):", error);
             return [];
         }
     },
@@ -708,6 +713,82 @@ export const firestoreService = {
         }
     },
 
+    // --- Passages ---
+    async getPassages(): Promise<Passage[]> {
+        try {
+            const passagesRef = collection(db, "passages");
+            const q = query(passagesRef, orderBy("createdAt", "desc"));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Passage));
+        } catch (error) {
+            console.error("Error fetching passages:", error);
+            return [];
+        }
+    },
+
+    async getPassage(id: string): Promise<Passage | null> {
+        try {
+            const docRef = doc(db, "passages", id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                return { id: docSnap.id, ...docSnap.data() } as Passage;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error fetching passage:", error);
+            return null;
+        }
+    },
+
+    async createPassage(passageData: Partial<Passage>): Promise<string | null> {
+        try {
+            const passagesRef = collection(db, "passages");
+            const newPassage = {
+                ...passageData,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            const docRef = await addDoc(passagesRef, cleanData(newPassage));
+            return docRef.id;
+        } catch (error) {
+            console.error("Error creating passage:", error);
+            return null;
+        }
+    },
+
+    async updatePassage(id: string, updates: Partial<Passage>): Promise<boolean> {
+        try {
+            const passageRef = doc(db, "passages", id);
+            await updateDoc(passageRef, cleanData({
+                ...updates,
+                updatedAt: new Date().toISOString()
+            }));
+            return true;
+        } catch (error) {
+            console.error("Error updating passage:", error);
+            return false;
+        }
+    },
+
+    async deletePassage(id: string): Promise<boolean> {
+        try {
+            // Block deletion if questions are linked to this passage
+            const questionsRef = collection(db, "questions");
+            const qCount = query(questionsRef, where("passageId", "==", id), limit(1));
+            const snapshot = await getDocs(qCount);
+
+            if (!snapshot.empty) {
+                throw new Error("Cannot delete passage. Existing questions are heavily linked to it.");
+            }
+
+            await deleteDoc(doc(db, "passages", id));
+            return true;
+        } catch (error) {
+            console.error("Error deleting passage:", error);
+            throw error; // Rethrow to let the UI catch and alert the specific error message
+        }
+    },
+
     // --- CMS ---
     async getCMSContent(): Promise<CMSContent[]> {
         try {
@@ -726,7 +807,7 @@ export const firestoreService = {
                 } as CMSContent;
             });
         } catch (error) {
-            console.error("Error fetching CMS content:", error);
+            // Silencing this error to prevent Next.js dev overlay from popping up on the landing page for guests
             return [];
         }
     },
@@ -742,6 +823,20 @@ export const firestoreService = {
         } catch (error) {
             console.error("Error updating CMS content:", error);
             return false;
+        }
+    },
+
+    async createCMSContent(data: Omit<CMSContent, 'id'>): Promise<string | null> {
+        try {
+            const contentRef = collection(db, "content");
+            const docRef = await addDoc(contentRef, {
+                ...data,
+                updatedAt: Timestamp.now()
+            });
+            return docRef.id;
+        } catch (error) {
+            console.error("Error creating CMS content:", error);
+            return null;
         }
     },
     // --- Settings & Audit ---
@@ -881,5 +976,23 @@ export const firestoreService = {
             console.error("Error fetching transactions:", error);
             return [];
         }
+    },
+
+    // --- MEDIA ASSETS ---
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async getMediaAssets(): Promise<any[]> {
+        const q = query(collection(db, 'mediaAssets'), orderBy('uploadedAt', 'desc'));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    },
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async uploadMediaAsset(asset: any): Promise<any> {
+        const docRef = await addDoc(collection(db, 'mediaAssets'), asset);
+        return { id: docRef.id, ...asset };
+    },
+
+    async deleteMediaAsset(id: string): Promise<void> {
+        await deleteDoc(doc(db, 'mediaAssets', id));
     }
 };

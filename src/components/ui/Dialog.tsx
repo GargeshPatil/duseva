@@ -1,26 +1,34 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Dialog = ({ children, open, onOpenChange }: { children: React.ReactNode; open?: boolean; onOpenChange?: (open: boolean) => void }) => {
-    if (!open) return null;
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => onOpenChange?.(false)} />
-            <div className="relative z-50 w-full max-w-lg p-4 sm:p-0">
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!open || !mounted) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-md" onClick={() => onOpenChange?.(false)} />
+            <div className="relative z-[101] w-full max-w-lg p-4 sm:p-0">
                 {children}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
-
 const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, children, ...props }, ref) => (
     <div
         ref={ref}
         className={cn(
-            "relative w-full overflow-hidden rounded-lg bg-white text-slate-950 shadow-xl ring-1 ring-slate-950/5 p-6",
+            "relative w-full overflow-hidden rounded-lg bg-surface-card text-text-primary shadow-xl ring-1 ring-border/5 p-6",
             className
         )}
         {...props}
@@ -41,7 +49,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
                     // The standard shadcn pattern uses context. Let's do a mini context.
                 }
             }}
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-slate-100 data-[state=open]:text-slate-500"
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-border focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-surface-elevated data-[state=open]:text-text-muted"
         >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
@@ -99,7 +107,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <p
         ref={ref}
-        className={cn("text-sm text-slate-500", className)}
+        className={cn("text-sm text-text-muted", className)}
         {...props}
     />
 ));

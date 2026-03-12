@@ -37,7 +37,7 @@ export function MobileNav() {
 
     return (
         <>
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-safe shadow-[0_-1px_10px_rgba(0,0,0,0.05)]">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-surface-base/95 backdrop-blur-xl border-t border-border/50 z-40 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
                 <nav className="flex items-center justify-between px-6 h-16">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
@@ -47,10 +47,10 @@ export function MobileNav() {
                                 href={item.href}
                                 className={`
                                 flex flex-col items-center justify-center space-y-1 transition-colors
-                                ${isActive ? "text-blue-600" : "text-slate-400 hover:text-slate-600"}
+                                ${isActive ? "text-cta-primary" : "text-text-muted hover:text-text-primary"}
                             `}
                             >
-                                <div className={`p-1 rounded-xl ${isActive ? 'bg-blue-50' : ''}`}>
+                                <div className={`p-1.5 rounded-xl transition-colors ${isActive ? 'bg-surface-elevated shadow-sm' : ''}`}>
                                     <item.icon className={`h-5 w-5 ${isActive ? "fill-current" : ""}`} />
                                 </div>
                                 <span className="text-[10px] font-medium">{item.label}</span>
@@ -60,7 +60,7 @@ export function MobileNav() {
                     <button
                         onClick={() => setIsMenuOpen(true)}
                         className={`
-                            flex flex-col items-center justify-center space-y-1 transition-colors text-slate-400 hover:text-slate-600
+                            flex flex-col items-center justify-center space-y-1 transition-colors text-text-muted hover:text-text-primary
                         `}
                     >
                         <div className="p-1">
@@ -74,12 +74,12 @@ export function MobileNav() {
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <SheetContent onClose={() => setIsMenuOpen(false)}>
                     <SheetHeader>
-                        <div className="relative h-10 w-24">
-                            <Image src="/du-logo.png" alt="DU Seva" fill className="object-contain object-left" />
+                        <div className="relative h-[72px] w-[210px]">
+                            <Image src="/du-logo-white.png" alt="DU Seva" fill className="object-contain object-left" />
                         </div>
                         <div className="mt-4">
-                            <p className="font-bold text-slate-900">{userData?.name || 'Student'}</p>
-                            <p className="text-xs text-slate-500 truncate">{userData?.email}</p>
+                            <p className="font-bold text-text-primary">{userData?.name || 'Student'}</p>
+                            <p className="text-xs text-text-muted truncate">{userData?.email}</p>
                         </div>
                     </SheetHeader>
 
@@ -94,22 +94,22 @@ export function MobileNav() {
                                     className={`
                                         flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors
                                         ${isActive
-                                            ? "bg-blue-50 text-blue-700"
-                                            : "text-slate-600 hover:bg-slate-50"
+                                            ? "bg-white/10 text-cta-primary"
+                                            : "text-text-secondary hover:bg-white/5 hover:text-text-primary"
                                         }
                                     `}
                                 >
-                                    <item.icon className={`h-5 w-5 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
+                                    <item.icon className={`h-5 w-5 ${isActive ? "text-cta-primary" : "text-text-muted"}`} />
                                     {item.label}
                                 </Link>
                             );
                         })}
                     </div>
 
-                    <div className="p-4 border-t border-slate-100">
+                    <div className="p-4 border-t border-white/10">
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-3 px-3 py-3 w-full text-left rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                            className="flex items-center gap-3 px-3 py-3 w-full text-left rounded-lg text-sm font-medium text-semantic-error hover:bg-semantic-error/10 hover:text-red-400 transition-colors"
                         >
                             <LogOut className="h-5 w-5" />
                             Sign Out

@@ -45,6 +45,7 @@ export function PaymentModal({ isOpen, onClose, test, onUnlock }: PaymentModalPr
                 name: "CUET Mock Platform",
                 description: `Unlock ${test.title}`,
                 order_id: order.id,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 handler: async function (response: any) {
                     console.log("Payment Successful", response);
 
@@ -80,7 +81,9 @@ export function PaymentModal({ isOpen, onClose, test, onUnlock }: PaymentModalPr
                 }
             };
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const rzp1 = new (window as any).Razorpay(options);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             rzp1.on('payment.failed', function (response: any) {
                 alert(response.error.description);
                 console.error("Payment Failed:", response.error);
@@ -108,19 +111,21 @@ export function PaymentModal({ isOpen, onClose, test, onUnlock }: PaymentModalPr
                     </div>
                     <DialogTitle className="text-center text-xl">Unlock Premium Test</DialogTitle>
                     <DialogDescription className="text-center">
+                        {/* eslint-disable-next-line react/no-unescaped-entities */}
                         Get full access to "{test.title}" and detailed analysis.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="py-6">
                     <div className="text-center mb-6">
-                        <span className="text-3xl font-bold text-slate-900">₹{test.priceAmount || 99}</span>
-                        <span className="text-slate-500 ml-2 line-through">₹199</span>
+                        <span className="text-3xl font-bold text-text-primary">₹{test.priceAmount || 99}</span>
+                        <span className="text-text-muted ml-2 line-through">₹199</span>
                     </div>
 
-                    <div className="space-y-3 bg-slate-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-slate-900 mb-2">What's included:</h4>
-                        <ul className="space-y-2 text-sm text-slate-600">
+                    <div className="space-y-3 bg-surface-base p-4 rounded-lg">
+                        {/* eslint-disable-next-line react/no-unescaped-entities */}
+                        <h4 className="font-medium text-text-primary mb-2">What's included:</h4>
+                        <ul className="space-y-2 text-sm text-text-secondary">
                             <li className="flex items-center gap-2">
                                 <CheckCircle2 className="h-4 w-4 text-green-600" />
                                 Full exam simulation ({test.duration} mins)
@@ -146,12 +151,12 @@ export function PaymentModal({ isOpen, onClose, test, onUnlock }: PaymentModalPr
                         {isProcessing ? 'Processing...' : `Unlock Now • ₹${test.priceAmount || 99}`}
                     </Button>
 
-                    <div className="flex items-center justify-center gap-1 text-xs text-slate-400 mt-2">
+                    <div className="flex items-center justify-center gap-1 text-xs text-text-muted mt-2">
                         <ShieldCheck className="h-3 w-3" />
                         Secure Payment via Razorpay
                     </div>
                 </DialogFooter>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }

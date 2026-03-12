@@ -1,0 +1,38 @@
+
+  Tier Navigator
+    Open: T1:0 T2:6 T3:335 T4:138
+    Switch: `desloppify next --tier 1` | `desloppify next --tier 2` | `desloppify next --tier 3` | `desloppify next --tier 4`
+  Next item
+  (Tier 2, medium confidence)
+  ────────────────────────────────────────────────────────────
+  1x Monster function (>150 LOC)
+  File: src/components/layout/Navbar.tsx
+  ID:   smells::src/components/layout/Navbar.tsx::monster_function
+  Lines: 11
+
+  Code:
+        10 │ 
+    →   11 │ export function Navbar() {
+        12 │     const [isOpen, setIsOpen] = useState(false);
+
+  Dimension: Code quality — 88.5% (strict: 88.5%) (192 of 993 checks failing)
+
+  Auto-fixable: 129 similar findings. Run `desloppify fix dead-useeffect --dry-run` to fix all at once.
+
+  Fix with:
+    desloppify fix dead-useeffect --dry-run
+  Or resolve individually:
+    desloppify resolve fixed "smells::src/components/layout/Navbar.tsx::monster_function" --note "<what you did>" --attest "I have actually [DESCRIBE THE CONCRETE CHANGE YOU MADE] and I am not gaming the score by resolving without fixing."
+    desloppify resolve wontfix "smells::src/components/layout/Navbar.tsx::monster_function" --note "<why>" --attest "I have actually [DESCRIBE THE CONCRETE CHANGE YOU MADE] and I am not gaming the score by resolving without fixing."
+
+  North star: strict 32.4/100 → target 95.0 (+62.6 needed)
+
+  Subjective integrity gap: unassessed subjective dimensions + holistic review stale/missing
+  Priority: `desloppify review --prepare`
+  Then import and rerun `desloppify scan` to refresh strict score.
+  Unassessed (0% placeholder): AI generated debt, API coherence, Abstraction fit, +10 more
+  Subjective coverage debt: 138 files (138 unreviewed)
+  Includes 1 holistic stale/missing signal(s).
+  Triage: `desloppify show subjective_review --status open`
+  Then import review output and rerun `desloppify scan` to refresh subjective scores.
+

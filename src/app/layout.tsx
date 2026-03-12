@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { GlobalAuthLoader } from "@/components/auth/GlobalAuthLoader";
+import { PremiumGradient } from "@/components/ui/PremiumGradient";
+import { ThemeProvider } from "@/components/ui/ThemeProvider";
+import { PremiumCursorTracker } from "@/components/ui/PremiumCursorTracker";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,11 +15,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "DU Seva - CUET Mock Test Platform",
-  description: "Official DU Seva Mock Test Platform for CUET aspirants. Ace your exams with mentor-guided preparation.",
-  icons: {
-    icon: '/du-logo.png',
-    shortcut: '/du-logo.png',
-  }
+  description: "Official DU Seva Mock Test Platform for CUET aspirants. Ace your exams with mentor-guided preparation."
 };
 
 export default function RootLayout({
@@ -24,12 +23,47 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Synchronous script to prevent FOUC
+  const themeScript = `
+    (function() {
+      try {
+        var isMarketing = window.location.pathname === '/' || window.location.pathname.startsWith('/about');
+        var savedTheme = localStorage.getItem('app-theme');
+        var theme = 'light'; // default
+
+        if (savedTheme) {
+          theme = savedTheme === 'system' 
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : savedTheme;
+        } else {
+           // Default logic if no saved preference
+           if (isMarketing) {
+             theme = 'dark';
+           } else {
+             theme = 'light';
+           }
+        }
+        
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  `;
+
   return (
-    <html lang="en">
-      <body className={`${inter.className} ${inter.variable} antialiased bg-slate-50 text-slate-900`}>
-        <AuthProvider>
-          <GlobalAuthLoader>{children}</GlobalAuthLoader>
-        </AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className={`${inter.className} ${inter.variable} antialiased bg-surface-base text-text-primary min-h-screen relative transition-colors duration-300 overflow-x-hidden`}>
+        <ThemeProvider defaultTheme="system">
+          <PremiumGradient variant="hero" />
+          <PremiumCursorTracker />
+          <div className="relative z-10 min-h-screen flex flex-col">
+            <AuthProvider>
+              <GlobalAuthLoader>{children}</GlobalAuthLoader>
+            </AuthProvider>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,100 +1,59 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { BookOpen, Calendar, Award, Target } from "lucide-react";
-
-const guidanceSections = [
-    {
-        title: "Syllabus Analysis",
-        icon: <BookOpen className="h-6 w-6 text-blue-600" />,
-        content: "Detailed breakdown of the updated syllabus for Science, Commerce, and Humanities streams. Focus on core domain subjects like Accountancy, Physics, and Economics."
-    },
-    {
-        title: "Exam Pattern Strategy",
-        icon: <Target className="h-6 w-6 text-purple-600" />,
-        content: "Understanding the Computer Based Test (CBT) mode. Learn how to manage 45/50 questions in 45/60 minutes. Negative marking strategy (-1 for wrong answers)."
-    },
-    {
-        title: "Important Dates",
-        icon: <Calendar className="h-6 w-6 text-green-600" />,
-        content: "Tentative schedule for CUET 2026. Application forms expected in February. Exams likely in May-June. Keep track of NTA notifications."
-    },
-    {
-        title: "College Preferences",
-        icon: <Award className="h-6 w-6 text-orange-600" />,
-        content: "How to fill your CSAS portal preferences correctly. Priority list for North Campus vs South Campus colleges based on your normalized score."
-    }
-];
+import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { CuetHero } from "@/components/cuet2026/CuetHero";
+import { CuetContentGrid } from "@/components/cuet2026/CuetContentGrid";
+import { CuetCTA } from "@/components/cuet2026/CuetCTA";
 
 export default function Cuet2026Page() {
+    const router = useRouter();
+    const { user, userData, loading: authLoading } = useAuth();
+
+    // Parallax Effects
+    const { scrollYProgress } = useScroll();
+    const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+
+    useEffect(() => {
+        if (!authLoading && user && userData) {
+            if (userData.role === 'admin' || userData.role === 'developer') {
+                router.push("/admin");
+            } else {
+                router.push("/dashboard");
+            }
+        }
+    }, [user, userData, authLoading, router]);
+
+    const fadeUpVariants = {
+        hidden: { opacity: 0, y: 40 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" as const } }
+    };
+
     return (
-        <div className="min-h-screen flex flex-col font-sans bg-slate-50">
+        <div className="min-h-screen flex flex-col font-sans bg-slate-950 text-white selection:bg-cta-primary/30 selection:text-white relative overflow-hidden">
             <Navbar />
 
-            <main className="flex-1">
-                {/* Header */}
-                <section className="bg-white border-b border-slate-200 py-20">
-                    <div className="container px-4 md:px-6 text-center">
-                        <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight"
-                        >
-                            Complete Guide to <span className="text-blue-600">CUET 2026</span>
-                        </motion.h1>
-                        <motion.p
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed"
-                        >
-                            Everything you need to know about the exam, syllabus, and college admissions. Curated by mentors from SRCC and St. Stephen's.
-                        </motion.p>
-                    </div>
-                </section>
+            {/* Soft, Calming Ambient Background */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <motion.div
+                    style={{ y: yBg }}
+                    className="absolute inset-0 opacity-40"
+                >
+                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/20 blur-[120px] mix-blend-screen animate-blob" />
+                    <div className="absolute top-[20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-purple-500/20 blur-[120px] mix-blend-screen animate-blob animation-delay-2000" />
+                    <div className="absolute bottom-[-20%] left-[20%] w-[60%] h-[50%] rounded-full bg-cta-primary/20 blur-[120px] mix-blend-screen animate-blob animation-delay-4000" />
+                </motion.div>
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
+            </div>
 
-                {/* Content Grid */}
-                <section className="py-20">
-                    <div className="container px-4 md:px-6">
-                        <div className="grid md:grid-cols-2 gap-8">
-                            {guidanceSections.map((section, idx) => (
-                                <motion.div
-                                    key={idx}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 shrink-0">
-                                            {section.icon}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-bold text-slate-900 mb-3">{section.title}</h3>
-                                            <p className="text-slate-600 leading-relaxed">
-                                                {section.content}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* CTA */}
-                <section className="py-20 bg-blue-600 text-white text-center">
-                    <div className="container px-4 md:px-6">
-                        <h2 className="text-3xl font-bold mb-6">Ready to test your knowledge?</h2>
-                        <p className="text-blue-100 mb-8 max-w-lg mx-auto text-lg">Start with a free mock test designed according to the latest 2026 pattern.</p>
-                        <a href="/mocks" className="inline-flex items-center justify-center h-12 px-8 rounded-full bg-white text-blue-600 font-bold hover:bg-blue-50 transition-colors shadow-lg">
-                            Take a Free Mock Test
-                        </a>
-                    </div>
-                </section>
+            <main className="flex-1 relative z-10">
+                <CuetHero fadeUpVariants={fadeUpVariants} />
+                <CuetContentGrid />
+                <CuetCTA />
             </main>
 
             <Footer />

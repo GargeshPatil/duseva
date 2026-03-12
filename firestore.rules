@@ -55,7 +55,7 @@ service cloud.firestore {
     // 2. tests Collection
     match /tests/{testId} {
       // Public can read all tests (e.g., test catalog).
-      allow read: if resource.data.isVisible == true || isAdmin() || isDeveloper();
+      allow read: if resource.data.isPublished == true || isAdmin() || isDeveloper();
       // Only Admins and Developers can create, update, or delete tests.
       allow create, update, delete: if isAdmin() || isDeveloper();
     }
@@ -100,9 +100,8 @@ service cloud.firestore {
 
     // 7. content Collection (CMS)
     match /content/{contentId} {
-      // Public can read 'published' content. Authenticated Admins/Developers can read all content.
-      allow read: if resource.data.activeStatus == 'published' ||
-                     (isAuthenticated() && (isAdmin() || isDeveloper()));
+      // Public can read all content
+      allow read: if true;
       // Authenticated users can write if they are a Developer,
       // OR if they are an Admin AND the content's 'editableBy' field is 'admin'.
       allow create, update, delete: if isAuthenticated() &&
@@ -140,6 +139,18 @@ service cloud.firestore {
           (isAdmin() || isDeveloper());
 
       // Only Admins and Developers can create, update, or delete notifications.
+      allow create, update, delete: if isAdmin() || isDeveloper();
+    }
+
+    // 11. bundles Collection
+    match /bundles/{bundleId} {
+      allow read: if true; // Public can read bundles to see pricing
+      allow create, update, delete: if isAdmin() || isDeveloper();
+    }
+
+    // 12. passages Collection 
+    match /passages/{passageId} {
+      allow read: if true; // Public can read passages for tests
       allow create, update, delete: if isAdmin() || isDeveloper();
     }
 

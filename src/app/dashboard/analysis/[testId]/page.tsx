@@ -8,19 +8,18 @@ import { Test, Question, TestAttempt, TestResult } from "@/types/admin";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import {
-    Trophy,
-    Target,
-    BarChart2,
-    CheckCircle2,
-    XCircle,
-    AlertCircle,
-    ArrowRight,
-    ChevronDown,
-    ChevronUp,
-    Loader2,
-    TrendingUp,
-    TrendingDown,
-    Minus
+  Trophy,
+  Target,
+  BarChart2,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Minus
 } from "lucide-react";
 
 export default function AnalysisPage() {

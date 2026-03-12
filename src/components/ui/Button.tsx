@@ -7,21 +7,21 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export function getButtonClasses({ variant = 'primary', size = 'md', fullWidth = false, className = '' }: { variant?: ButtonProps['variant'], size?: ButtonProps['size'], fullWidth?: boolean, className?: string }) {
-    const baseClasses = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
+    const baseClasses = "inline-flex items-center justify-center rounded-xl font-bold transition-all duration-300 outline-none focus-visible:ring-4 focus-visible:ring-cta-primary/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95 relative overflow-hidden group";
 
     let variantClasses = "";
     switch (variant) {
         case 'primary':
-            variantClasses = "bg-primary text-primary-foreground hover:bg-blue-700 shadow-sm";
+            variantClasses = "bg-gradient-to-r from-cta-primary to-cta-hover text-white shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] border border-white/10 hover:-translate-y-1";
             break;
         case 'secondary':
-            variantClasses = "bg-secondary text-secondary-foreground hover:bg-slate-200 shadow-sm";
+            variantClasses = "bg-surface-glass backdrop-blur-xl text-text-primary hover:bg-surface-elevated border border-border/80 shadow-lg hover:shadow-xl hover:-translate-y-1";
             break;
         case 'outline':
-            variantClasses = "border border-input bg-background hover:bg-accent hover:text-accent-foreground";
+            variantClasses = "bg-surface-base border-2 border-border text-text-primary hover:border-cta-primary hover:text-cta-primary hover:bg-cta-primary/5 hover:shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:-translate-y-1";
             break;
         case 'ghost':
-            variantClasses = "hover:bg-muted hover:text-muted-foreground";
+            variantClasses = "bg-transparent text-text-secondary hover:text-text-primary hover:bg-surface-elevated/80 hover:scale-105 active:scale-95";
             break;
     }
 
@@ -49,6 +49,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         return (
             <button
                 ref={ref}
+                suppressHydrationWarning
                 className={classes}
                 {...props}
             />

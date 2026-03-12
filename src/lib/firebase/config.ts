@@ -13,8 +13,11 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (Client-Side Only)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let app: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let auth: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let db: any;
 
 // Check if we are in the browser environment

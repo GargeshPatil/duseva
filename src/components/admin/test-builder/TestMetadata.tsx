@@ -8,6 +8,7 @@ interface TestMetadataProps {
 }
 
 export function TestMetadata({ test, onChange }: TestMetadataProps) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChange = (field: keyof Test, value: any) => {
         onChange({ ...test, [field]: value });
     };
@@ -21,13 +22,27 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
     };
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 className space-y-6">
-            <h2 className="text-xl font-semibold text-slate-800 border-b border-slate-100 pb-2">Test Configuration</h2>
+        <div className="bg-surface-card p-6 sm:p-8 rounded-2xl shadow-xl border border-white/5 space-y-8 relative overflow-hidden group">
+            {/* Subtle top glow */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cta-primary/30 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
+
+            <div className="flex flex-col sm:flex-row justify-between border-b border-border/50 pb-4 items-start sm:items-center gap-4">
+                <h2 className="text-xl font-semibold text-text-primary">Test Configuration</h2>
+                <label className="flex items-center gap-2 cursor-pointer bg-surface p-2 rounded-lg border border-border">
+                    <input
+                        type="checkbox"
+                        checked={test.shuffleQuestions || false}
+                        onChange={(e) => handleChange('shuffleQuestions', e.target.checked)}
+                        className="rounded border-input text-cta-primary focus:ring-cta-primary"
+                    />
+                    <span className="text-sm font-medium text-text-secondary">Shuffle Questions</span>
+                </label>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Title */}
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Test Title</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Test Title</label>
                     <Input
                         value={test.title || ""}
                         onChange={(e) => handleChange('title', e.target.value)}
@@ -38,9 +53,9 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
 
                 {/* Description */}
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
                     <textarea
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[80px]"
+                        className="w-full px-3 py-2 bg-background border border-input rounded-lg text-sm outline-none focus:ring-2 focus:ring-ring transition-all min-h-[80px]"
                         value={test.description || ""}
                         onChange={(e) => handleChange('description', e.target.value)}
                         placeholder="Describe the syllabus or topics covered..."
@@ -49,7 +64,7 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
 
                 {/* Duration & Marks */}
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Duration (minutes)</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Duration (minutes)</label>
                     <Input
                         type="number"
                         min={5}
@@ -58,7 +73,7 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Total Marks</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Total Marks</label>
                     <Input
                         type="number"
                         min={0}
@@ -69,9 +84,9 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
 
                 {/* Category & Difficulty */}
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
                     <select
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 bg-background border border-input rounded-lg text-sm outline-none focus:ring-2 focus:ring-ring"
                         value={test.category || "Subject"}
                         onChange={(e) => handleChange('category', e.target.value)}
                     >
@@ -81,9 +96,9 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Difficulty</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Difficulty</label>
                     <select
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 bg-background border border-input rounded-lg text-sm outline-none focus:ring-2 focus:ring-ring"
                         value={test.difficulty || "Medium"}
                         onChange={(e) => handleChange('difficulty', e.target.value)}
                     >
@@ -95,7 +110,7 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
 
                 {/* Streams */}
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Target Streams</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Target Streams</label>
                     <div className="flex flex-wrap gap-2">
                         {['Science', 'Commerce', 'Humanities', 'General', 'English'].map(stream => {
                             const isSelected = test.streams?.includes(stream);
@@ -105,8 +120,8 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
                                     type="button"
                                     onClick={() => handleStreamToggle(stream)}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${isSelected
-                                        ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                                        ? 'bg-cta-primary/10 text-cta-primary border-cta-primary/30'
+                                        : 'bg-transparent text-text-secondary border-border hover:border-text-muted hover:text-text-primary'
                                         }`}
                                 >
                                     {stream}
@@ -117,8 +132,8 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
                 </div>
 
                 {/* Pricing */}
-                <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Pricing Configuration</label>
+                <div className="md:col-span-2 bg-surface-elevated p-4 rounded-lg border border-border">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Pricing Configuration</label>
                     <div className="flex flex-wrap gap-4 items-center">
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -127,7 +142,7 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
                                 checked={test.price === 'free'}
                                 onChange={() => handleChange('price', 'free')}
                             />
-                            <span className="text-sm text-slate-700">Free</span>
+                            <span className="text-sm text-text-secondary">Free</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -136,12 +151,12 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
                                 checked={test.price === 'paid'}
                                 onChange={() => handleChange('price', 'paid')}
                             />
-                            <span className="text-sm text-slate-700">Paid</span>
+                            <span className="text-sm text-text-secondary">Paid</span>
                         </label>
 
                         {test.price === 'paid' && (
                             <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
-                                <span className="text-sm text-slate-500">Amount (₹):</span>
+                                <span className="text-sm text-text-muted">Amount (₹):</span>
                                 <Input
                                     type="number"
                                     min={0}

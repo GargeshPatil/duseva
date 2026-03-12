@@ -1,6 +1,4 @@
-// ... imports
 import { ParseResult } from "@/utils/csvParser";
-import { Question } from "@/types/admin";
 import { AlertCircle, CheckCircle, AlertTriangle } from "lucide-react";
 
 interface QuestionPreviewTableProps {
@@ -10,60 +8,43 @@ interface QuestionPreviewTableProps {
 export function QuestionPreviewTable({ parseResult }: QuestionPreviewTableProps) {
     const { rows, meta } = parseResult;
 
-    // Rows can now be valid, invalid, or duplicate (marked via isDuplicate prop on ParsedRow if we add it, othewise checks)
-    // Actually, duplicate check happens in Modal. Modal should ideally update the `rows` state?
-    // Or Modal passes `duplicates` array separately.
-    // Let's assume Modal passes `duplicates` prop? No, props are fixed here.
-    // The Modal uses `setDuplicates` but doesn't modify `parseResult`.
-    // Wait, I need to pass `duplicates` as a separate prop or attach it to `parseResult`.
-    // In Modal I did `result.duplicates = dups`. But `duplicates` is a `Partial<Question>[]`.
-    // It's hard to map back to specific rows if questions are identical.
-    // But duplicate check uses text+subject.
-
-    // BETTER: Modal should pass `duplicates` prop to this component, AND we match by content.
-    // OR we accept that `parseResult` is the source of truth for rows.
-
-    // Let's rely on text matching for duplicates rendering here too. 
-    // BUT we need access to the `duplicates` list from parent.
-    // Parent should pass it. I will update Props.
-
     return (
         <div className="space-y-4">
             {/* Stats Header */}
             <div className="flex gap-4 text-sm flex-wrap">
-                <div className="flex items-center gap-2 text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                    <span className="font-medium">Total: {meta.totalRows}</span>
+                <div className="flex items-center gap-2 text-text-secondary bg-surface-elevated px-3 py-1 rounded-full border border-border">
+                    <span className="font-semibold tracking-wide">Total: {meta.totalRows}</span>
                 </div>
-                <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                <div className="flex items-center gap-2 text-emerald-400 bg-semantic-success/10 px-3 py-1 rounded-full border border-semantic-success/20">
                     <CheckCircle className="h-4 w-4" />
-                    <span className="font-medium">{meta.validRows} Valid</span>
+                    <span className="font-semibold tracking-wide">{meta.validRows} Valid</span>
                 </div>
                 {meta.invalidRows > 0 && (
-                    <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-1 rounded-full border border-red-200">
+                    <div className="flex items-center gap-2 text-rose-400 bg-semantic-error/10 px-3 py-1 rounded-full border border-semantic-error/20">
                         <AlertCircle className="h-4 w-4" />
-                        <span className="font-medium">{meta.invalidRows} Errors</span>
+                        <span className="font-semibold tracking-wide">{meta.invalidRows} Errors</span>
                     </div>
                 )}
             </div>
 
-            <div className="border rounded-lg overflow-hidden">
-                <div className="max-h-[400px] overflow-auto">
+            <div className="border border-border rounded-xl overflow-hidden bg-surface-card shadow-sm">
+                <div className="max-h-[400px] overflow-auto custom-scrollbar">
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-slate-50 text-slate-500 font-medium sticky top-0 z-10 shadow-sm">
+                        <thead className="bg-surface-elevated text-text-secondary font-semibold sticky top-0 z-10 shadow-sm">
                             <tr>
-                                <th className="px-4 py-3">Row</th>
-                                <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3">Question</th>
-                                <th className="px-4 py-3">Type</th>
-                                <th className="px-4 py-3">Difficulty</th>
-                                <th className="px-4 py-3">Correct Ans</th>
-                                <th className="px-4 py-3">Marks</th>
+                                <th className="px-4 py-3 border-b border-border/50">Row</th>
+                                <th className="px-4 py-3 border-b border-border/50">Status</th>
+                                <th className="px-4 py-3 border-b border-border/50">Type</th>
+                                <th className="px-4 py-3 border-b border-border/50">Question/Passage</th>
+                                <th className="px-4 py-3 border-b border-border/50">Subject / Diff</th>
+                                <th className="px-4 py-3 border-b border-border/50">Details / Ans</th>
+                                <th className="px-4 py-3 border-b border-border/50">Marks</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-border/50">
                             {rows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                                    <td colSpan={7} className="px-4 py-12 text-center text-text-muted font-medium">
                                         No data to display.
                                     </td>
                                 </tr>
@@ -72,61 +53,81 @@ export function QuestionPreviewTable({ parseResult }: QuestionPreviewTableProps)
                                     const { data, valid, errors, row: rowNum } = row;
                                     const q = data;
 
-                                    // Check if duplicate (passed via extended interface or we infer?)
-                                    // For now, let's rely on parent modification or simple check
-                                    // The duplicate check in modal attaches `isDuplicate` to row?
-                                    // I'll update Modal to do that.
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     const isDuplicate = (row as any).isDuplicate;
 
-                                    let statusColor = "bg-green-50";
                                     let statusText = "Valid";
                                     let statusIcon = <CheckCircle className="h-3 w-3" />;
 
                                     if (!valid) {
-                                        statusColor = "bg-red-50";
                                         statusText = "Error";
                                         statusIcon = <AlertCircle className="h-3 w-3" />;
                                     } else if (isDuplicate) {
-                                        statusColor = "bg-amber-50";
                                         statusText = "Duplicate";
                                         statusIcon = <AlertTriangle className="h-3 w-3" />;
                                     }
 
                                     return (
-                                        <tr key={rowNum} className={`hover:bg-slate-50 ${!valid ? 'bg-red-50/30' : ''} ${isDuplicate ? 'bg-amber-50/30' : ''}`}>
-                                            <td className="px-4 py-2 text-slate-400 font-mono text-xs">{rowNum}</td>
-                                            <td className="px-4 py-2">
+                                        <tr key={rowNum} className={`hover:bg-surface-elevated/50 transition-colors ${!valid ? 'bg-semantic-error/5' : ''} ${isDuplicate ? 'bg-semantic-warning/5' : ''}`}>
+                                            <td className="px-4 py-3 text-text-muted font-mono text-xs">{rowNum}</td>
+                                            <td className="px-4 py-3">
                                                 <div className="flex flex-col items-start gap-1">
-                                                    <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded border ${!valid ? 'text-red-700 bg-red-100 border-red-200' :
-                                                            isDuplicate ? 'text-amber-700 bg-amber-100 border-amber-200' :
-                                                                'text-green-700 bg-green-100 border-green-200'
+                                                    <span className={`flex items-center gap-1.5 text-[11px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full border ${!valid ? 'text-rose-400 bg-semantic-error/10 border-semantic-error/20' :
+                                                        isDuplicate ? 'text-amber-400 bg-semantic-warning/10 border-semantic-warning/20' :
+                                                            'text-emerald-400 bg-semantic-success/10 border-semantic-success/20'
                                                         }`}>
                                                         {statusIcon} {statusText}
                                                     </span>
                                                     {errors.length > 0 && (
-                                                        <span className="text-[10px] text-red-600 font-medium max-w-[200px] whitespace-normal">
+                                                        <span className="text-[10px] text-rose-400/80 font-medium max-w-[200px] whitespace-normal">
                                                             {errors.join(", ")}
                                                         </span>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-2 max-w-[300px] truncate">
-                                                <span title={q.text}>{q.text || <span className="text-slate-300 italic">Missing Text</span>}</span>
-                                            </td>
-                                            <td className="px-4 py-2">{q.subject || "-"}</td>
-                                            <td className="px-4 py-2">
-                                                <span className={`px-2 py-0.5 rounded text-xs border ${q.difficulty === "Easy" ? "bg-green-50 text-green-700 border-green-100" :
-                                                        q.difficulty === "Hard" ? "bg-red-50 text-red-700 border-red-100" :
-                                                            "bg-yellow-50 text-yellow-700 border-yellow-100"
+
+                                            <td className="px-4 py-3">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase border ${q.questionType === 'match' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                                                    q.questionType === 'passage' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                                        'bg-surface-elevated text-text-secondary border-border'
                                                     }`}>
-                                                    {q.difficulty || "Med"}
+                                                    {q.questionType || 'MCQ'}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-2 font-mono">
-                                                {q.correctOption !== -1 ? ["A", "B", "C", "D"][q.correctOption!] : <span className="text-red-400">-</span>}
+
+                                            <td className="px-4 py-3 max-w-[300px] truncate">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-text-primary text-sm" title={q.text}>{q.text || <span className="text-text-muted italic">Missing Text</span>}</span>
+                                                    {q.questionType === 'passage' && (
+                                                        <span className="text-[11px] text-blue-400/80 truncate" title={(q as any).passageText || q.passageId}>
+                                                            Passage: {(q as any).passageText || q.passageId}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
-                                            <td className="px-4 py-2">
-                                                {q.marks !== undefined ? `+${q.marks}` : '-'} / {q.negativeMarks !== undefined ? `-${q.negativeMarks}` : '-'}
+
+                                            <td className="px-4 py-3">
+                                                <div className="flex flex-col gap-1.5 items-start">
+                                                    <span className="text-[11px] font-semibold tracking-wide uppercase text-text-secondary">{q.subject || "-"}</span>
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase border ${q.difficulty === "Easy" ? "bg-semantic-success/10 text-emerald-400 border-semantic-success/20" :
+                                                        q.difficulty === "Hard" ? "bg-semantic-error/10 text-rose-400 border-semantic-error/20" :
+                                                            "bg-semantic-warning/10 text-amber-400 border-semantic-warning/20"
+                                                        }`}>
+                                                        {q.difficulty || "Med"}
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            <td className="px-4 py-3 font-mono text-xs">
+                                                {q.questionType === 'match' ? (
+                                                    <span className="text-purple-400 border border-purple-500/20 bg-purple-500/10 px-1.5 py-0.5 rounded font-medium">{q.matchPairs?.length || 0} Pairs</span>
+                                                ) : q.correctOption !== -1 ? (
+                                                    <span className="bg-surface-elevated text-text-primary border border-border/50 px-2 py-0.5 rounded font-medium">Ans: {["A", "B", "C", "D"][q.correctOption!]}</span>
+                                                ) : <span className="text-rose-400/50">-</span>}
+                                            </td>
+
+                                            <td className="px-4 py-3 text-xs font-medium">
+                                                <span className="text-emerald-400">+{q.marks || 0}</span> <span className="text-text-muted mx-1">/</span> <span className="text-rose-400">-{q.negativeMarks || 0}</span>
                                             </td>
                                         </tr>
                                     );

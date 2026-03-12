@@ -130,6 +130,7 @@ export default function SeedTestPage() {
                 throw new Error("Failed to create test document.");
             }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             console.error(err);
             setStatus('error');
@@ -139,6 +140,7 @@ export default function SeedTestPage() {
 
     return (
         <div className="max-w-md mx-auto py-12 px-4 space-y-6">
+            {/* eslint-disable-next-line react/no-unescaped-entities */}
             <h1 className="text-2xl font-bold">Seed "Test Test 1"</h1>
 
             <div className="bg-slate-50 p-4 rounded border">

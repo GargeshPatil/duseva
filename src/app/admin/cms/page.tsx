@@ -2,29 +2,35 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { Save, AlertCircle, Loader2 } from "lucide-react";
 import { firestoreService } from "@/services/firestoreService";
 import { CMSContent } from "@/types/admin";
 import { useAuth } from "@/context/AuthContext";
-
+import { handlePrefillCUET2026Util, handlePrefillLandingUtil } from "./prefillUtils";
+import { motion, Variants } from "framer-motion";
+import { CMSHeroSection } from "@/components/admin/cms/CMSHeroSection";
+import { CMSLandingSection } from "@/components/admin/cms/CMSLandingSection";
+import { CMSCUET2026Section } from "@/components/admin/cms/CMSCUET2026Section";
+import { CMSPricingSection } from "@/components/admin/cms/CMSPricingSection";
 export default function CMSPage() {
     const { userData } = useAuth();
     const [content, setContent] = useState<CMSContent[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    // If user is developer, they can edit everything. 
-    // If admin, they can only edit items that are NOT restricted to developer.
-    // However, the interface property 'editableBy' can explicitly set permissions.
     const isDeveloper = userData?.role === 'developer';
 
     useEffect(() => {
         async function loadContent() {
             setLoading(true);
-            const data = await firestoreService.getCMSContent();
-            setContent(data);
-            setLoading(false);
+            try {
+                const data = await firestoreService.getCMSContent();
+                setContent(data);
+            } catch (error) {
+                console.error("Failed to load CMS content:", error);
+            } finally {
+                setLoading(false);
+            }
         }
         loadContent();
     }, []);
@@ -36,112 +42,95 @@ export default function CMSPage() {
 
     async function handleSave() {
         setSaving(true);
-
-        // Find changed items (in a real app check dirty state)
-        // For now, save all or just the ones we modified in state.
-        // Optimization: track dirty fields?
-        // Simpler: Just save all visible inputs for now, or just iterate.
-
         let successCount = 0;
-        for (const item of content) {
-            // Basic permission check on client side for UI feedback
-            if (item.editableBy === 'developer' && !isDeveloper) continue;
-
-            const success = await firestoreService.updateCMSContent(item.id, item.value);
-            if (success) successCount++;
-        }
-
-        setSaving(false);
-        if (successCount > 0) {
-            alert("Content updated successfully!");
+        try {
+            for (const item of content) {
+                if (item.editableBy === 'developer' && !isDeveloper) continue;
+                const success = await firestoreService.updateCMSContent(item.id, item.value);
+                if (success) successCount++;
+            }
+            if (successCount > 0) {
+                alert(`Content updated successfully! (${successCount} items saved)`);
+            }
+        } catch (error) {
+            console.error("Failed to save content", error);
+            alert("An error occurred while saving content.");
+        } finally {
+            setSaving(false);
         }
     }
 
+    const handlePrefillCUET2026 = () => handlePrefillCUET2026Util(content, setContent, setSaving);
+    const handlePrefillLanding = () => handlePrefillLandingUtil(content, setContent, setSaving);
+
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants: Variants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+    };
+
     if (loading) return (
-        <div className="p-8 flex justify-center items-center">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-500 mr-2" /> Loading CMS data...
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-cta-primary" />
+            <span className="text-white/50 font-medium tracking-wide">Loading CMS Data...</span>
         </div>
     );
 
     const heroSection = content.filter(c => c.section === 'hero');
     const pricingSection = content.filter(c => c.section === 'pricing');
+    const landingSection = content.filter(c => c.section === 'landing');
+    const cuet2026Section = content.filter(c => c.section === 'cuet2026');
 
-    // Helper to check if current user can edit specific item
     const canEdit = (item: CMSContent) => {
         if (item.editableBy === 'developer') return isDeveloper;
-        // logic: if editableBy is 'admin' (default if undefined), both admin and developer can edit.
         return true;
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in max-w-4xl">
-            <div className="flex justify-between items-center">
+        <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-8 max-w-5xl pb-20"
+        >
+            <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Content Management</h1>
-                    <p className="text-slate-500 mt-1">Edit website content directly.</p>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">Content Management</h1>
+                    <p className="text-white/60 mt-1.5 text-lg">Manage landing pages and static content.</p>
                 </div>
-                <Button onClick={handleSave} disabled={saving} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
-                    <Save className="h-4 w-4" /> {saving ? "Saving..." : "Save Changes"}
+                <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-cta-primary hover:bg-cta-hover text-white rounded-xl h-12 px-6 shadow-[0_0_20px_rgba(255,107,0,0.3)] gap-2 min-w-[140px] transition-all font-semibold"
+                >
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {saving ? "Saving..." : "Save Changes"}
                 </Button>
-            </div>
+            </motion.div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3 text-blue-800 text-sm">
+            <motion.div variants={itemVariants} className="bg-cta-primary/10 border border-cta-primary/20 rounded-2xl p-4 flex gap-3 text-cta-primary/90 text-sm backdrop-blur-xl">
                 <AlertCircle className="h-5 w-5 shrink-0" />
-                <p>Changes made here will be instantly visible on the live website.</p>
-            </div>
+                <p className="font-medium">Changes made here will be instantly visible on the live website. Be careful when saving structured content.</p>
+            </motion.div>
 
-            {/* Hero Section */}
-            {heroSection.length > 0 && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
-                    <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-2">Hero Section</h3>
+            <CMSHeroSection heroSection={heroSection} itemVariants={itemVariants} handleUpdate={handleUpdate} canEdit={canEdit} />
+            <CMSLandingSection landingSection={landingSection} itemVariants={itemVariants} handleUpdate={handleUpdate} canEdit={canEdit} handlePrefillLanding={handlePrefillLanding} saving={saving} />
+            <CMSCUET2026Section cuet2026Section={cuet2026Section} itemVariants={itemVariants} handleUpdate={handleUpdate} canEdit={canEdit} handlePrefillCUET2026={handlePrefillCUET2026} saving={saving} />
+            <CMSPricingSection pricingSection={pricingSection} itemVariants={itemVariants} handleUpdate={handleUpdate} canEdit={canEdit} />
 
-                    {heroSection.map(item => (
-                        <div key={item.id} className={canEdit(item) ? "" : "opacity-50 pointer-events-none"}>
-                            <div className="flex justify-between">
-                                <label className="block text-sm font-medium text-slate-700 mb-1 capitalize">
-                                    {item.key}
-                                </label>
-                                {!canEdit(item) && <span className="text-xs text-slate-400">Developer Only</span>}
-                            </div>
-                            <textarea
-                                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[80px]"
-                                value={item.value}
-                                onChange={(e) => handleUpdate(item.id, e.target.value)}
-                                disabled={!canEdit(item)}
-                            />
-                        </div>
-                    ))}
-                </div>
+            {content.length === 0 && !loading && (
+                <motion.div variants={itemVariants} className="text-center p-16 text-white/40 bg-surface-card/60 backdrop-blur-xl rounded-3xl border border-white/10 border-dashed">
+                    {/* eslint-disable-next-line react/no-unescaped-entities */}
+                    No content found in Firestore 'content' collection. Run a seed script or add documents manually.
+                </motion.div>
             )}
-
-            {/* Pricing Section */}
-            {pricingSection.length > 0 && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
-                    <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-2">Pricing Section</h3>
-
-                    {pricingSection.map(item => (
-                        <div key={item.id} className={canEdit(item) ? "" : "opacity-50 pointer-events-none"}>
-                            <div className="flex justify-between">
-                                <label className="block text-sm font-medium text-slate-700 mb-1 capitalize">
-                                    {item.key}
-                                </label>
-                                {!canEdit(item) && <span className="text-xs text-slate-400">Developer Only</span>}
-                            </div>
-                            <Input
-                                value={item.value}
-                                onChange={(e) => handleUpdate(item.id, e.target.value)}
-                                disabled={!canEdit(item)}
-                            />
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {content.length === 0 && (
-                <div className="text-center p-12 text-slate-500">
-                    No content found in Firestore 'content' collection. run a seed script or add documents manually.
-                </div>
-            )}
-        </div>
+        </motion.div>
     );
 }

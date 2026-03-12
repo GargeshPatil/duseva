@@ -13,7 +13,12 @@ export interface User {
     onboardingCompleted?: boolean;
 }
 
+export interface Passage { id: string; title?: string; text: string; createdAt?: string; updatedAt?: string; }
+
 export interface Question {
+    questionType?: 'mcq' | 'match' | 'passage';
+    matchPairs?: { left: string; right: string }[];
+    passageId?: string;
     id: string;
     text: string;
     options: string[];
@@ -45,9 +50,9 @@ export interface Test {
     attempts: number;
     createdDate: string;
     status: 'draft' | 'published';
+    shuffleQuestions?: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sections?: any[]; // Keep existing structure if any
-    // Backwards compatibility for UI during migration (optional, but helpful if we don't fix all UI immediately, though we should)
-    // stream?: string; 
 }
 
 export interface Bundle {
@@ -78,6 +83,14 @@ export interface DashboardStats {
     activeTests: number;
     revenue: number;
     recentRegistrations: User[];
+}
+
+export interface MediaAsset {
+    id: string;
+    url: string;
+    name: string;
+    size: string;
+    uploadedAt: string;
 }
 
 export interface Transaction {

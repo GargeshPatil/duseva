@@ -6,18 +6,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
-    LayoutDashboard,
-    FileText,
-    Users,
-    Settings,
-    LogOut,
-    Layers,
-    PenTool,
-    BarChart,
-    Menu,
-    X,
-    FolderOpen,
-    Library
+  LayoutDashboard,
+  Users,
+  Settings,
+  LogOut,
+  Layers,
+  PenTool,
+  BarChart,
+  Menu,
+  Library
 } from "lucide-react";
 
 export function AdminMobileNav() {
@@ -40,7 +37,6 @@ export function AdminMobileNav() {
         { label: "Test Management", href: "/admin/management", icon: Library }, // Unified Hub
         { label: "Users", href: "/admin/users", icon: Users },
         { label: "Content (CMS)", href: "/admin/cms", icon: PenTool },
-        { label: "Media", href: "/admin/media", icon: Layers },
         { label: "Analytics", href: "/admin/analytics", icon: BarChart },
         { label: "Settings", href: "/admin/settings", icon: Settings },
     ];
@@ -48,24 +44,24 @@ export function AdminMobileNav() {
     const activeItem = navItems.find(item => pathname === item.href) || navItems[0];
 
     return (
-        <div className="md:hidden sticky top-0 z-30 bg-white border-b border-slate-200">
+        <div className="md:hidden sticky top-0 z-30 bg-surface-base/95 backdrop-blur-xl border-b border-white/10">
             <div className="flex items-center justify-between px-4 h-16">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setOpen(true)}
-                        className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                        className="p-2 -ml-2 text-text-primary hover:bg-surface-elevated rounded-lg transition-colors"
                     >
                         <Menu className="h-6 w-6" />
                     </button>
 
                     <Sheet open={open} onOpenChange={setOpen} side="left">
-                        <SheetContent onClose={() => setOpen(false)} className="w-full max-w-xs p-0 flex flex-col">
-                            <SheetHeader className="p-6 border-b border-slate-100 text-left">
+                        <SheetContent onClose={() => setOpen(false)} className="w-full max-w-xs p-0 flex flex-col bg-surface-glass border-r border-white/10">
+                            <SheetHeader className="p-6 border-b border-white/10 text-left">
                                 <SheetTitle className="flex items-center gap-2">
-                                    <Layers className="h-6 w-6 text-blue-600" />
-                                    <span className="font-bold text-slate-900">CUET Admin</span>
+                                    <Layers className="h-6 w-6 text-cta-primary" />
+                                    <span className="font-bold text-text-primary">CUET Admin</span>
                                 </SheetTitle>
-                                <div className="text-sm text-slate-500 mt-1">
+                                <div className="text-sm text-text-muted mt-1">
                                     {userData?.name || 'Admin User'}
                                 </div>
                             </SheetHeader>
@@ -81,22 +77,22 @@ export function AdminMobileNav() {
                                             className={`
                                                 flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors
                                                 ${isActive
-                                                    ? "bg-blue-50 text-blue-700"
-                                                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                                    ? "bg-surface-elevated border border-border/50 text-cta-primary"
+                                                    : "text-text-secondary hover:bg-surface-elevated hover:text-text-primary"
                                                 }
                                             `}
                                         >
-                                            <item.icon className={`h-5 w-5 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
+                                            <item.icon className={`h-5 w-5 ${isActive ? "text-cta-primary" : "text-text-muted"}`} />
                                             {item.label}
                                         </Link>
                                     );
                                 })}
                             </nav>
 
-                            <div className="p-4 border-t border-slate-100">
+                            <div className="p-4 border-t border-white/10">
                                 <button
                                     onClick={handleLogout}
-                                    className="flex items-center gap-3 px-3 py-3 w-full text-left rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                                    className="flex items-center gap-3 px-3 py-3 w-full text-left rounded-lg text-sm font-medium text-semantic-error hover:bg-semantic-error/10 hover:text-red-400 transition-colors"
                                 >
                                     <LogOut className="h-5 w-5" />
                                     Sign Out
@@ -105,7 +101,7 @@ export function AdminMobileNav() {
                         </SheetContent>
                     </Sheet>
 
-                    <span className="font-semibold text-slate-900 truncate max-w-[200px]">
+                    <span className="font-semibold text-text-primary truncate max-w-[200px]">
                         {activeItem?.label || 'Admin Panel'}
                     </span>
                 </div>

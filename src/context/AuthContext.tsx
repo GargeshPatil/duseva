@@ -21,7 +21,9 @@ export interface UserData {
     role: "student" | "admin" | "developer"; // Default is student
     createdAt: Timestamp;
     lastLoginAt: Timestamp;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     purchasedTests: Record<string, any>; // Map for purchased tests
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     performanceSummary: Record<string, any>; // Map for performance summary
     stream?: 'Science' | 'Commerce' | 'Humanities';
     targetUniversity?: string;

@@ -2,129 +2,104 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { BarChart, TrendingUp, Users, Clock, DollarSign, Activity, Loader2 } from "lucide-react";
-import { mockDb } from "@/services/mockDb";
+import { TrendingUp, Activity, Loader2, Download, Calendar } from "lucide-react";
+import { firestoreService } from "@/services/firestoreService";
 import { DashboardStats } from "@/types/admin";
+import { motion, Variants } from "framer-motion";
+import { KPICards } from "@/components/admin/analytics/KPICards";
+import { RecentSignups } from "@/components/admin/analytics/RecentSignups";
 
 export default function AnalyticsPage() {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
 
+    async function loadStats() {
+        setLoading(true);
+        try {
+            const data = await firestoreService.getDashboardStats();
+            setStats(data);
+        } catch (error) {
+            console.error("Failed to load stats", error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     useEffect(() => {
         loadStats();
     }, []);
 
-    async function loadStats() {
-        setLoading(true);
-        // Using mockDb for consistent admin experience
-        const data = await mockDb.getDashboardStats();
-        setStats(data);
-        setLoading(false);
-    }
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants: Variants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+    };
 
     if (loading || !stats) return (
-        <div className="p-8 flex justify-center items-center">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-500 mr-2" /> Loading analytics engine...
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-cta-primary" />
+            <span className="text-white/50 font-medium tracking-wide">Loading analytics engine...</span>
         </div>
     );
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
+        <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-8"
+        >
+            <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Analytics Overview</h1>
-                    <p className="text-slate-500 mt-1">Deep dive into platform performance and user behavior.</p>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">Analytics Overview</h1>
+                    <p className="text-white/60 mt-1.5 text-lg">Deep dive into platform performance and user behavior.</p>
                 </div>
-                <div className="flex gap-2">
-                    <select className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                        <option>Last 7 Days</option>
-                        <option>Last 30 Days</option>
-                        <option>This Year</option>
-                    </select>
-                    <Button variant="outline" className="gap-2">
-                        Export Report
+                <div className="flex gap-3 w-full md:w-auto">
+                    <div className="relative flex-1 md:flex-initial">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                        <select className="pl-9 pr-8 h-11 w-full md:w-40 bg-white/5 border border-white/10 rounded-xl text-sm justify-between items-center outline-none text-white focus:ring-2 focus:ring-cta-primary/50 transition-all appearance-none cursor-pointer">
+                            <option value="7" className="bg-surface-elevated text-white">Last 7 Days</option>
+                            <option value="30" className="bg-surface-elevated text-white">Last 30 Days</option>
+                            <option value="365" className="bg-surface-elevated text-white">This Year</option>
+                        </select>
+                    </div>
+                    <Button
+                        variant="secondary"
+                        className="bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl h-11 px-4 gap-2 transition-all shadow-sm flex-1 md:flex-initial justify-center"
+                    >
+                        <Download className="h-4 w-4" />
+                        Export
                     </Button>
                 </div>
-            </div>
+            </motion.div>
 
             {/* KPI Cards */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <div className="flex justify-between items-start mb-2">
-                        <p className="text-slate-500 font-medium text-sm">Avg. Session</p>
-                        <Clock className="h-5 w-5 text-blue-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-slate-900">45m</h3>
-                    <div className="flex items-center text-xs font-medium text-green-600 mt-1">
-                        <TrendingUp className="h-3 w-3 mr-1" /> +12% vs last week
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <div className="flex justify-between items-start mb-2">
-                        <p className="text-slate-500 font-medium text-sm">Active Tests</p>
-                        <Activity className="h-5 w-5 text-purple-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-slate-900">{stats.activeTests}</h3>
-                    <div className="flex items-center text-xs font-medium text-green-600 mt-1">
-                        <TrendingUp className="h-3 w-3 mr-1" /> Live now
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <div className="flex justify-between items-start mb-2">
-                        <p className="text-slate-500 font-medium text-sm">Revenue Today</p>
-                        <DollarSign className="h-5 w-5 text-green-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-slate-900">₹{stats.revenue}</h3>
-                    <div className="flex items-center text-xs font-medium text-green-600 mt-1">
-                        <TrendingUp className="h-3 w-3 mr-1" /> All-time high
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <div className="flex justify-between items-start mb-2">
-                        <p className="text-slate-500 font-medium text-sm">Total Users</p>
-                        <Users className="h-5 w-5 text-orange-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-slate-900">{stats.totalUsers}</h3>
-                    <div className="flex items-center text-xs font-medium text-slate-500 mt-1">
-                        Permissions stable
-                    </div>
-                </div>
-            </div>
+            <KPICards stats={stats} containerVariants={containerVariants} itemVariants={itemVariants} />
 
-            {/* Charts Section (Visual Mockup - connected to live numbers partially) */}
-            <div className="grid lg:grid-cols-2 gap-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 className="font-bold text-slate-900 mb-6">User Growth Trend</h3>
-                    <div className="h-64 flex items-center justify-center border border-dashed border-slate-200 bg-slate-50 rounded-lg text-slate-400">
-                        Chart Engine Loaded (Mock Visual)
-                        {/* Implementing real Recharts or similar is out of scope for this step, keeping mock visual logic or placeholder */}
+            {/* Charts Section */}
+            <motion.div variants={containerVariants} className="grid lg:grid-cols-2 gap-8">
+                <motion.div variants={itemVariants} className="bg-surface-card/60 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/5 flex flex-col h-full">
+                    <h3 className="font-bold text-white text-xl mb-6 flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-cta-primary" /> User Growth Trend
+                    </h3>
+                    <div className="flex-1 min-h-[250px] flex items-center justify-center border-2 border-dashed border-white/10 bg-black/20 rounded-2xl">
+                        <div className="text-center group">
+                            <Activity className="h-8 w-8 text-white/20 mx-auto mb-3 group-hover:text-cta-primary/50 transition-colors" />
+                            <p className="text-white/40 font-medium tracking-wide">Chart Engine Loaded</p>
+                            <p className="text-white/20 text-xs mt-1">(Visual Mockup)</p>
+                        </div>
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 className="font-bold text-slate-900 mb-6">Recent Registrations</h3>
-                    <div className="space-y-4">
-                        {stats.recentRegistrations.length === 0 ? (
-                            <p className="text-slate-500 text-sm">No recent signups.</p>
-                        ) : (
-                            stats.recentRegistrations.map(user => (
-                                <div key={user.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
-                                            {user.name.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-900">{user.name}</p>
-                                            <p className="text-xs text-slate-500">{user.email}</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs text-slate-400">{user.joinedAt}</span>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
+                <RecentSignups stats={stats} itemVariants={itemVariants} />
+            </motion.div>
+        </motion.div>
     );
 }

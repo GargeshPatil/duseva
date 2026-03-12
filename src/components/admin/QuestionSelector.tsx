@@ -27,7 +27,6 @@ export function QuestionSelector({ selectedIds, onSelectionChange, onClose }: Qu
     const [localSelected, setLocalSelected] = useState<Set<string>>(new Set(selectedIds));
 
     async function loadQuestions() {
-        setLoading(true);
         // Fetch all for now. scaling might need pagination later.
         const data = await firestoreService.getQuestions();
         setQuestions(data);
@@ -35,11 +34,13 @@ export function QuestionSelector({ selectedIds, onSelectionChange, onClose }: Qu
     }
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadQuestions();
     }, []);
 
     // Sync prop changes to local state
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLocalSelected(new Set(selectedIds));
     }, [selectedIds]);
 

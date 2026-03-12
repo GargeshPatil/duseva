@@ -1,14 +1,10 @@
 import React from "react";
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-    // Add any specific props if needed, but generic HTML props are usually enough
-}
-
-export const Card = React.forwardRef<HTMLDivElement, CardProps>(
+export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
     ({ className, ...props }, ref) => (
         <div
             ref={ref}
-            className={`rounded-xl border border-border bg-white text-slate-950 shadow-sm ${className || ""}`}
+            className={`group relative overflow-hidden rounded-3xl border border-white/20 dark:border-white/10 bg-surface-card backdrop-blur-2xl text-text-primary shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-all duration-500 hover:shadow-[0_15px_40px_rgba(99,102,241,0.15)] hover:-translate-y-1 ${className || ""}`}
             {...props}
         />
     )

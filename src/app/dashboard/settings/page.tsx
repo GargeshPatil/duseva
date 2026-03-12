@@ -1,119 +1,59 @@
 "use client";
 
-import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/Button";
-import { db } from "@/lib/firebase/config";
-import { doc, updateDoc } from "firebase/firestore";
-import { User, Lock, Mail, Save, LogOut } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { motion, Variants } from "framer-motion";
+import { ProfileSettings } from "@/components/dashboard/ProfileSettings";
+import { SecuritySettings } from "@/components/dashboard/SecuritySettings";
 
 export default function SettingsPage() {
-    const { userData, logout } = useAuth();
-    const [name, setName] = useState(userData?.name || "");
-    const [isSaving, setIsSaving] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-
-    const handleSave = async () => {
-        if (!userData || !name.trim()) return;
-        setIsSaving(true);
-        setMessage(null);
-        try {
-            await updateDoc(doc(db, "users", userData.uid), {
-                name: name.trim()
-            });
-            setMessage({ type: 'success', text: "Profile updated successfully!" });
-        } catch (error) {
-            setMessage({ type: 'error', text: "Failed to update profile." });
-        } finally {
-            setIsSaving(false);
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
         }
     };
 
+    const itemVariants: Variants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+    };
+
     return (
-        <div className="max-w-2xl mx-auto space-y-8">
-            <h1 className="text-2xl font-bold text-slate-900">Account Settings</h1>
+        <div className="max-w-4xl mx-auto space-y-8 pb-20 overflow-x-hidden">
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="relative overflow-hidden rounded-[2.5rem] bg-surface-card/60 border border-white/10 backdrop-blur-2xl p-8 sm:p-12 shadow-2xl flex flex-col justify-between"
+            >
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-cta-primary/10 rounded-full blur-[80px] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-[60px] pointer-events-none" />
 
-            <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-6">
-                <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
-                    <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xl font-bold">
-                        {name ? name[0].toUpperCase() : "U"}
-                    </div>
+                <div className="relative z-10 w-full flex items-center justify-between">
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-900">{userData?.name}</h2>
-                        <p className="text-slate-500 text-sm capitalize">{userData?.role}</p>
-                    </div>
-                </div>
-
-                {/* Profile Form */}
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                        <div className="relative">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
-                            />
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-sm font-medium mb-6">
+                            <ShieldCheck className="h-4 w-4 text-emerald-400" /> Account Settings
                         </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                        <div className="flex gap-3">
-                            <div className="relative flex-1">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                <input
-                                    type="email"
-                                    value={userData?.email}
-                                    disabled
-                                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-500"
-                                />
-                            </div>
-                            <Button variant="outline" size="sm">Change Email</Button>
-                        </div>
+                        <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60 tracking-tight leading-tight">
+                            Command Center
+                        </h1>
+                        <p className="mt-4 text-white/50 max-w-xl text-lg">
+                            Manage your profile, security, and preferences.
+                        </p>
                     </div>
                 </div>
+            </motion.div>
 
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <Button variant="primary" onClick={handleSave} disabled={isSaving} className="gap-2">
-                        <Save className="h-4 w-4" />
-                        {isSaving ? "Saving..." : "Save Changes"}
-                    </Button>
-                    {message && (
-                        <span className={`text-sm ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                            {message.text}
-                        </span>
-                    )}
-                </div>
-            </div>
-
-            <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-6">
-                <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                    <Lock className="h-5 w-5 text-slate-400" /> Security
-                </h3>
-
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
-                    <div>
-                        <p className="font-medium text-slate-900">Password</p>
-                        <p className="text-xs text-slate-500">Last changed 3 months ago</p>
-                    </div>
-                    <Button variant="outline" size="sm">Change Password</Button>
-                </div>
-
-                <div className="pt-4">
-                    <Button
-                        onClick={logout}
-                        variant="outline"
-                        fullWidth
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-slate-200 text-center justify-center"
-                    >
-                        <LogOut className="h-4 w-4 mr-2" />
-                        Sign Out
-                    </Button>
-                </div>
-            </div>
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="grid gap-8"
+            >
+                <ProfileSettings itemVariants={itemVariants} />
+                <SecuritySettings itemVariants={itemVariants} />
+            </motion.div>
         </div>
     );
 }

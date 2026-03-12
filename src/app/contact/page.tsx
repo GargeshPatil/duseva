@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 
 export default function ContactPage() {
-    async function handleSubmit(formData: FormData) {
+    async function handleSubmit(_formData: FormData) {
         // Mock server action for now
         // "use server";
         // console.log("Form submitted", formData);

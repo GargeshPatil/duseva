@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
+import { PremiumGradient } from "@/components/ui/PremiumGradient";
 
 const features = [
     {
@@ -29,13 +30,13 @@ const features = [
 
 export function FeatureShowcase() {
     return (
-        <section className="py-20 overflow-hidden bg-white">
+        <section className="py-20 overflow-hidden bg-background">
             <div className="container px-4 md:px-6">
                 <div className="text-center max-w-3xl mx-auto mb-20">
-                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-4">
+                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
                         Everything you need to master CUET
                     </h2>
-                    <p className="text-lg text-slate-600">
+                    <p className="text-lg text-text-secondary">
                         Designed by toppers, built for future toppers.
                     </p>
                 </div>
@@ -51,20 +52,20 @@ export function FeatureShowcase() {
                                 transition={{ duration: 0.7 }}
                                 className="flex-1"
                             >
-                                <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-${feature.color}-100 text-${feature.color}-700 mb-6`}>
+                                <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-border focus:ring-offset-2 border-transparent bg-${feature.color}-500/10 text-${feature.color}-600 dark:text-${feature.color}-400 mb-6`}>
                                     {feature.title}
                                 </div>
-                                <h3 className="text-3xl font-bold text-slate-900 mb-4 leading-tight">
+                                <h3 className="text-3xl font-bold text-text-primary mb-4 leading-tight">
                                     {feature.title}
                                 </h3>
-                                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                                <p className="text-lg text-text-secondary mb-8 leading-relaxed">
                                     {feature.description}
                                 </p>
                                 <ul className="space-y-3">
                                     {feature.list.map((item, i) => (
-                                        <li key={i} className="flex items-center gap-3 text-slate-700">
-                                            <div className={`mt-1 h-5 w-5 rounded-full bg-${feature.color}-100 flex items-center justify-center shrink-0`}>
-                                                <CheckCircle2 className={`h-3.5 w-3.5 text-${feature.color}-600`} />
+                                        <li key={i} className="flex items-center gap-3 text-text-primary">
+                                            <div className={`mt-1 h-5 w-5 rounded-full bg-${feature.color}-500/10 flex items-center justify-center shrink-0`}>
+                                                <CheckCircle2 className={`h-3.5 w-3.5 text-${feature.color}-500`} />
                                             </div>
                                             <span>{item}</span>
                                         </li>
@@ -80,16 +81,19 @@ export function FeatureShowcase() {
                                 transition={{ duration: 0.7 }}
                                 className="flex-1 w-full"
                             >
-                                <div className={`relative aspect-video rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 shadow-xl overflow-hidden group`}>
-                                    <div className="absolute inset-0 flex items-center justify-center">
+                                <div className={`relative aspect-video rounded-2xl bg-surface-card border border-border shadow-xl overflow-hidden group`}>
+                                    {/* Premium Card Glow Surface */}
+                                    <PremiumGradient variant="cardGlow" />
+
+                                    <div className="absolute inset-0 flex items-center justify-center z-10">
                                         {/* Placeholder for feature screenshot */}
-                                        <div className="text-slate-400 font-medium text-lg">
+                                        <div className="text-text-muted font-medium text-lg">
                                             {feature.title} Preview
                                         </div>
                                     </div>
 
                                     {/* Overlay Gradient */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
                                 </div>
                             </motion.div>
                         </div>

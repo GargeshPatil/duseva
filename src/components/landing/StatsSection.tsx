@@ -1,34 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { firestoreService } from "@/services/firestoreService";
 
 export function StatsSection() {
-    const [counts, setCounts] = useState({
+    const counts = {
         questions: "50,000+",
         students: "2,000+",
         tests: "100+",
         selections: "500+"
-    });
-
-    useEffect(() => {
-        async function loadStats() {
-            try {
-                // Fetch real stats
-                const stats = await firestoreService.getDashboardStats();
-                setCounts({
-                    questions: "50,000+", // Keep marketing number for now
-                    students: stats.totalUsers > 0 ? `${stats.totalUsers}+` : "2,000+",
-                    tests: stats.activeTests > 0 ? `${stats.activeTests}+` : "100+",
-                    selections: "500+"
-                });
-            } catch (error) {
-                console.error("Failed to load landing stats", error);
-            }
-        }
-        loadStats();
-    }, []);
+    };
 
     const statsData = [
         { label: "Questions Attempted", value: counts.questions, delay: 0 },

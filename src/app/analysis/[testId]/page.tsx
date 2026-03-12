@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  ArrowRight,
   ChevronDown,
   ChevronUp,
   Loader2,

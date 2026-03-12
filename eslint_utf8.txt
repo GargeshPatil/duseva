@@ -1,0 +1,560 @@
+﻿
+> cuet_mock_platform@0.1.0 lint
+> eslint
+
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\postcss.config.mjs
+  1:1  warning  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\analytics\page.tsx
+   5:10  warning  'BarChart' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  14:9   error    Error: Cannot access variable before it is declared
+
+`loadStats` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\analytics\page.tsx:14:9
+  12 |
+  13 |     useEffect(() => {
+> 14 |         loadStats();
+     |         ^^^^^^^^^ `loadStats` accessed before it is declared
+  15 |     }, []);
+  16 |
+  17 |     async function loadStats() {
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\analytics\page.tsx:17:5
+  15 |     }, []);
+  16 |
+> 17 |     async function loadStats() {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 18 |         setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 19 |         // Using firestoreService for consistent admin experience
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 20 |         const data = await firestoreService.getDashboardStats();
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |         setStats(data);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 23 |     }
+     | ^^^^^^ `loadStats` is declared here
+  24 |
+  25 |     if (loading || !stats) return (
+  26 |         <div className="p-8 flex justify-center items-center">  react-hooks/immutability
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\bundles\[bundleId]\page.tsx
+  16:13  warning  'user' is assigned a value but never used                                                                    @typescript-eslint/no-unused-vars
+  36:8   warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\cms\page.tsx
+  142:51  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  142:59  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\management\page.tsx
+  73:103  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\media\page.tsx
+  22:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\media\page.tsx:22:9
+  20 |
+  21 |     useEffect(() => {
+> 22 |         loadAssets();
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  23 |     }, []);
+  24 |
+  25 |     async function handleUpload() {  react-hooks/set-state-in-effect
+  79:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @next/next/no-img-element
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\page.tsx
+  35:74  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  35:81  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\payments\page.tsx
+  16:9  error  Error: Cannot access variable before it is declared
+
+`loadTransactions` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\payments\page.tsx:16:9
+  14 |
+  15 |     useEffect(() => {
+> 16 |         loadTransactions();
+     |         ^^^^^^^^^^^^^^^^ `loadTransactions` accessed before it is declared
+  17 |     }, []);
+  18 |
+  19 |     async function loadTransactions() {
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\payments\page.tsx:19:5
+  17 |     }, []);
+  18 |
+> 19 |     async function loadTransactions() {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 20 |         setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |         const data = await firestoreService.getRecentTransactions();
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |         setTransactions(data);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 23 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 24 |     }
+     | ^^^^^^ `loadTransactions` is declared here
+  25 |
+  26 |     const filteredTransactions = transactions.filter(tx =>
+  27 |         tx.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||  react-hooks/immutability
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\questions\[questionId]\page.tsx
+   7:27  warning  'Plus' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+   7:33  warning  'Trash2' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  11:10  warning  'collection' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  11:22  warning  'getDocs' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  12:10  warning  'db' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  36:9   error    Error: Cannot access variable before it is declared
+
+`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\questions\[questionId]\page.tsx:36:9
+  34 |
+  35 |     useEffect(() => {
+> 36 |         loadData();
+     |         ^^^^^^^^ `loadData` accessed before it is declared
+  37 |     }, []);
+  38 |
+  39 |     async function loadData() {
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\questions\[questionId]\page.tsx:39:5
+  37 |     }, []);
+  38 |
+> 39 |     async function loadData() {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |         // Load tests for dropdown
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 41 |         try {
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 58 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 59 |     }
+     | ^^^^^^ `loadData` is declared here
+  60 |
+  61 |     async function handleSave() {
+  62 |         if (!question.text || question.options?.some(o => !o)) {  react-hooks/immutability
+  37:8   warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+  69:63  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  71:75  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\settings\page.tsx
+   6:46  warning  'Mail' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  22:9   error    Error: Cannot access variable before it is declared
+
+`loadSettings` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\settings\page.tsx:22:9
+  20 |
+  21 |     useEffect(() => {
+> 22 |         loadSettings();
+     |         ^^^^^^^^^^^^ `loadSettings` accessed before it is declared
+  23 |         if (isDeveloper) {
+  24 |             loadAuditLogs();
+  25 |         }
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\settings\page.tsx:28:5
+  26 |     }, [isDeveloper]);
+  27 |
+> 28 |     async function loadSettings() {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |         setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |         const data = await firestoreService.getSettings();
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |         setSettings(data);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     }
+     | ^^^^^^ `loadSettings` is declared here
+  34 |
+  35 |     async function loadAuditLogs() {
+  36 |         setLogsLoading(true);                     react-hooks/immutability
+  24:13  error    Error: Cannot access variable before it is declared
+
+`loadAuditLogs` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\settings\page.tsx:24:13
+  22 |         loadSettings();
+  23 |         if (isDeveloper) {
+> 24 |             loadAuditLogs();
+     |             ^^^^^^^^^^^^^ `loadAuditLogs` accessed before it is declared
+  25 |         }
+  26 |     }, [isDeveloper]);
+  27 |
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\settings\page.tsx:35:5
+  33 |     }
+  34 |
+> 35 |     async function loadAuditLogs() {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |         setLogsLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |         const logs = await firestoreService.getAuditLogs();
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 38 |         setAuditLogs(logs);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |         setLogsLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |     }
+     | ^^^^^^ `loadAuditLogs` is declared here
+  41 |
+  42 |     async function handleSave() {
+  43 |         if (!settings) return;  react-hooks/immutability
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\tests\[testId]\page.tsx
+    6:42  warning  'Eye' is defined but never used                                                                                            @typescript-eslint/no-unused-vars
+   18:13  warning  'user' is assigned a value but never used                                                                                  @typescript-eslint/no-unused-vars
+   46:8   warning  React Hook useEffect has missing dependencies: 'isNew' and 'loadTest'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+   85:29  warning  'id' is assigned a value but never used                                                                                    @typescript-eslint/no-unused-vars
+   86:82  error    Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+  108:62  error    Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+  110:70  error    Unexpected any. Specify a different type                                                                                   @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\users\page.tsx
+  28:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\admin\users\page.tsx:28:9
+  26 |
+  27 |     useEffect(() => {
+> 28 |         loadUsers();
+     |         ^^^^^^^^^ Avoid calling setState() directly within an effect
+  29 |     }, []);
+  30 |
+  31 |     async function handleRoleUpdate(uid: string, newRole: string) {  react-hooks/set-state-in-effect
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\analysis\[testId]\page.tsx
+  17:3  warning  'ArrowRight' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\api\razorpay\order\route.ts
+  36:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\auth\login\page.tsx
+  49:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\auth\signup\page.tsx
+  44:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\contact\page.tsx
+  10:33  warning  'formData' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\cuet-2026\page.tsx
+  53:151  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\dashboard\analysis\[testId]\page.tsx
+  17:5  warning  'ArrowRight' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\dashboard\analysis\page.tsx
+  8:25  warning  'Trophy' is defined but never used         @typescript-eslint/no-unused-vars
+  8:63  warning  'MessageSquare' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\dashboard\attempts\page.tsx
+  9:52  warning  'AlertCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\dashboard\layout.tsx
+  9:10  warning  'Loader2' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\dashboard\page.tsx
+   13:5    warning  'AlertCircle' is defined but never used                          @typescript-eslint/no-unused-vars
+   53:11   warning  'handleUnlock' is assigned a value but never used                @typescript-eslint/no-unused-vars
+  172:122  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  212:52   warning  't' is defined but never used                                    @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\dashboard\settings\page.tsx
+  25:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\dashboard\syllabus\page.tsx
+    8:37   warning  'BookOpen' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   69:65   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+   69:106  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  128:29   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  128:53   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  128:216  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  128:237  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  137:24   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  137:109  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  137:138  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  137:167  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  241:13   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\dashboard\syllabus\page.tsx:241:13
+  239 |     useEffect(() => {
+  240 |         if (userData) {
+> 241 |             setStream(userData.stream as StreamType);
+      |             ^^^^^^^^^ Avoid calling setState() directly within an effect
+  242 |
+  243 |             // Logic: 
+  244 |             // 1. If no stream/target set -> Show Modal  react-hooks/set-state-in-effect
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\dashboard\tests\page.tsx
+    8:18  warning  'Filter' is defined but never used                @typescript-eslint/no-unused-vars
+  132:31  warning  'isPurchased' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\mocks\page.tsx
+  12:8   warning  'Link' is defined but never used                                 @typescript-eslint/no-unused-vars
+  68:17  warning  'b' is defined but never used                                    @typescript-eslint/no-unused-vars
+  89:75  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\page.tsx
+  4:8   warning  'Image' is defined but never used         @typescript-eslint/no-unused-vars
+  8:10  warning  'Button' is defined but never used        @typescript-eslint/no-unused-vars
+  9:10  warning  'ArrowRight' is defined but never used    @typescript-eslint/no-unused-vars
+  9:22  warning  'CheckCircle2' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\test\[testId]\page.tsx
+   10:10  warning  'Timer' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   56:73  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   58:17  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\test\[testId]\page.tsx:58:17
+  56 |             const isPurchased = test.price === 'free' || !!(userData as any)?.purchasedTests?.[test.id];
+  57 |             if (test.price === 'paid' && !isPurchased) {
+> 58 |                 setAccessDenied(true);
+     |                 ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  59 |                 setShowPaymentModal(true);
+  60 |             }
+  61 |         }  react-hooks/set-state-in-effect
+  403:63  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\app\test\seed\page.tsx
+  133:23  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  142:53  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  142:65  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\AdminMobileNav.tsx
+  10:5  warning  'FileText' is defined but never used    @typescript-eslint/no-unused-vars
+  18:5  warning  'X' is defined but never used           @typescript-eslint/no-unused-vars
+  19:5  warning  'FolderOpen' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\AdminSidebar.tsx
+  8:5  warning  'FileText' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\QuestionSelector.tsx
+  38:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\QuestionSelector.tsx:38:9
+  36 |
+  37 |     useEffect(() => {
+> 38 |         loadQuestions();
+     |         ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  39 |     }, []);
+  40 |
+  41 |     // Sync prop changes to local state                                                                                             react-hooks/set-state-in-effect
+  43:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\QuestionSelector.tsx:43:9
+  41 |     // Sync prop changes to local state
+  42 |     useEffect(() => {
+> 43 |         setLocalSelected(new Set(selectedIds));
+     |         ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  44 |     }, [selectedIds]);
+  45 |
+  46 |     const filteredQuestions = questions.filter(q => {  react-hooks/set-state-in-effect
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\management\BundlesTab.tsx
+  17:9  error  Error: Cannot access variable before it is declared
+
+`loadBundles` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\management\BundlesTab.tsx:17:9
+  15 |
+  16 |     useEffect(() => {
+> 17 |         loadBundles();
+     |         ^^^^^^^^^^^ `loadBundles` accessed before it is declared
+  18 |     }, []);
+  19 |
+  20 |     async function loadBundles() {
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\management\BundlesTab.tsx:20:5
+  18 |     }, []);
+  19 |
+> 20 |     async function loadBundles() {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |         setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |         const data = await firestoreService.getBundles();
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 23 |         setBundles(data);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 24 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 25 |     }
+     | ^^^^^^ `loadBundles` is declared here
+  26 |
+  27 |     async function handleDelete(id: string) {
+  28 |         if (confirm("Are you sure you want to deactivate this bundle?")) {  react-hooks/immutability
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\management\OverviewTab.tsx
+  57:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\management\QuestionsTab.tsx
+  5:64  warning  'Filter' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\management\TestsTab.tsx
+  5:49  warning  'BarChart2' is defined but never used  @typescript-eslint/no-unused-vars
+  5:60  warning  'Filter' is defined but never used     @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\questions\AddToTestModal.tsx
+  15:27  warning  'Plus' is defined but never used          @typescript-eslint/no-unused-vars
+  15:33  warning  'FileText' is defined but never used      @typescript-eslint/no-unused-vars
+  89:47  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  90:51  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\questions\CSVImportModal.tsx
+   15:33  warning  'ParsedRow' is defined but never used      @typescript-eslint/no-unused-vars
+   28:12  warning  'file' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   56:29  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  112:54  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\questions\FileUploader.tsx
+  4:18  warning  'FileText' is defined but never used  @typescript-eslint/no-unused-vars
+  4:41  warning  'X' is defined but never used         @typescript-eslint/no-unused-vars
+  5:10  warning  'Button' is defined but never used    @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\questions\QuestionPreviewTable.tsx
+   3:10  warning  'Question' is defined but never used              @typescript-eslint/no-unused-vars
+  79:65  error    Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  90:41  warning  'statusColor' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\test-builder\QuestionBankSidePanel.tsx
+   7:21  warning  'Filter' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+  22:27  warning  'setFilterSubject' is assigned a value but never used                                                                @typescript-eslint/no-unused-vars
+  30:8   warning  React Hook useEffect has a missing dependency: 'questions.length'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  39:23  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\test-builder\QuestionCard.tsx
+  19:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\test-builder\TestMetadata.tsx
+  11:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\test-builder\TestQuestionList.tsx
+  29:25  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\test-builder\TestQuestionList.tsx:29:25
+  27 |         const copy: Question = {
+  28 |             ...source,
+> 29 |             id: `temp_${Date.now()}_${Math.random()}`, // Temp ID, will be replaced on save
+     |                         ^^^^^^^^^^ Cannot call impure function
+  30 |             text: `${source.text} (Copy)`
+  31 |         };
+  32 |         const newQuestions = [...questions];                      react-hooks/purity
+  29:39  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\admin\test-builder\TestQuestionList.tsx:29:39
+  27 |         const copy: Question = {
+  28 |             ...source,
+> 29 |             id: `temp_${Date.now()}_${Math.random()}`, // Temp ID, will be replaced on save
+     |                                       ^^^^^^^^^^^^^ Cannot call impure function
+  30 |             text: `${source.text} (Copy)`
+  31 |         };
+  32 |         const newQuestions = [...questions];  react-hooks/purity
+  55:55  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react/no-unescaped-entities
+  55:68  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react/no-unescaped-entities
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\dashboard\PaymentModal.tsx
+   48:52  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   83:41  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   84:59  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  111:44  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  111:57  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  122:77  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\dashboard\Sidebar.tsx
+  14:5  warning  'GraduationCap' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\dashboard\TestCard.tsx
+  3:31  warning  'FileText' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\landing\HeroSection.tsx
+   7:8   warning  'Image' is defined but never used                                @typescript-eslint/no-unused-vars
+   9:31  warning  'headline' is defined but never used                             @typescript-eslint/no-unused-vars
+   9:41  warning  'subheadline' is defined but never used                          @typescript-eslint/no-unused-vars
+  55:69  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\layout\Footer.tsx
+  17:34   error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  17:128  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\layout\Navbar.tsx
+  4:10  warning  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\components\ui\Card.tsx
+  3:11  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\context\AuthContext.tsx
+  24:36  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  25:40  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  98:8   warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\hooks\useTestEngine.ts
+    5:42  warning  'TestAttempt' is defined but never used                                                                                      @typescript-eslint/no-unused-vars
+  159:8   warning  React Hook useEffect has missing dependencies: 'router' and 'startTick'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  189:8   warning  React Hook useCallback has a missing dependency: 'handleAutoSubmit'. Either include it or remove the dependency array        react-hooks/exhaustive-deps
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\lib\firebase\config.ts
+  16:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:9   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\services\firestoreService.ts
+   26:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   26:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   36:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   99:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  373:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\garge\.gemini\antigravity\scratch\cuet_mock_platform\src\types\admin.ts
+  48:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 146 problems (80 errors, 66 warnings)
+
