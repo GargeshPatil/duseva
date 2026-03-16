@@ -166,7 +166,7 @@ export function AddToTestModal({ isOpen, onClose, questionIds, onSuccess }: AddT
                                     >
                                         <div>
                                             <p className="font-medium text-sm text-slate-900">{test.title}</p>
-                                            <p className="text-xs text-slate-500">{test.questions?.length || 0} questions • {test.streams?.join(", ")}</p>
+                                            <p className="text-xs text-slate-500">{test.questions?.length || 0} questions • {Array.isArray(test.streams) ? test.streams.join(", ") : test.streams || "General"}</p>
                                         </div>
                                         {selectedTestId === test.id && <Check className="h-4 w-4 text-blue-600" />}
                                     </div>

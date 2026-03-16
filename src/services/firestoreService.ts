@@ -293,7 +293,7 @@ export const firestoreService = {
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
                     status: data.isPublished ? 'published' : 'draft',
-                    streams: data.streams || (data.stream ? [data.stream] : []),
+                    streams: Array.isArray(data.streams) ? data.streams : (data.streams ? [data.streams] : (data.stream ? [data.stream] : [])),
                     questionIds: data.questionIds || [],
                     sections: data.sections || []
                 } as Test;
@@ -325,7 +325,7 @@ export const firestoreService = {
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
                     status: data.isPublished ? 'published' : 'draft',
-                    streams: data.streams || (data.stream ? [data.stream] : []),
+                    streams: Array.isArray(data.streams) ? data.streams : (data.streams ? [data.streams] : (data.stream ? [data.stream] : [])),
                     questionIds: data.questionIds || [],
                     sections: data.sections || []
                 } as Test;
@@ -349,7 +349,7 @@ export const firestoreService = {
                 totalMarks: testData.totalMarks,
                 difficulty: testData.difficulty,
                 category: testData.category,
-                streams: testData.streams || ['General'], // Default to General
+                streams: Array.isArray(testData.streams) ? testData.streams : (testData.streams ? [testData.streams] : ['General']), // Default to General
                 isPaid: testData.price === 'paid',
                 price: testData.price === 'paid' ? 99 : 0, // Default price logic, update as needed
                 isVisible: true,

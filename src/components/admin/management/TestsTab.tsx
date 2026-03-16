@@ -97,7 +97,7 @@ export function TestsTab() {
 
     const filteredTests = tests.filter(t => {
         const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStream = streamFilter ? t.streams?.includes(streamFilter) : true;
+        const matchesStream = streamFilter ? (Array.isArray(t.streams) ? t.streams.includes(streamFilter) : t.streams === streamFilter) : true;
         const matchesCategory = categoryFilter ? t.category === categoryFilter : true;
         return matchesSearch && matchesStream && matchesCategory;
     });
@@ -281,11 +281,15 @@ export function TestsTab() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-wrap gap-1.5">
-                                                {test.streams?.map(s => (
+                                                {Array.isArray(test.streams) ? test.streams.map(s => (
                                                     <span key={s} className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded-md text-white/70 uppercase tracking-wider font-bold">
                                                         {s}
                                                     </span>
-                                                )) || <span className="text-white/40 italic">General</span>}
+                                                )) : (typeof test.streams === 'string' ? (
+                                                    <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded-md text-white/70 uppercase tracking-wider font-bold">
+                                                        {test.streams}
+                                                    </span>
+                                                ) : <span className="text-white/40 italic">General</span>)}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
@@ -390,9 +394,11 @@ export function TestsTab() {
                                             </div>
                                         </div>
                                         <div className="flex gap-2 text-[10px] uppercase tracking-wider font-bold text-white/60 overflow-x-auto pb-1">
-                                            {test.streams?.map(s => (
+                                            {Array.isArray(test.streams) ? test.streams.map(s => (
                                                 <span key={s} className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">{s}</span>
-                                            )) || <span className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">General</span>}
+                                            )) : (typeof test.streams === 'string' ? (
+                                                <span className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">{test.streams}</span>
+                                            ) : <span className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">General</span>)}
                                             <span className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">{test.category}</span>
                                             <span className="bg-black/40 border border-white/10 px-2 py-1 rounded-md shrink-0">{test.questions?.length || test.questionIds?.length || 0} Qs</span>
                                         </div>

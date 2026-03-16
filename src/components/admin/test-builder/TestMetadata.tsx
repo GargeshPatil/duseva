@@ -14,10 +14,14 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
     };
 
     const handleStreamToggle = (stream: string) => {
-        const current = test.streams || [];
-        const updated = current.includes(stream)
-            ? current.filter(s => s !== stream)
-            : [...current, stream];
+        let current = test.streams || [];
+        if (typeof current === 'string') {
+            current = [current];
+        }
+        
+        const updated = (current as string[]).includes(stream)
+            ? (current as string[]).filter(s => s !== stream)
+            : [...(current as string[]), stream];
         handleChange('streams', updated);
     };
 
@@ -113,7 +117,7 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
                     <label className="block text-sm font-medium text-text-secondary mb-2">Target Streams</label>
                     <div className="flex flex-wrap gap-2">
                         {['Science', 'Commerce', 'Humanities', 'General', 'English'].map(stream => {
-                            const isSelected = test.streams?.includes(stream);
+                            const isSelected = Array.isArray(test.streams) ? test.streams.includes(stream) : test.streams === stream;
                             return (
                                 <button
                                     key={stream}
