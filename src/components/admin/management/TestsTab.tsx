@@ -272,7 +272,9 @@ export function TestsTab() {
                                             />
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="font-bold text-white tracking-wide">{test.title}</div>
+                                            <Link href={`/admin/tests/${test.id}`} className="font-bold text-white tracking-wide hover:text-cta-primary transition-colors inline-block">
+                                                {test.title}
+                                            </Link>
                                             <div className="text-[11px] text-white/40 mt-1 max-w-xs truncate font-medium">
                                                 {test.description || "No description provided"}
                                             </div>
@@ -307,7 +309,7 @@ export function TestsTab() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center justify-end gap-2">
                                                 <Link href={`/test/${test.id}`} target="_blank">
                                                     <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-transparent hover:border-white/10" title="Preview">
                                                         <Eye className="h-4 w-4" />
@@ -360,7 +362,9 @@ export function TestsTab() {
                                     <div className="flex-1 space-y-3">
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <h3 className="font-bold text-white">{test.title}</h3>
+                                                <Link href={`/admin/tests/${test.id}`}>
+                                                    <h3 className="font-bold text-white hover:text-cta-primary transition-colors">{test.title}</h3>
+                                                </Link>
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider mt-2 border
                                                     ${test.status === 'published'
                                                         ? 'bg-semantic-success/10 text-emerald-400 border-semantic-success/20'
