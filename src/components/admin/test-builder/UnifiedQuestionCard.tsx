@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Question, Passage } from "@/types/admin";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Trash2, GripVertical, Check, Copy, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, GripVertical, Check, Copy, X, ChevronDown, ChevronUp, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Reorder, useDragControls } from "framer-motion";
+import { uploadImage } from "@/services/storageService";
 
 interface UnifiedQuestionCardProps {
     question: Question;
@@ -32,6 +33,7 @@ export function UnifiedQuestionCard({
 
     const [isCreatingPassage, setIsCreatingPassage] = useState(false);
     const [newPassageText, setNewPassageText] = useState("");
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChange = (field: keyof Question, value: any) => {
@@ -63,6 +65,24 @@ export function UnifiedQuestionCard({
         // Note: Actual passage creation needs to be handled on save by the parent
         // For inline editing, it's easier if we store a temporary prop or rely on parent
         handleChange('passageText' as any, text);
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingImage(true);
+        try {
+            const timestamp = Date.now();
+            const path = `questions/images/${question.id || "temp"}_${timestamp}_${file.name}`;
+            const url = await uploadImage(file, path);
+            handleChange('imageUrl', url);
+        } catch (error) {
+            console.error("Image upload failed:", error);
+            alert("Failed to upload image.");
+        } finally {
+            setIsUploadingImage(false);
+        }
     };
 
     const cardContent = (
@@ -203,6 +223,34 @@ export function UnifiedQuestionCard({
                                     onChange={(e) => handleChange('text', e.target.value)}
                                     placeholder="Type the question here..."
                                 />
+                            </div>
+
+                            {/* Image Upload */}
+                            <div className="p-4 bg-surface-elevated border border-border rounded-lg space-y-3">
+                                <label className="block text-xs font-semibold text-text-secondary uppercase">Attached Image (Optional)</label>
+                                {question.imageUrl ? (
+                                    <div className="relative inline-block border border-border rounded-lg overflow-hidden bg-background">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={question.imageUrl} alt="Question" className="max-h-48 object-contain" />
+                                        <button
+                                            onClick={() => handleChange('imageUrl', null)}
+                                            className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-semantic-error transition"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3">
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            disabled={isUploadingImage}
+                                            className="max-w-[300px] text-xs h-9 cursor-pointer"
+                                        />
+                                        {isUploadingImage && <Loader2 className="h-4 w-4 animate-spin text-text-muted" />}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Match Pairs Builder */}

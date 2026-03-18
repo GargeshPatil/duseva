@@ -42,7 +42,6 @@ export function Footer() {
                             Navigation
                         </h4>
                         <ul className="space-y-4 text-white/60 font-medium">
-                            <li><Link href="/" className="hover:text-white transition-all duration-300 flex items-center gap-3 group"><span className="w-1.5 h-1.5 bg-white/20 group-hover:bg-cta-primary rounded-full transition-colors"></span><span className="group-hover:translate-x-1 transition-transform">Home</span></Link></li>
                             <li><Link href="/cuet-2026" className="hover:text-white transition-all duration-300 flex items-center gap-3 group"><span className="w-1.5 h-1.5 bg-white/20 group-hover:bg-cta-primary rounded-full transition-colors"></span><span className="group-hover:translate-x-1 transition-transform">CUET 2026 Guide</span></Link></li>
                             <li><Link href="/mocks" className="hover:text-white transition-all duration-300 flex items-center gap-3 group"><span className="w-1.5 h-1.5 bg-white/20 group-hover:bg-cta-primary rounded-full transition-colors"></span><span className="group-hover:translate-x-1 transition-transform">Mock Tests</span></Link></li>
                             <li><Link href="/contact" className="hover:text-white transition-all duration-300 flex items-center gap-3 group"><span className="w-1.5 h-1.5 bg-white/20 group-hover:bg-cta-primary rounded-full transition-colors"></span><span className="group-hover:translate-x-1 transition-transform">Contact Us</span></Link></li>

@@ -1,7 +1,7 @@
-
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -19,6 +19,8 @@ let app: any;
 let auth: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let db: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let storage: any;
 
 // Check if we are in the browser environment
 if (typeof window !== "undefined") {
@@ -33,6 +35,7 @@ if (typeof window !== "undefined") {
             });
 
             db = getFirestore(app);
+            storage = getStorage(app);
         } catch (error) {
             console.error("Firebase initialization failed:", error);
         }
@@ -41,4 +44,4 @@ if (typeof window !== "undefined") {
     }
 }
 
-export { app, auth, db };
+export { app, auth, db, storage };

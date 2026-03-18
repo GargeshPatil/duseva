@@ -659,6 +659,52 @@ export const firestoreService = {
         }
     },
 
+    async runMigration(): Promise<{ success: number; failed: number }> {
+        try {
+            const questionsRef = collection(db, "questions");
+            const snapshot = await getDocs(query(questionsRef));
+            const batchLimit = 450;
+            let successCount = 0;
+            const chunks = [];
+            for (let i = 0; i < snapshot.docs.length; i += batchLimit) {
+                chunks.push(snapshot.docs.slice(i, i + batchLimit));
+            }
+
+            for (const chunk of chunks) {
+                const batch = writeBatch(db);
+                chunk.forEach(docSnap => {
+                    const data = docSnap.data();
+                    let needsUpdate = false;
+                    const updates: any = {};
+
+                    if (!data.questionType) {
+                        updates.questionType = "mcq";
+                        needsUpdate = true;
+                    }
+                    if (!data.options || data.options.length === 0) {
+                        updates.options = ["", "", "", ""];
+                        needsUpdate = true;
+                    }
+                    if (data.correctOption === undefined || data.correctOption === null) {
+                        updates.correctOption = 0;
+                        needsUpdate = true;
+                    }
+
+                    if (needsUpdate) {
+                        updates.updatedAt = Timestamp.now();
+                        batch.update(docSnap.ref, updates);
+                        successCount++;
+                    }
+                });
+                await batch.commit();
+            }
+            return { success: successCount, failed: 0 };
+        } catch (error) {
+            console.error("Migration failed:", error);
+            return { success: 0, failed: 1 };
+        }
+    },
+
     async updateQuestion(id: string, updates: Partial<Question>): Promise<boolean> {
         try {
             const questionRef = doc(db, "questions", id);

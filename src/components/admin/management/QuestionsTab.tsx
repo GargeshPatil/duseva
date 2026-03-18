@@ -33,6 +33,7 @@ export function QuestionsTab() {
     const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
     const [isAddToTestModalOpen, setIsAddToTestModalOpen] = useState(false);
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [isMigrating, setIsMigrating] = useState(false);
 
     useEffect(() => {
         loadQuestions();
@@ -77,6 +78,22 @@ export function QuestionsTab() {
                 console.error("Bulk delete failed", error);
             } finally {
                 setIsBulkDeleting(false);
+            }
+        }
+    }
+
+    async function handleMigrate() {
+        if (confirm("This will scan and update all legacy questions to the new Mocks engine schema (assigning 'mcq' type, fixing empty options, etc). Continue?")) {
+            setIsMigrating(true);
+            try {
+                const result = await firestoreService.runMigration();
+                alert(`Migration Complete. Updated ${result.success} questions.`);
+                loadQuestions();
+            } catch (error) {
+                console.error(error);
+                alert("Migration encountered an error.");
+            } finally {
+                setIsMigrating(false);
             }
         }
     }
@@ -140,6 +157,14 @@ export function QuestionsTab() {
                         className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl h-11 px-4 gap-2 transition-all shadow-sm"
                     >
                         <Upload className="h-4 w-4" /> Import CSV
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        onClick={handleMigrate}
+                        disabled={isMigrating}
+                        className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 rounded-xl h-11 px-4 gap-2 transition-all shadow-sm"
+                    >
+                        {isMigrating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Layers className="h-4 w-4" />} Fix Existing Data
                     </Button>
                     <Button
                         onClick={() => setEditingQuestionId('new')}

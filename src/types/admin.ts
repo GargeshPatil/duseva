@@ -21,6 +21,7 @@ export interface Question {
     passageId?: string;
     id: string;
     text: string;
+    imageUrl?: string; // New: optional image support
     options: string[];
     correctOption: number; // Index 0-3
     explanation?: string;

@@ -28,13 +28,7 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (!authLoading && user && userData) {
-      if (userData.role === 'admin' || userData.role === 'developer') {
-        router.push("/admin");
-      } else {
-        router.push("/dashboard");
-      }
-    }
+    // Intentionally removed auto-redirect so both admin and student can view the landing page from their dashboards
   }, [user, userData, authLoading, router]);
 
   if (authLoading) {

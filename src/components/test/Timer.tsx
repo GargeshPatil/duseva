@@ -1,42 +1,30 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { Clock } from "lucide-react";
+import React from 'react';
+import { Clock } from 'lucide-react';
 
 interface TimerProps {
-    durationInSeconds: number; // e.g., 2700 for 45 mins
-    onTimeUp?: () => void;
+    timeRemaining: number; // in seconds
 }
 
-export function Timer({ durationInSeconds, onTimeUp }: TimerProps) {
-    const [timeLeft, setTimeLeft] = useState(durationInSeconds);
-
-    useEffect(() => {
-        if (timeLeft <= 0) {
-            onTimeUp?.();
-            return;
-        }
-
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => prev - 1);
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [timeLeft, onTimeUp]);
-
+export function Timer({ timeRemaining }: TimerProps) {
     const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        
+        if (h > 0) {
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
-    const isLowTime = timeLeft < 300; // less than 5 mins
+    const isLowTime = timeRemaining < 300; // less than 5 mins
 
     return (
-        <div className={`flex items-center gap-2 font-mono text-lg font-bold px-4 py-2 rounded-lg border ${isLowTime ? "bg-red-50 text-red-600 border-red-200" : "bg-blue-50 text-primary border-blue-200"
-            }`}>
-            <Clock className="h-5 w-5" />
-            {formatTime(timeLeft)}
+        <div className={`flex items-center gap-2 font-mono text-[15px] font-bold px-3 py-1.5 rounded bg-white
+            ${isLowTime ? "text-red-600 border border-red-500 animate-pulse" : "text-[#1D4E89]"}
+        `}>
+            <Clock className="h-4 w-4" />
+            <span>Time Left: {formatTime(timeRemaining)}</span>
         </div>
     );
 }

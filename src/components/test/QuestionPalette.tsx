@@ -1,121 +1,148 @@
 import React from 'react';
-import { QuestionStatus } from '@/types/admin';
+import { useExamEngine } from '@/hooks/useExamEngine';
 
-interface QuestionPaletteProps {
-    totalQuestions: number;
-    currentQuestionIndex: number; // 0-based
-    questionStatus: Record<string, QuestionStatus>;
-    questions: { id: string }[];
-    onQuestionSelect: (index: number) => void;
-}
+export function QuestionPalette({ engine }: { engine: ReturnType<typeof useExamEngine> }) {
+    const { questions, questionStatus, currentQIndex, actions } = engine;
 
-export function QuestionPalette({
-    totalQuestions,
-    currentQuestionIndex,
-    questionStatus,
-    questions,
-    onQuestionSelect
-}: QuestionPaletteProps) {
-
-    // Helper to determine status color based on NTA guidelines
-    const getStatusClass = (idx: number) => {
+    const getStatusStyle = (idx: number) => {
         const qId = questions[idx]?.id;
-        const statusObj = questionStatus[qId];
-        const status = statusObj?.status || 'not_visited';
-        const isCurrent = currentQuestionIndex === idx;
+        const status = questionStatus[qId]?.status || 'not_visited';
 
-        // Current question always needs highlighting (often a border or distinct background)
-        // NTA style: Current question might just have a ring, but the background color relies on status.
-        // Actually NTA shows current question distinctly.
-
-        let baseClass = "";
-
+        // Base styles depending on state
         switch (status) {
             case 'answered':
-                baseClass = "bg-semantic-success text-white border-semantic-success";
-                break;
+                return {
+                    background: '#4caf50',
+                    color: 'white',
+                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 100%, 0 100%, 0% 25%)',
+                    border: 'none',
+                };
             case 'not_answered':
-                baseClass = "bg-semantic-error text-white border-semantic-error";
-                break;
+                return {
+                    background: '#ff5722',
+                    color: 'white',
+                    clipPath: 'polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%)',
+                    border: 'none',
+                };
             case 'marked_for_review':
-                baseClass = "bg-cta-primary/10 text-cta-primary border-cta-primary/30";
-                break;
+                return {
+                    background: '#673ab7',
+                    color: 'white',
+                    borderRadius: '50%',
+                    border: 'none',
+                };
             case 'answered_marked_for_review':
-                baseClass = "bg-cta-primary text-white border-cta-hover relative overflow-hidden";
-                break;
+                return {
+                    background: '#673ab7',
+                    color: 'white',
+                    borderRadius: '50%',
+                    border: 'none',
+                };
             case 'not_visited':
             default:
-                baseClass = "bg-surface-elevated text-text-secondary border-border/60";
-                break;
+                return {
+                    background: '#e0e0e0',
+                    color: 'black',
+                    borderRadius: '4px',
+                    border: '1px solid #999',
+                };
         }
-
-        if (isCurrent) {
-            return `${baseClass} ring-2 ring-cta-primary/50 ring-offset-1 dark:ring-offset-surface-base`;
-        }
-        return baseClass;
     };
 
+    // Calculate Dynamic Summary
+    const summary = {
+        answered: 0,
+        not_answered: 0,
+        not_visited: 0,
+        marked: 0,
+        answered_marked: 0
+    };
+
+    questions.forEach(q => {
+        const s = questionStatus[q.id]?.status || 'not_visited';
+        if (s === 'answered') summary.answered++;
+        else if (s === 'not_answered') summary.not_answered++;
+        else if (s === 'marked_for_review') summary.marked++;
+        else if (s === 'answered_marked_for_review') summary.answered_marked++;
+        else summary.not_visited++;
+    });
+
     return (
-        <div className="bg-surface-card border-l border-border/60 flex flex-col h-full shadow-lg z-30">
-            <div className="p-4 bg-surface-base border-b border-border/60 flex items-center justify-between">
-                <h3 className="font-semibold text-text-primary text-sm uppercase tracking-wide">Question Palette</h3>
-                <span className="text-xs bg-surface-elevated text-text-secondary px-2 py-0.5 rounded-full font-medium border border-border">{questions.length} Qs</span>
+        <div className="flex flex-col h-full bg-white p-3 pt-0">
+            
+            {/* Title */}
+            <div className="bg-[#1D4E89] text-white text-[14px] font-bold py-2 px-3 shrink-0 mb-3 mt-3 shadow-sm border border-[#0b3360]">
+                {engine.currentSection}
             </div>
 
-            <div className="p-4 flex-1 overflow-y-auto bg-surface-base">
-                <div className="grid grid-cols-5 gap-2.5">
-                    {Array.from({ length: totalQuestions }).map((_, idx) => {
-                        const qNum = idx + 1;
-                        const qId = questions[idx]?.id;
-                        const isAnsweredMarked = questionStatus[qId]?.status === 'answered_marked_for_review';
-                        const statusClass = getStatusClass(idx);
-
-                        return (
-                            <button
-                                key={idx}
-                                onClick={() => onQuestionSelect(idx)}
-                                className={`
-                                    h-9 w-9 flex items-center justify-center rounded-[10px] border text-sm font-semibold transition-all duration-200
-                                    ${statusClass}
-                                    relative hover:scale-105 active:scale-95 shadow-sm
-                                `}
-                            >
-                                {qNum}
-                                {isAnsweredMarked && (
-                                    <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-semantic-success rounded-full border-2 border-surface-card"></span>
-                                )}
-                            </button>
-                        );
-                    })}
+            {/* Right Panel - Legend */}
+            <div style={{ border: '2px dashed #ccc', padding: '15px', marginBottom: '10px' }} className="shrink-0">
+                <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[12px] font-medium text-black">
+                    <div className="flex items-center gap-2">
+                        <div style={{ width: '30px', height: '30px', background: '#e0e0e0', borderRadius: '4px', border: '1px solid #999' }} className="flex items-center justify-center font-bold">{summary.not_visited}</div>
+                        <span className="leading-tight">Not Visited</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div style={{ width: '30px', height: '30px', background: '#ff5722', color: 'white', clipPath: 'polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%)' }} className="flex items-center justify-center font-bold">{summary.not_answered}</div>
+                        <span className="leading-tight">Not Answered</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div style={{ width: '30px', height: '30px', background: '#4caf50', color: 'white', clipPath: 'polygon(50% 0%, 100% 25%, 100% 100%, 0 100%, 0% 25%)' }} className="flex items-center justify-center font-bold">{summary.answered}</div>
+                        <span className="leading-tight">Answered</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div style={{ width: '30px', height: '30px', background: '#673ab7', color: 'white', borderRadius: '50%' }} className="flex items-center justify-center font-bold">{summary.marked}</div>
+                        <span className="leading-tight">Marked for Review</span>
+                    </div>
+                    <div className="col-span-2 flex items-center gap-2 mt-1">
+                        <div className="relative shrink-0">
+                            <div style={{ width: '30px', height: '30px', background: '#673ab7', color: 'white', borderRadius: '50%' }} className="flex items-center justify-center font-bold">{summary.answered_marked}</div>
+                            {/* Tick Overlay */}
+                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#4caf50] rounded-full border border-white flex items-center justify-center">
+                                <span className="text-white text-[9px] font-bold leading-none">✓</span>
+                            </div>
+                        </div>
+                        <span className="leading-tight">Answered & Marked for Review (will be considered for evaluation)</span>
+                    </div>
                 </div>
             </div>
 
-            <div className="p-4 border-t border-border/60 bg-surface-card text-[11px] space-y-3 mt-auto shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]">
-                <h4 className="font-semibold text-text-primary mb-2 uppercase tracking-wider text-[10px]">Legend</h4>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-3">
-                    <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 flex items-center justify-center rounded-[6px] bg-semantic-success text-white font-semibold text-[10px] shadow-sm">5</span>
-                        <span className="text-text-secondary">Answered</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 flex items-center justify-center rounded-[6px] bg-semantic-error text-white font-semibold text-[10px] shadow-sm">3</span>
-                        <span className="text-text-secondary">Not Answered</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 flex items-center justify-center rounded-[6px] bg-cta-primary/10 text-cta-primary border border-cta-primary/30 font-semibold text-[10px] shadow-sm">7</span>
-                        <span className="text-text-secondary">Marked</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 flex items-center justify-center rounded-[6px] bg-surface-elevated text-text-secondary border border-border/60 font-semibold text-[10px] shadow-sm">1</span>
-                        <span className="text-text-secondary">Not Visited</span>
-                    </div>
-                    <div className="col-span-2 flex items-center gap-2 pt-1 border-t border-border/60">
-                        <div className="relative shrink-0">
-                            <span className="w-5 h-5 flex items-center justify-center rounded-[6px] bg-cta-primary text-white font-semibold text-[10px] shadow-sm">9</span>
-                            <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-semantic-success rounded-full border border-surface-card"></span>
-                        </div>
-                        <span className="text-text-secondary leading-tight">Ans & Marked (Evaluated)</span>
-                    </div>
+            {/* Grid */}
+            <div className="p-3 flex-1 overflow-y-auto bg-[#cce5ff] border border-[#b8daff] custom-scrollbar">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+                    {questions.map((q, idx) => {
+                        const isAnsweredMarked = questionStatus[q.id]?.status === 'answered_marked_for_review';
+                        const isCurrent = currentQIndex === idx;
+                        const style = getStatusStyle(idx);
+                        
+                        return (
+                            <div 
+                                key={q.id}
+                                onClick={() => actions.handleJump(idx)}
+                                style={{
+                                    ...style,
+                                    width: '40px',
+                                    height: '40px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '14px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    outline: isCurrent ? '2px solid #000' : 'none',
+                                    position: 'relative',
+                                }}
+                                title={`Question ${idx + 1}`}
+                            >
+                                {idx + 1}
+                                {isAnsweredMarked && (
+                                     <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#4caf50] rounded-full border border-white flex items-center justify-center">
+                                        <span className="text-white text-[9px] font-bold leading-none">✓</span>
+                                     </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>

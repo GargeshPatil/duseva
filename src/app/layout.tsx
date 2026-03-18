@@ -27,7 +27,8 @@ export default function RootLayout({
   const themeScript = `
     (function() {
       try {
-        var isMarketing = window.location.pathname === '/' || window.location.pathname.startsWith('/about');
+        var path = window.location.pathname;
+        var isDarkPath = path === '/' || path.startsWith('/about') || path.startsWith('/mocks') || path.startsWith('/auth') || path.startsWith('/dashboard') || path.startsWith('/test') || path.startsWith('/admin') || path.startsWith('/analysis');
         var savedTheme = localStorage.getItem('app-theme');
         var theme = 'light'; // default
 
@@ -37,7 +38,7 @@ export default function RootLayout({
             : savedTheme;
         } else {
            // Default logic if no saved preference
-           if (isMarketing) {
+           if (isDarkPath) {
              theme = 'dark';
            } else {
              theme = 'light';
