@@ -49,7 +49,7 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
                 activeBundles: bundles.filter(b => b.isActive).length
             });
         } catch (error) {
-            console.error("Failed to load stats", error);
+            console.warn("Failed to load stats", error);
         } finally {
             setLoading(false);
         }

@@ -55,7 +55,7 @@ service cloud.firestore {
     // 2. tests Collection
     match /tests/{testId} {
       // Public can read all tests (e.g., test catalog).
-      allow read: if resource.data.isPublished == true || isAdmin() || isDeveloper();
+      allow read: if isAdmin() || isDeveloper() || resource.data.isPublished == true;
       // Only Admins and Developers can create, update, or delete tests.
       allow create, update, delete: if isAdmin() || isDeveloper();
     }

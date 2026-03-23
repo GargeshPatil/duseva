@@ -85,20 +85,51 @@ export default function TestBuilderPage() {
 
             for (const q of questions) {
                 let savedQ = { ...q };
+                
+                // Handle inline passage creation
+                let finalPassageId = savedQ.passageId;
+                const passageTextToCreate = (savedQ as any).passageText;
+                
+                if (savedQ.questionType === "passage" && passageTextToCreate && passageTextToCreate.trim() !== "") {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const newId = await firestoreService.createPassage({ text: passageTextToCreate });
+                    if (newId) {
+                        finalPassageId = newId;
+                    } else {
+                        throw new Error("Failed to create the new passage.");
+                    }
+                } else if (savedQ.questionType === "passage" && !finalPassageId) {
+                    throw new Error("Please select or create a passage for passage-based questions.");
+                }
+
+                if (savedQ.questionType === "passage") {
+                    savedQ.passageId = finalPassageId;
+                } else {
+                    delete savedQ.passageId;
+                }
+                
+                // Clean up transient UI fields
+                if (savedQ.questionType !== "match") {
+                    delete savedQ.matchPairs;
+                }
+                
+                // Remove temporary field before uploading
+                delete (savedQ as any).passageText;
+
                 // If it has a temp ID (starts with temp_) or is empty/null, create it as new
-                if (!q.id || q.id.startsWith('temp_')) {
+                if (!savedQ.id || savedQ.id.startsWith('temp_')) {
                     // Remove the temp ID so firestore generates one
-                    const { id, ...qData } = q;
+                    const { id, ...qData } = savedQ;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const newId = await firestoreService.createQuestion(qData as any);
                     if (newId) {
-                        savedQ = { ...q, id: newId };
+                        savedQ = { ...savedQ, id: newId };
                     } else {
                         throw new Error("Failed to create question");
                     }
                 } else {
                     // Update existing
-                    await firestoreService.updateQuestion(q.id, q);
+                    await firestoreService.updateQuestion(savedQ.id, savedQ);
                 }
                 finalQuestionIds.push(savedQ.id);
                 savedQuestions.push(savedQ);

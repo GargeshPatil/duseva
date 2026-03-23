@@ -507,6 +507,10 @@ export const firestoreService = {
                         subject: data.subject,
                         tags: data.tags || [],
                         difficulty: data.difficulty,
+                        questionType: data.questionType,
+                        matchPairs: data.matchPairs,
+                        passageId: data.passageId,
+                        imageUrl: data.imageUrl,
                     } as Question;
                 });
             }
@@ -543,6 +547,10 @@ export const firestoreService = {
                     subject: data.subject,
                     tags: data.tags || [],
                     difficulty: data.difficulty,
+                    questionType: data.questionType,
+                    matchPairs: data.matchPairs,
+                    passageId: data.passageId,
+                    imageUrl: data.imageUrl,
                 } as Question;
             });
         } catch (error) {

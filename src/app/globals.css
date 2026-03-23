@@ -158,3 +158,32 @@
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+@layer components {
+  .rich-text-content table {
+    @apply w-full border-collapse my-4;
+  }
+  .rich-text-content th,
+  .rich-text-content td {
+    @apply border border-gray-300 p-2 text-left;
+  }
+  .rich-text-content th {
+    @apply bg-gray-100 font-bold;
+  }
+  [data-theme="dark"] .rich-text-content th,
+  [data-theme="dark"] .rich-text-content td {
+    @apply border-gray-700;
+  }
+  [data-theme="dark"] .rich-text-content th {
+    @apply bg-gray-800;
+  }
+  .rich-text-content p {
+    @apply mb-2 last:mb-0;
+  }
+  .rich-text-content ol {
+    @apply list-decimal pl-5 my-2;
+  }
+  .rich-text-content ul {
+    @apply list-disc pl-5 my-2;
+  }
+}

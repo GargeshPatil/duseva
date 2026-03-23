@@ -14,14 +14,16 @@ export function QuestionPalette({ engine }: { engine: ReturnType<typeof useExamE
                 return {
                     background: '#4caf50',
                     color: 'white',
-                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 100%, 0 100%, 0% 25%)',
+                    clipPath: 'polygon(100% 0%, 100% 100%, 0% 80%, 0% 20%)',
+                    boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)',
                     border: 'none',
                 };
             case 'not_answered':
                 return {
                     background: '#ff5722',
                     color: 'white',
-                    clipPath: 'polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%)',
+                    clipPath: 'polygon(100% 0%, 100% 100%, 0% 80%, 0% 20%)',
+                    boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)',
                     border: 'none',
                 };
             case 'marked_for_review':
@@ -29,6 +31,7 @@ export function QuestionPalette({ engine }: { engine: ReturnType<typeof useExamE
                     background: '#673ab7',
                     color: 'white',
                     borderRadius: '50%',
+                    boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)',
                     border: 'none',
                 };
             case 'answered_marked_for_review':
@@ -36,6 +39,7 @@ export function QuestionPalette({ engine }: { engine: ReturnType<typeof useExamE
                     background: '#673ab7',
                     color: 'white',
                     borderRadius: '50%',
+                    boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)',
                     border: 'none',
                 };
             case 'not_visited':
@@ -44,6 +48,7 @@ export function QuestionPalette({ engine }: { engine: ReturnType<typeof useExamE
                     background: '#e0e0e0',
                     color: 'black',
                     borderRadius: '4px',
+                    boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)',
                     border: '1px solid #999',
                 };
         }
@@ -79,27 +84,30 @@ export function QuestionPalette({ engine }: { engine: ReturnType<typeof useExamE
             <div style={{ border: '2px dashed #ccc', padding: '15px', marginBottom: '10px' }} className="shrink-0">
                 <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[12px] font-medium text-black">
                     <div className="flex items-center gap-2">
-                        <div style={{ width: '30px', height: '30px', background: '#e0e0e0', borderRadius: '4px', border: '1px solid #999' }} className="flex items-center justify-center font-bold">{summary.not_visited}</div>
+                        <div style={{ width: '30px', height: '30px', background: '#e0e0e0', borderRadius: '4px', border: '1px solid #999', boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)' }} className="flex items-center justify-center font-bold">{summary.not_visited}</div>
                         <span className="leading-tight">Not Visited</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div style={{ width: '30px', height: '30px', background: '#ff5722', color: 'white', clipPath: 'polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%)' }} className="flex items-center justify-center font-bold">{summary.not_answered}</div>
+                        <div style={{ width: '30px', height: '30px', background: '#ff5722', color: 'white', clipPath: 'polygon(100% 0%, 100% 100%, 0% 80%, 0% 20%)', boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)' }} className="flex items-center justify-center font-bold">{summary.not_answered}</div>
                         <span className="leading-tight">Not Answered</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div style={{ width: '30px', height: '30px', background: '#4caf50', color: 'white', clipPath: 'polygon(50% 0%, 100% 25%, 100% 100%, 0 100%, 0% 25%)' }} className="flex items-center justify-center font-bold">{summary.answered}</div>
+                        <div style={{ width: '30px', height: '30px', background: '#4caf50', color: 'white', clipPath: 'polygon(100% 0%, 100% 100%, 0% 80%, 0% 20%)', boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)' }} className="flex items-center justify-center font-bold">{summary.answered}</div>
                         <span className="leading-tight">Answered</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div style={{ width: '30px', height: '30px', background: '#673ab7', color: 'white', borderRadius: '50%' }} className="flex items-center justify-center font-bold">{summary.marked}</div>
+                        <div style={{ width: '30px', height: '30px', background: '#673ab7', color: 'white', borderRadius: '50%', boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)' }} className="flex items-center justify-center font-bold">{summary.marked}</div>
                         <span className="leading-tight">Marked for Review</span>
                     </div>
                     <div className="col-span-2 flex items-center gap-2 mt-1">
                         <div className="relative shrink-0">
-                            <div style={{ width: '30px', height: '30px', background: '#673ab7', color: 'white', borderRadius: '50%' }} className="flex items-center justify-center font-bold">{summary.answered_marked}</div>
-                            {/* Tick Overlay */}
-                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#4caf50] rounded-full border border-white flex items-center justify-center">
-                                <span className="text-white text-[9px] font-bold leading-none">✓</span>
+                            <div style={{ width: '30px', height: '30px', background: '#673ab7', color: 'white', borderRadius: '50%', boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)' }} className="flex items-center justify-center font-bold">{summary.answered_marked}</div>
+                            {/* Blue Square Overlay */}
+                            <div className="absolute -bottom-1 -right-1 bg-white rounded-full flex items-center justify-center p-[2px]">
+                                <div className="w-[10px] h-[10px] bg-[#1976d2] flex flex-col items-center justify-center gap-[1px]">
+                                    <div className="w-[6px] h-[1px] bg-white"></div>
+                                    <div className="w-[6px] h-[1px] bg-white"></div>
+                                </div>
                             </div>
                         </div>
                         <span className="leading-tight">Answered & Marked for Review (will be considered for evaluation)</span>
@@ -136,8 +144,11 @@ export function QuestionPalette({ engine }: { engine: ReturnType<typeof useExamE
                             >
                                 {idx + 1}
                                 {isAnsweredMarked && (
-                                     <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#4caf50] rounded-full border border-white flex items-center justify-center">
-                                        <span className="text-white text-[9px] font-bold leading-none">✓</span>
+                                     <div className="absolute -bottom-1 -right-1 bg-white rounded-full flex items-center justify-center p-[2px]">
+                                        <div className="w-[10px] h-[10px] bg-[#1976d2] flex flex-col items-center justify-center gap-[1px]">
+                                            <div className="w-[6px] h-[1px] bg-white"></div>
+                                            <div className="w-[6px] h-[1px] bg-white"></div>
+                                        </div>
                                      </div>
                                 )}
                             </div>

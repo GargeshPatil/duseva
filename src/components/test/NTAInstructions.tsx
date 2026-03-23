@@ -25,7 +25,7 @@ export default function NTAInstructions({ testId }: Props) {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.headerTitle}>National Testing Agency</div>
+        <div className={styles.headerTitle}>DU Seva</div>
       </header>
 
       <main className={styles.mainContent}>
@@ -39,22 +39,25 @@ export default function NTAInstructions({ testId }: Props) {
             <li>The Question Palette displayed on the right side of screen will show the status of each question using one of the following symbols:
               <ul style={{ listStyleType: 'none', paddingLeft: 0, marginTop: '10px' }}>
                 <li style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ display: 'inline-block', width: '30px', height: '30px', background: '#e0e0e0', border: '1px solid #999', textAlign: 'center', lineHeight: '28px', marginRight: '10px', borderRadius: '4px', fontWeight: 'bold' }}>1</span> You have not visited the question yet.
+                  <span style={{ display: 'inline-block', width: '30px', height: '30px', background: '#e0e0e0', border: '1px solid #999', boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)', textAlign: 'center', lineHeight: '28px', marginRight: '10px', borderRadius: '4px', fontWeight: 'bold' }}>1</span> You have not visited the question yet.
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ display: 'inline-block', width: '30px', height: '30px', background: '#ff5722', color: 'white', textAlign: 'center', lineHeight: '26px', marginRight: '10px', clipPath: 'polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%)', fontWeight: 'bold' }}>2</span> You have not answered the question.
+                  <span style={{ display: 'inline-block', width: '30px', height: '30px', background: '#ff5722', color: 'white', textAlign: 'center', lineHeight: '26px', marginRight: '10px', boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)', clipPath: 'polygon(100% 0%, 100% 100%, 0% 80%, 0% 20%)', fontWeight: 'bold' }}>2</span> You have not answered the question.
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ display: 'inline-block', width: '30px', height: '30px', background: '#4caf50', color: 'white', textAlign: 'center', lineHeight: '36px', marginRight: '10px', clipPath: 'polygon(50% 0%, 100% 25%, 100% 100%, 0 100%, 0% 25%)', fontWeight: 'bold' }}>3</span> You have answered the question.
+                  <span style={{ display: 'inline-block', width: '30px', height: '30px', background: '#4caf50', color: 'white', textAlign: 'center', lineHeight: '26px', marginRight: '10px', boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)', clipPath: 'polygon(100% 0%, 100% 100%, 0% 80%, 0% 20%)', fontWeight: 'bold' }}>3</span> You have answered the question.
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ display: 'inline-block', width: '30px', height: '30px', background: '#673ab7', color: 'white', textAlign: 'center', lineHeight: '30px', borderRadius: '50%', marginRight: '10px', fontWeight: 'bold' }}>4</span> You have NOT answered the question, but have marked the question for review.
+                  <span style={{ display: 'inline-block', width: '30px', height: '30px', background: '#673ab7', color: 'white', textAlign: 'center', lineHeight: '30px', borderRadius: '50%', boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)', marginRight: '10px', fontWeight: 'bold' }}>4</span> You have NOT answered the question, but have marked the question for review.
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ display: 'inline-block', width: '30px', height: '30px', background: '#673ab7', color: 'white', textAlign: 'center', lineHeight: '30px', borderRadius: '50%', position: 'relative', marginRight: '10px', fontWeight: 'bold' }}>
+                  <span style={{ display: 'inline-block', width: '30px', height: '30px', background: '#673ab7', color: 'white', textAlign: 'center', lineHeight: '30px', borderRadius: '50%', boxShadow: 'inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)', position: 'relative', marginRight: '10px', fontWeight: 'bold' }}>
                     5
-                    <span style={{ position: 'absolute', right: '-4px', bottom: '-4px', width: '14px', height: '14px', background: '#4caf50', borderRadius: '50%', border: '1px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ color: 'white', fontSize: '9px', fontWeight: 'bold', lineHeight: '1' }}>✓</span>
+                    <span style={{ position: 'absolute', right: '-4px', bottom: '-4px', width: '14px', height: '14px', background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ background: '#1976d2', width: '10px', height: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1px' }}>
+                        <span style={{ display: 'block', width: '6px', height: '1px', background: 'white' }}></span>
+                        <span style={{ display: 'block', width: '6px', height: '1px', background: 'white' }}></span>
+                      </span>
                     </span>
                   </span> 
                   The question(s) "Answered and Marked for Review" will be considered for evaluation.

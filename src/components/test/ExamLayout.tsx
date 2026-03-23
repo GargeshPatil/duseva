@@ -34,7 +34,7 @@ export function ExamLayout({ engine }: ExamLayoutProps) {
                     <div className="flex flex-col text-[#333]">
                         <div className="flex items-center gap-2">
                             <span className="font-semibold w-[120px]">Candidate Name</span>
-                            <span>: {user?.displayName || 'Student User'}</span>
+                            <span>: {user?.displayName || user?.email || 'Candidate'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="font-semibold w-[120px]">Exam Name</span>

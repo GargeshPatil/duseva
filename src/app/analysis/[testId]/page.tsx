@@ -36,6 +36,7 @@ export default function AnalysisPage() {
 
   // UI State
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'correct' | 'incorrect' | 'skipped'>('all');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -273,9 +274,33 @@ export default function AnalysisPage() {
 
         {/* Detailed Question Review */}
         <div className="space-y-6">
-          <h2 className="text-xl font-bold text-slate-900">Detailed Question Review</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 className="text-xl font-bold text-slate-900">Detailed Question Review</h2>
+            <div className="flex bg-white rounded-lg p-1 border border-slate-200">
+              {(['all', 'correct', 'incorrect', 'skipped'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md capitalize transition-colors ${
+                    filter === f ? 'bg-slate-100 text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          {questions.map((q, index) => {
+          {questions.filter(q => {
+            const userAnswerIdx = attempt.answers[q.id];
+            const isSkipped = userAnswerIdx === undefined;
+            const isCorrect = userAnswerIdx === q.correctOption;
+            if (filter === 'skipped') return isSkipped;
+            if (filter === 'correct') return isCorrect;
+            if (filter === 'incorrect') return !isSkipped && !isCorrect;
+            return true;
+          }).map((q) => {
+            const index = questions.findIndex(origQ => origQ.id === q.id);
             const userAnswerIdx = attempt.answers[q.id];
             const isSkipped = userAnswerIdx === undefined;
             const isCorrect = userAnswerIdx === q.correctOption;
@@ -303,14 +328,14 @@ export default function AnalysisPage() {
 
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
-                      <h3 className="font-medium text-slate-900 pr-8">{q.text}</h3>
+                      <div className="font-medium text-slate-900 pr-8 rich-text-content" dangerouslySetInnerHTML={{ __html: q.text }} />
                       {isExpanded ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
                     </div>
 
                     {!isExpanded && (
-                      <div className="mt-2 flex items-center gap-4 text-sm">
+                      <div className="mt-2 flex flex-col gap-1 text-sm">
                         <span className={`${isCorrect ? 'text-green-600' : isSkipped ? 'text-slate-500' : 'text-red-600'} font-medium`}>
-                          {isSkipped ? 'Skipped' : isCorrect ? 'Correct (+5)' : 'Incorrect (-1)'}
+                          Status: {isSkipped ? 'Skipped' : isCorrect ? 'Correct' : 'Incorrect'}
                         </span>
                       </div>
                     )}
@@ -319,6 +344,15 @@ export default function AnalysisPage() {
 
                 {isExpanded && (
                   <div className="px-4 md:px-6 pb-6 pt-0 border-t border-slate-100/50">
+                    <div className="mt-4 space-y-3">
+                      <div className="text-sm font-medium mb-2 text-slate-700">
+                        <span className="font-bold">Your Answer:</span> {isSkipped ? 'None' : q.options[userAnswerIdx]}
+                      </div>
+                      <div className="text-sm font-medium mb-2 text-slate-700">
+                        <span className="font-bold">Correct Answer:</span> {q.options[q.correctOption]}
+                      </div>
+                    </div>
+                    
                     <div className="mt-4 space-y-3">
                       {q.options.map((opt, i) => {
                         const isSelected = i === userAnswerIdx;

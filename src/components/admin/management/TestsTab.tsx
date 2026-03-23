@@ -45,7 +45,7 @@ export function TestsTab() {
             console.log("TestsTab: Fetched tests:", data.length);
             setTests(data);
         } catch (err) {
-            console.error("TestsTab: Permission Error?", err);
+            console.warn("TestsTab: Permission Error?", err);
         }
         setLoading(false);
     }
