@@ -236,8 +236,7 @@ export async function parseCSV(file: File): Promise<ParseResult> {
 
             const headers = rawRows[0].map(h => h.trim());
             const parsedRows: ParsedRow[] = [];
-            let validCount = 0;
-            let invalidCount = 0;
+            let currentPassageRow: (ParsedRow & { raw: any }) | null = null;
 
             for (let i = 1; i < rawRows.length; i++) {
                 const rowValues = rawRows[i];
@@ -253,17 +252,67 @@ export async function parseCSV(file: File): Promise<ParseResult> {
                 // Validate
                 const { valid, data, errors } = validateAndMapRow(rowObj as unknown as CSVRow);
 
-                parsedRows.push({
+                const newParsedRow = {
                     row: i + 1, // Logical CSV row
                     data,
                     valid,
                     errors,
                     raw: rowObj // Store raw for inline editing
-                } as ParsedRow & { raw: any });
+                } as ParsedRow & { raw: any };
 
-                if (valid) validCount++;
-                else invalidCount++;
+                // Grouping Logic
+                if (data.questionType === 'passage') {
+                    newParsedRow.data.subQuestions = [];
+                    // If it has its own question text, treat it as the first sub-question
+                    if (data.text && data.text.trim() !== '') {
+                        newParsedRow.data.subQuestions.push({
+                            id: 'sq_' + Date.now() + i,
+                            type: 'mcq',
+                            text: data.text,
+                            options: data.options || [],
+                            correctOption: data.correctOption || 0,
+                            explanation: data.explanation
+                        });
+                        // Clear the top-level text so it acts purely as a container
+                        newParsedRow.data.text = '';
+                    }
+                    currentPassageRow = newParsedRow;
+                    parsedRows.push(newParsedRow);
+                } else if ((data.questionType === 'mcq' || data.questionType === 'match') && ((rowObj as any).passageText || (rowObj as any).passageId)) {
+                    // It references a passage.
+                    if (currentPassageRow && 
+                       (((rowObj as any).passageText && (rowObj as any).passageText === (currentPassageRow.raw as any).passageText) || 
+                        ((rowObj as any).passageId && (rowObj as any).passageId === (currentPassageRow.raw as any).passageId))) {
+                        
+                        currentPassageRow.data.subQuestions!.push({
+                            id: 'sq_' + Date.now() + i,
+                            type: data.questionType,
+                            text: data.text || '',
+                            options: data.options || [],
+                            correctOption: data.correctOption || 0,
+                            explanation: data.explanation,
+                            matchPairs: data.matchPairs
+                        });
+                        
+                        // Absorb row. If invalid, invalidate parent.
+                        if (!valid) {
+                            currentPassageRow.valid = false;
+                            currentPassageRow.errors.push(`Sub-question at row ${i+1} invalid: ${errors.join(', ')}`);
+                        }
+                    } else {
+                        // Independent question
+                        currentPassageRow = null;
+                        parsedRows.push(newParsedRow);
+                    }
+                } else {
+                    currentPassageRow = null;
+                    parsedRows.push(newParsedRow);
+                }
             }
+
+            // Recalculate valid/invalid counts due to grouping
+            const validCount = parsedRows.filter(r => r.valid).length;
+            const invalidCount = parsedRows.filter(r => !r.valid).length;
 
             resolve({
                 rows: parsedRows,

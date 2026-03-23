@@ -15,10 +15,22 @@ export interface User {
 
 export interface Passage { id: string; title?: string; text: string; createdAt?: string; updatedAt?: string; }
 
+export interface SubQuestion {
+    id: string;
+    type: 'mcq' | 'match';
+    text: string;
+    imageUrl?: string;
+    options: string[];
+    correctOption: number;
+    explanation?: string;
+    matchPairs?: { left: string; right: string }[];
+}
+
 export interface Question {
     questionType?: 'mcq' | 'match' | 'passage';
     matchPairs?: { left: string; right: string }[];
     passageId?: string;
+    subQuestions?: SubQuestion[];
     id: string;
     text: string;
     imageUrl?: string; // New: optional image support

@@ -17,8 +17,20 @@ export function QuestionRenderer({ question, engine, selectedOption, onOptionSel
                     question.questionType === "MATCH" || 
                     (question.matchPairs && question.matchPairs.length > 0);
 
+    const passageContext = question.passageId && engine.passages[question.passageId] ? (
+        <div className="border border-[#ddd] p-[10px] mb-[15px] bg-[#fafafa] text-[14px] text-black">
+            <div className="font-bold mb-2 uppercase text-xs">Read the following passage:</div>
+            <div dangerouslySetInnerHTML={{ __html: sanitizeText(engine.passages[question.passageId].text) }} />
+        </div>
+    ) : null;
+
     if (isMatch && question.matchPairs && question.matchPairs.length > 0) {
-        return <MatchQuestion question={question} selectedOption={selectedOption} onOptionSelect={onOptionSelect} />;
+        return (
+            <>
+                {passageContext}
+                <MatchQuestion question={question} selectedOption={selectedOption} onOptionSelect={onOptionSelect} />
+            </>
+        );
     }
 
     if (question.type === "passage" || question.questionType === "passage") {
@@ -28,6 +40,7 @@ export function QuestionRenderer({ question, engine, selectedOption, onOptionSel
     // Default MCQ Rendering
     return (
         <div className="flex flex-col gap-4 mb-4">
+            {passageContext}
             {/* Render Text */}
             {question.text && (
                 <div 

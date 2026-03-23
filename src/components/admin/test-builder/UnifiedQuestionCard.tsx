@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Trash2, GripVertical, Check, Copy, X, ChevronDown, ChevronUp, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Reorder, useDragControls } from "framer-motion";
 import { uploadImage } from "@/services/storageService";
+import { SubQuestionEditor } from "./SubQuestionEditor";
 
 interface UnifiedQuestionCardProps {
     question: Question;
@@ -212,9 +213,22 @@ export function UnifiedQuestionCard({
                                 </div>
                             )}
 
-                            {/* Question Text */}
-                            <div>
-                                <label className="block text-xs font-semibold text-text-secondary uppercase mb-1">
+                            {/* Sub-Questions Editor for Passage type */}
+                            {question.questionType === "passage" && (
+                                <div className="p-4 bg-surface-base border border-border rounded-lg">
+                                    <SubQuestionEditor 
+                                        subQuestions={question.subQuestions || []} 
+                                        onChange={(sqs) => handleChange('subQuestions', sqs)} 
+                                    />
+                                </div>
+                            )}
+
+                            {/* Legacy Question Fields (Only shown if NOT a passage, OR a passage with 0 subquestions) */}
+                            {(!(question.questionType === "passage" && question.subQuestions && question.subQuestions.length > 0)) && (
+                                <>
+                                    {/* Question Text */}
+                                    <div>
+                                        <label className="block text-xs font-semibold text-text-secondary uppercase mb-1">
                                     {question.questionType === "passage" ? "Question Text related to Passage" : "Question Text"}
                                 </label>
                                 <textarea
@@ -356,6 +370,8 @@ export function UnifiedQuestionCard({
                                     </div>
                                 )}
                             </div>
+                        </>
+                        )}
                         </div>
 
                         {/* Right Column: Meta */}

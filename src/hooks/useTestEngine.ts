@@ -114,6 +114,30 @@ export function useTestEngine(testId: string) {
                     } else {
                         qs = await firestoreService.getQuestions({ testId });
                     }
+
+                    // Flatten passage sub-questions
+                    const flattenedQs: Question[] = [];
+                    qs.forEach(q => {
+                        if (q.questionType === 'passage' && q.subQuestions && q.subQuestions.length > 0) {
+                            q.subQuestions.forEach(subQ => {
+                                flattenedQs.push({
+                                    ...subQ,
+                                    questionType: subQ.type as any,
+                                    passageId: q.passageId,
+                                    stream: q.stream,
+                                    difficulty: q.difficulty,
+                                    marks: q.marks,
+                                    negativeMarks: q.negativeMarks,
+                                    subject: q.subject,
+                                    isSubQuestion: true 
+                                } as unknown as Question);
+                            });
+                        } else {
+                            flattenedQs.push(q);
+                        }
+                    });
+                    qs = flattenedQs;
+
                     setQuestions(qs);
 
                     // Fetch associated passages

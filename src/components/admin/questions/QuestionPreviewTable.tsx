@@ -116,9 +116,16 @@ export function QuestionPreviewTable({ parseResult, onUpdateRow }: QuestionPrevi
                                                     </div>
                                                     
                                                     {q.questionType === 'passage' && (
-                                                        <span className="text-[10px] text-blue-400/80 truncate block mt-0.5" title={(q as any).passageText || q.passageId}>
-                                                            <span className="font-semibold uppercase mr-1">Passage:</span> {(q as any).passageText || q.passageId}
-                                                        </span>
+                                                        <div className="flex flex-col gap-1 items-start mt-0.5">
+                                                            <span className="text-[10px] text-blue-400/80 truncate block text-left max-w-full" title={(q as any).passageText || q.passageId}>
+                                                                <span className="font-semibold uppercase mr-1">Passage:</span> {(q as any).passageText || q.passageId}
+                                                            </span>
+                                                            {q.subQuestions && q.subQuestions.length > 0 && (
+                                                                <span className="text-[10px] font-bold text-cta-primary bg-cta-primary/10 border border-cta-primary/20 px-2 py-0.5 rounded">
+                                                                    {q.subQuestions.length} Sub-question{q.subQuestions.length !== 1 ? 's' : ''} bundled
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </td>
