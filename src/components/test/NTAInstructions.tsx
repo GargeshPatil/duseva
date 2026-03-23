@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import styles from './NTAInstructions.module.css';
 
 interface Props {
@@ -10,8 +11,18 @@ interface Props {
 
 export default function NTAInstructions({ testId }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const isReattempt = searchParams.get('reattempt') === 'true';
+    if (isReattempt && user) {
+      localStorage.removeItem(`exam_session_${testId}_${user.uid}`);
+      localStorage.removeItem(`test_session_${testId}_${user.uid}`);
+    }
+  }, [searchParams, testId, user]);
 
   const handleProceed = () => {
     if (!agreed) {

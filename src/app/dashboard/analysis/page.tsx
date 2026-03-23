@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { firestoreService } from "@/services/firestoreService";
-import { TestAttempt } from "@/types/admin";
+import { TestAttempt, Test } from "@/types/admin";
 import { useAuth } from "@/context/AuthContext";
 import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 import { SubjectMastery } from "@/components/dashboard/SubjectMastery";
@@ -11,12 +11,14 @@ import { AnalyticsKpiCards } from "@/components/dashboard/AnalyticsKpiCards";
 import { AnalyticsHeader } from "@/components/dashboard/AnalyticsHeader";
 import { motion } from "framer-motion";
 import { Activity } from "lucide-react";
+import Link from "next/link";
 
 export type MetricType = 'tests' | 'score' | 'accuracy' | 'time' | null;
 
 export default function AnalyticsPage() {
     const { user } = useAuth();
     const [attempts, setAttempts] = useState<TestAttempt[]>([]);
+    const [testsData, setTestsData] = useState<Record<string, Test>>({});
     const [loading, setLoading] = useState(true);
     const [selectedMetric, setSelectedMetric] = useState<MetricType>(null);
 
@@ -29,6 +31,17 @@ export default function AnalyticsPage() {
                 // Sort by date ascending for chart
                 completedAttempts.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
                 setAttempts(completedAttempts);
+
+                // Fetch associated test data
+                const testIds = Array.from(new Set(completedAttempts.map(a => a.testId)));
+                const testPromises = testIds.map(id => firestoreService.getTest(id));
+                const fetchedTests = await Promise.all(testPromises);
+                
+                const testRecord: Record<string, Test> = {};
+                fetchedTests.forEach(test => {
+                    if (test) testRecord[test.id] = test;
+                });
+                setTestsData(testRecord);
             } catch (error) {
                 console.error("Error loading analytics:", error);
             } finally {
@@ -125,6 +138,79 @@ export default function AnalyticsPage() {
 
             {/* Metric Detail Overlay (Glassmorphic Slider) */}
             <MetricDetailOverlay selectedMetric={selectedMetric} setSelectedMetric={setSelectedMetric} chartData={chartData} attemptsLength={attempts.length} />
+
+            {/* Test-wise Analysis Section */}
+            <div className="mt-12">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 className="text-2xl font-bold text-white">Test-wise Analysis</h2>
+                        <p className="text-white/40 mt-1">Deep dive into your progression across specific tests.</p>
+                    </div>
+                </div>
+                
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Object.values(
+                        attempts.reduce((acc, attempt) => {
+                            if (!acc[attempt.testId]) {
+                                acc[attempt.testId] = {
+                                    testId: attempt.testId,
+                                    title: testsData[attempt.testId]?.title || 'Unknown Test',
+                                    attemptsCount: 0,
+                                    bestScore: 0,
+                                    totalAccuracy: 0,
+                                    maxMarks: testsData[attempt.testId]?.totalMarks || 0,
+                                };
+                            }
+                            const score = attempt.resultData?.score || 0;
+                            const accuracy = attempt.resultData?.accuracy || 0;
+                            
+                            acc[attempt.testId].attemptsCount += 1;
+                            if (score > acc[attempt.testId].bestScore) acc[attempt.testId].bestScore = score;
+                            acc[attempt.testId].totalAccuracy += accuracy;
+                            
+                            return acc;
+                        }, {} as Record<string, any>)
+                    ).map((testStats: any) => {
+                        const avgTestAccuracy = Math.round(testStats.totalAccuracy / testStats.attemptsCount);
+                        
+                        return (
+                            <Link 
+                                href={`/dashboard/analysis/test/${testStats.testId}`} 
+                                key={testStats.testId}
+                                className="bg-surface-card/60 rounded-2xl border border-white/10 p-6 backdrop-blur-xl hover:bg-white/[0.05] transition-all group hover:-translate-y-1 hover:shadow-2xl hover:shadow-cta-primary/10 overflow-hidden relative"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+                                
+                                <h3 className="font-bold text-lg text-white mb-4 line-clamp-1 group-hover:text-cta-primary transition-colors">
+                                    {testStats.title}
+                                </h3>
+                                
+                                <div className="grid grid-cols-3 gap-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                                    <div className="text-center">
+                                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1">Attempts</div>
+                                        <div className="font-bold text-white">{testStats.attemptsCount}</div>
+                                    </div>
+                                    <div className="text-center border-l border-white/10">
+                                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1">Best Score</div>
+                                        <div className="font-bold text-emerald-400">{testStats.bestScore}<span className="text-[10px] text-white/30 ml-0.5">/{testStats.maxMarks}</span></div>
+                                    </div>
+                                    <div className="text-center border-l border-white/10">
+                                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1">Avg Acc.</div>
+                                        <div className="font-bold text-blue-400">{avgTestAccuracy}%</div>
+                                    </div>
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </div>
+                {attempts.length === 0 && (
+                    <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
+                        <Activity className="h-12 w-12 text-white/20 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-white mb-2">No tests taken yet</h3>
+                        <p className="text-white/50">Complete a test to unlock detailed progression analysis.</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

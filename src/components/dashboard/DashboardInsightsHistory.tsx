@@ -44,7 +44,7 @@ export function DashboardInsightsHistory({ insights, recentAttempts }: Dashboard
                 {recentAttempts.length > 0 ? (
                     <div className="space-y-4">
                         {recentAttempts.map((attempt) => (
-                            <Link key={attempt.id} href={`/dashboard/analysis/${attempt.testId}`} className="group block">
+                            <Link key={attempt.id} href={`/dashboard/analysis/${attempt.id}`} className="group block">
                                 <div className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
                                     <div className="h-12 w-12 bg-white/5 rounded-xl border border-white/5 flex items-center justify-center text-white/50 group-hover:bg-white/10 group-hover:text-white transition-colors">
                                         <Trophy className="h-5 w-5" />

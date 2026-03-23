@@ -123,7 +123,7 @@ export function TestCard({ test, isAttempted, isInProgress, isPurchased = false,
                                         ? "bg-white/10 hover:bg-white/20 text-white"
                                         : "bg-white text-slate-900 hover:bg-white/90 shadow-white/10"
                                     }`}
-                                onClick={() => onStart(test)}
+                                onClick={() => isAttempted ? onStart({ ...test, isReattempt: true } as any) : onStart(test)}
                             >
                                 {isInProgress ? (
                                     <>Resume <Play className="h-3.5 w-3.5 ml-1.5 fill-current" /></>
@@ -134,7 +134,7 @@ export function TestCard({ test, isAttempted, isInProgress, isPurchased = false,
                                 )}
                             </Button>
                         ) : (
-                            <Link href={`/test/${test.id}`} className="flex-1">
+                            <Link href={`/test/${test.id}/start${isAttempted ? '?reattempt=true' : ''}`} className="flex-1">
                                 <Button
                                     size="sm"
                                     fullWidth

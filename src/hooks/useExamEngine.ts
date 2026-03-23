@@ -26,6 +26,8 @@ export function useExamEngine(testId: string) {
     // Exam Data State
     const [answers, setAnswers] = useState<Record<string, any>>({});
     const [questionStatus, setQuestionStatus] = useState<Record<string, QuestionStatus>>({});
+    const [timeSpent, setTimeSpent] = useState<Record<string, number>>({});
+    const lastEntryTimeRef = useRef<number>(Date.now());
     
     // Exam Session State
     const [timeRemaining, setTimeRemaining] = useState(0);
@@ -48,7 +50,8 @@ export function useExamEngine(testId: string) {
         currentQIndex,
         attemptId,
         status: 'in_progress',
-        tabSwitches
+        tabSwitches,
+        timeSpent
     });
 
     // Sync stateRef
@@ -60,9 +63,10 @@ export function useExamEngine(testId: string) {
             currentQIndex,
             attemptId,
             status: isTestStarted ? 'in_progress' : 'idle',
-            tabSwitches
+            tabSwitches,
+            timeSpent
         };
-    }, [answers, questionStatus, timeRemaining, currentQIndex, attemptId, isTestStarted, tabSwitches]);
+    }, [answers, questionStatus, timeRemaining, currentQIndex, attemptId, isTestStarted, tabSwitches, timeSpent]);
 
     // --- Integrity: Tab Switching & Visibility ---
     useEffect(() => {
@@ -139,7 +143,7 @@ export function useExamEngine(testId: string) {
                     if (savedSession) {
                         const session = JSON.parse(savedSession);
                         if (session.status === 'submitted' || session.status === 'completed') {
-                            router.replace(`/analysis/${testId}`);
+                            router.replace(`/dashboard/analysis/${session.attemptId}`);
                             return;
                         }
 
@@ -150,6 +154,7 @@ export function useExamEngine(testId: string) {
 
                         setAnswers(session.answers || {});
                         setQuestionStatus(session.questionStatus || {});
+                        setTimeSpent(session.timeSpent || {});
                         setCurrentQIndex(session.currentQIndex || 0);
                         setAttemptId(session.attemptId);
                         setStartTime(session.startTime);
@@ -163,6 +168,7 @@ export function useExamEngine(testId: string) {
 
                             if (remaining > 0) {
                                 setIsTestStarted(true);
+                                lastEntryTimeRef.current = Date.now();
                                 startTick(start, foundTest.duration * 60);
                             } else {
                                 setTimeRemaining(0);
@@ -227,7 +233,8 @@ export function useExamEngine(testId: string) {
             ...stateRef.current,
             startTime,
             lastUpdated: Date.now(),
-            shuffledQuestionIds: questions.map(q => q.id)
+            shuffledQuestionIds: questions.map(q => q.id),
+            timeSpent: stateRef.current.timeSpent
         };
         localStorage.setItem(`exam_session_${testId}_${user.uid}`, JSON.stringify(session));
     }, [testId, user, startTime, questions]);
@@ -241,7 +248,8 @@ export function useExamEngine(testId: string) {
             questionStatus: current.questionStatus,
             timeRemaining: current.timeRemaining,
             currentQuestionIndex: current.currentQIndex,
-            tabSwitches: current.tabSwitches
+            tabSwitches: current.tabSwitches,
+            timeSpent: current.timeSpent
         });
     };
 
@@ -273,6 +281,7 @@ export function useExamEngine(testId: string) {
             const totalSeconds = test.duration * 60;
             setTimeRemaining(totalSeconds);
             setIsTestStarted(true);
+            lastEntryTimeRef.current = Date.now();
 
             requestFullScreen();
 
@@ -302,6 +311,7 @@ export function useExamEngine(testId: string) {
                 timeRemaining: totalSeconds,
                 status: 'in_progress',
                 tabSwitches: 0,
+                timeSpent: {},
                 shuffledQuestionIds: questions.map(q => q.id)
             }));
         }
@@ -349,8 +359,25 @@ export function useExamEngine(testId: string) {
         }));
     };
 
+    const updateTimeSpent = useCallback(() => {
+        if (!isTestStarted || questions.length === 0) return;
+        const currentQ = questions[currentQIndex];
+        if (!currentQ) return;
+        
+        const now = Date.now();
+        const spent = Math.max(0, Math.floor((now - lastEntryTimeRef.current) / 1000));
+        
+        setTimeSpent(prev => ({
+            ...prev,
+            [currentQ.id]: (prev[currentQ.id] || 0) + spent
+        }));
+        
+        lastEntryTimeRef.current = now;
+    }, [currentQIndex, isTestStarted, questions]);
+
     const moveToNextQuestion = () => {
         if (currentQIndex < questions.length - 1) {
+            updateTimeSpent();
             setCurrentQIndex(prev => prev + 1);
         }
     };
@@ -405,6 +432,7 @@ export function useExamEngine(testId: string) {
 
     const handleJump = (index: number) => {
         if (index >= 0 && index < questions.length) {
+            updateTimeSpent();
             setCurrentQIndex(index);
         }
     };
@@ -459,11 +487,20 @@ export function useExamEngine(testId: string) {
             completedAt: new Date().toISOString()
         };
 
+        // Final time tracking update before submit
+        if (questions[currentQIndex]) {
+            const now = Date.now();
+            const spent = Math.floor((now - lastEntryTimeRef.current) / 1000);
+            const finalQId = questions[currentQIndex].id;
+            current.timeSpent = { ...current.timeSpent, [finalQId]: (current.timeSpent[finalQId] || 0) + spent };
+        }
+
         const success = await firestoreService.submitTestAttempt(
             attemptId,
             resultData,
             current.answers,
-            current.questionStatus
+            current.questionStatus,
+            current.timeSpent
         );
 
         if (success) {
@@ -476,7 +513,7 @@ export function useExamEngine(testId: string) {
                 document.exitFullscreen().catch(err => console.log(err));
             }
 
-            router.replace(`/analysis/${testId}`);
+            router.replace(`/dashboard/analysis/${attemptId}`);
         } else {
             alert("Submission failed. Please check connection and try again.");
             setIsSubmitting(false);

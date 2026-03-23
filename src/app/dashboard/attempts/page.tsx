@@ -118,7 +118,7 @@ export default function MyAttemptsPage() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 {attempt.status === 'completed' ? (
-                                                    <Link href={`/dashboard/analysis/${attempt.testId}`}>
+                                                    <Link href={`/dashboard/analysis/${attempt.id}`}>
                                                         <Button size="sm" variant="ghost" className="text-slate-600 hover:text-primary">
                                                             Analysis <ArrowRight className="h-4 w-4 ml-1" />
                                                         </Button>

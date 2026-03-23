@@ -99,7 +99,8 @@ export const firestoreService = {
         resultData: Omit<TestResult, 'id'>,
         finalAnswers?: Record<string, number>,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        finalStatus?: Record<string, any>
+        finalStatus?: Record<string, any>,
+        finalTimeSpent?: Record<string, number>
     ): Promise<boolean> {
         try {
             const attemptRef = doc(db, "testAttempts", attemptId);
@@ -117,6 +118,7 @@ export const firestoreService = {
 
             if (finalAnswers) updatePayload.answers = finalAnswers;
             if (finalStatus) updatePayload.questionStatus = finalStatus;
+            if (finalTimeSpent) updatePayload.timeSpent = finalTimeSpent;
 
             await updateDoc(attemptRef, updatePayload);
 
@@ -144,25 +146,10 @@ export const firestoreService = {
 
     async getLastTestAttempt(userId: string, testId: string): Promise<TestAttempt | null> {
         try {
-            const attemptsRef = collection(db, "testAttempts");
-            // Index required: userId ASC, testId ASC, startTime DESC
-            // If index missing, might fail. 
-            // Workaround: Filter by user and test, then sort in memory if needed, or rely on simple query?
-            // "where" clauses can be combined. sorting by startTime requires index.
-
-            const q = query(
-                attemptsRef,
-                where("userId", "==", userId),
-                where("testId", "==", testId),
-                where("status", "==", "completed"),
-                orderBy("startTime", "desc"),
-                limit(1)
-            );
-
-            const snapshot = await getDocs(q);
-            if (!snapshot.empty) {
-                const doc = snapshot.docs[0];
-                return { id: doc.id, ...doc.data() } as TestAttempt;
+            const attempts = await this.getUserAttempts(userId, 'completed');
+            const testAttempts = attempts.filter(a => a.testId === testId);
+            if (testAttempts.length > 0) {
+                return testAttempts[0]; // Already sorted desc by getUserAttempts
             }
             return null;
         } catch (error) {
@@ -174,25 +161,23 @@ export const firestoreService = {
     async getUserAttempts(userId: string, status?: 'completed' | 'in_progress'): Promise<TestAttempt[]> {
         try {
             const attemptsRef = collection(db, "testAttempts");
-            let q;
-
-            if (status) {
-                q = query(
-                    attemptsRef,
-                    where("userId", "==", userId),
-                    where("status", "==", status),
-                    orderBy("startTime", "desc")
-                );
-            } else {
-                q = query(
-                    attemptsRef,
-                    where("userId", "==", userId),
-                    orderBy("startTime", "desc")
-                );
-            }
+            // To avoid composite index requirements, query only by userId and sort/filter in memory
+            const q = query(
+                attemptsRef,
+                where("userId", "==", userId)
+            );
 
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TestAttempt));
+            let attempts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TestAttempt));
+            
+            if (status) {
+                attempts = attempts.filter(a => a.status === status);
+            }
+            
+            // Sort by startTime descending
+            attempts.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+            
+            return attempts;
         } catch (error) {
             console.error("Error fetching user attempts:", error);
             return [];
@@ -306,6 +291,8 @@ export const firestoreService = {
 
     async getTest(testId: string): Promise<Test | null> {
         try {
+            if (!testId || typeof testId !== "string") return null;
+            
             const docRef = doc(db, "tests", testId);
             const docSnap = await getDoc(docRef);
 

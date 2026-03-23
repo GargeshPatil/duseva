@@ -149,6 +149,7 @@ export interface TestAttempt {
     questionStatus: Record<string, QuestionStatus>; // questionId -> status
     tabSwitches?: number; // Track focus loss
     resultData?: Omit<TestResult, 'id'>; // Store full result details
+    timeSpent?: Record<string, number>; // questionId -> seconds spent
 }
 
 export interface TestResult {
