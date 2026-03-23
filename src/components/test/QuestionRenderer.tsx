@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { MatchQuestion } from './MatchQuestion';
 import { PassageBlock } from './PassageBlock';
+import { sanitizeText } from '@/utils/sanitizeText';
 
 interface QuestionRendererProps {
     question: any;
@@ -31,7 +32,7 @@ export function QuestionRenderer({ question, engine, selectedOption, onOptionSel
             {question.text && (
                 <div 
                     className="text-[16px] leading-relaxed text-black rich-text-content"
-                    dangerouslySetInnerHTML={{ __html: question.text }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeText(question.text) }}
                 />
             )}
 
@@ -67,7 +68,7 @@ export function QuestionRenderer({ question, engine, selectedOption, onOptionSel
                             <span className="text-[12px] font-bold text-black mt-1">({optIdx + 1})</span>
                         </div>
                         <div className="flex-1 flex flex-col">
-                            <span className="text-[15px] text-black mt-0.5" dangerouslySetInnerHTML={{ __html: optText }} />
+                            <span className="text-[15px] text-black mt-0.5" dangerouslySetInnerHTML={{ __html: sanitizeText(optText) }} />
                         </div>
                     </label>
                 ))}

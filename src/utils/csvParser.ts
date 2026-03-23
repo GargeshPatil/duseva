@@ -1,6 +1,7 @@
 
 import { Question } from "@/types/admin";
 import { normalizeTag } from "./tagNormalizer";
+import { sanitizeObject } from "./sanitizeText";
 
 export interface CSVRow {
     questionType?: string; // mcq, match, passage
@@ -52,7 +53,8 @@ export interface ParseError {
  * Validates a single CSV row and maps it to a Question object.
  * Always returns data (best effort) even if invalid.
  */
-export function validateAndMapRow(row: Partial<CSVRow>): { valid: boolean; data: Partial<Question>; errors: string[] } {
+export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; data: Partial<Question>; errors: string[] } {
+    const row = sanitizeObject(rawRow);
     const errors: string[] = [];
 
     // Question Type
@@ -241,7 +243,7 @@ export async function parseCSV(file: File): Promise<ParseResult> {
                 const rowValues = rawRows[i];
 
                 // Map to CSVRow object
-                const rowObj: Record<string, string> = {};
+                let rowObj: Record<string, string> = {};
                 headers.forEach((h, index) => {
                     if (index < rowValues.length) {
                         rowObj[h] = rowValues[index];

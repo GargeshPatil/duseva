@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { sanitizeText } from '@/utils/sanitizeText';
 
 interface PassageBlockProps {
     question: any;
@@ -15,7 +16,7 @@ export function PassageBlock({ question: q, engine, selectedOption, onOptionSele
             {q.passageId && engine.passages[q.passageId] && (
                 <div className="border border-[#ddd] p-[10px] mb-[15px] bg-[#fafafa] text-[14px] text-black">
                     <div className="font-bold mb-2 uppercase text-xs">Read the following passage:</div>
-                    <div dangerouslySetInnerHTML={{ __html: engine.passages[q.passageId].text }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeText(engine.passages[q.passageId].text) }} />
                 </div>
             )}
 
@@ -23,7 +24,7 @@ export function PassageBlock({ question: q, engine, selectedOption, onOptionSele
             {q.text && (
                 <div 
                     className="text-[16px] leading-relaxed text-black rich-text-content"
-                    dangerouslySetInnerHTML={{ __html: q.text }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeText(q.text) }}
                 />
             )}
 
@@ -59,7 +60,7 @@ export function PassageBlock({ question: q, engine, selectedOption, onOptionSele
                             <span className="text-[12px] font-bold text-black mt-1">({optIdx + 1})</span>
                         </div>
                         <div className="flex-1 flex flex-col">
-                            <span className="text-[15px] text-black mt-0.5" dangerouslySetInnerHTML={{ __html: optText }} />
+                            <span className="text-[15px] text-black mt-0.5" dangerouslySetInnerHTML={{ __html: sanitizeText(optText) }} />
                         </div>
                     </label>
                 ))}

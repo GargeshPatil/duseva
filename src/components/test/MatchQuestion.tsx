@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { sanitizeText } from '@/utils/sanitizeText';
 
 interface MatchQuestionProps {
     question: any;
@@ -16,7 +17,7 @@ export function MatchQuestion({ question: q, selectedOption, onOptionSelect }: M
             {q.text && (
                 <div 
                     className="text-[16px] leading-relaxed text-black rich-text-content"
-                    dangerouslySetInnerHTML={{ __html: q.text }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeText(q.text) }}
                 />
             )}
 
@@ -51,11 +52,11 @@ export function MatchQuestion({ question: q, selectedOption, onOptionSelect }: M
                                 <td className="px-2 py-1 text-center font-bold border-r border-[#ccc]">
                                     {String.fromCharCode(65 + idx)}.
                                 </td>
-                                <td className="px-2 py-1 border-r border-[#ccc]">{pair.left}</td>
+                                <td className="px-2 py-1 border-r border-[#ccc]">{sanitizeText(pair.left)}</td>
                                 <td className="px-2 py-1 text-center font-bold border-r border-[#ccc]">
                                     I{idx === 0 ? '' : idx === 1 ? 'I' : idx === 2 ? 'II' : idx === 3 ? 'V' : ''}.
                                 </td>
-                                <td className="px-2 py-1">{pair.right}</td>
+                                <td className="px-2 py-1">{sanitizeText(pair.right)}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -80,7 +81,7 @@ export function MatchQuestion({ question: q, selectedOption, onOptionSelect }: M
                             <span className="text-[12px] font-bold text-black mt-1">({optIdx + 1})</span>
                         </div>
                         <div className="flex-1 flex flex-col">
-                            <span className="text-[15px] text-black mt-0.5" dangerouslySetInnerHTML={{ __html: optText }} />
+                            <span className="text-[15px] text-black mt-0.5" dangerouslySetInnerHTML={{ __html: sanitizeText(optText) }} />
                         </div>
                     </label>
                 ))}
