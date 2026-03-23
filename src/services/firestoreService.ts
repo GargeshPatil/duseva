@@ -515,13 +515,17 @@ export const firestoreService = {
                 constraints.push(where("subject", "==", filters.subject));
             }
 
-            constraints.push(orderBy("createdAt", "desc"));
-            constraints.push(limit(filters?.limit || 100));
+            // We omit orderBy("createdAt", "desc") from the Firebase query to avoid composite index requirements
+            // when combined with where() clauses. We will sort in memory.
+            if (constraints.length === 0) {
+                constraints.push(orderBy("createdAt", "desc"));
+                constraints.push(limit(filters?.limit || 100));
+            }
 
             const q = query(questionsRef, ...constraints);
             const querySnapshot = await getDocs(q);
 
-            return querySnapshot.docs.map(doc => {
+            let results = querySnapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
                     id: doc.id,
@@ -538,8 +542,24 @@ export const firestoreService = {
                     matchPairs: data.matchPairs,
                     passageId: data.passageId,
                     imageUrl: data.imageUrl,
-                } as Question;
+                    createdAt: data.createdAt // extract for sorting
+                } as Question & { createdAt?: any };
             });
+
+            // If we used where clauses, we must sort and slice in-memory
+            if (constraints.length > 0 && !constraints.includes(orderBy("createdAt", "desc") as QueryConstraint)) {
+                results.sort((a, b) => {
+                    const timeA = a.createdAt?.toMillis?.() || 0;
+                    const timeB = b.createdAt?.toMillis?.() || 0;
+                    return timeB - timeA; // desc
+                });
+                if (filters?.limit) {
+                    results = results.slice(0, filters.limit);
+                }
+            }
+
+            // Cleanup injected createdAt before returning
+            return results.map(({ createdAt, ...q }) => q as Question);
         } catch (error) {
             console.warn("Notice: Error fetching questions (usually permission related):", error);
             return [];
