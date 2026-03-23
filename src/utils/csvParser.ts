@@ -52,7 +52,7 @@ export interface ParseError {
  * Validates a single CSV row and maps it to a Question object.
  * Always returns data (best effort) even if invalid.
  */
-function validateAndMapRow(row: CSVRow): { valid: boolean; data: Partial<Question>; errors: string[] } {
+export function validateAndMapRow(row: Partial<CSVRow>): { valid: boolean; data: Partial<Question>; errors: string[] } {
     const errors: string[] = [];
 
     // Question Type
@@ -78,12 +78,16 @@ function validateAndMapRow(row: CSVRow): { valid: boolean; data: Partial<Questio
         if (!row.listA?.trim() || !row.listB?.trim()) {
             errors.push("Match questions require 'List A' and 'List B' columns.");
         } else {
-            const listAItems = row.listA.split(',').map(s => s.trim()).filter(Boolean);
-            const listBItems = row.listB.split(',').map(s => s.trim()).filter(Boolean);
+            const listAItems = row.listA.split('|').map(s => s.trim()).filter(Boolean);
+            const listBItems = row.listB.split('|').map(s => s.trim()).filter(Boolean);
             if (listAItems.length !== listBItems.length || listAItems.length === 0) {
-                errors.push("Match 'List A' and 'List B' must have the same number of comma-separated items.");
+                errors.push("Match 'List A' and 'List B' must have the same number of pipe-separated (|) items.");
             } else {
-                matchPairs = listAItems.map((left, index) => ({ left, right: listBItems[index] }));
+                matchPairs = listAItems.map((left, index) => {
+                    const cleanLeft = left.replace(/^[A-Z]:/, '').trim();
+                    const cleanRight = listBItems[index].replace(/^[0-9]+:/, '').trim();
+                    return { left: cleanLeft, right: cleanRight };
+                });
             }
         }
     }
@@ -99,9 +103,9 @@ function validateAndMapRow(row: CSVRow): { valid: boolean; data: Partial<Questio
     const ans = row.correctAnswer?.trim().toUpperCase();
     const validMap: Record<string, number> = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, '1': 0, '2': 1, '3': 2, '4': 3 };
 
-    if (validMap[ans] !== undefined) {
+    if (ans && validMap[ans] !== undefined) {
         correctOption = validMap[ans];
-    } else if (ans) { // Only add specific error if ans is present but invalid
+    } else if (ans) {
         errors.push(`Invalid Correct Answer '${ans}'. Expected A, B, C, D or 1, 2, 3, 4.`);
     }
 
@@ -154,10 +158,59 @@ function validateAndMapRow(row: CSVRow): { valid: boolean; data: Partial<Questio
         }
     }
 
-    // Store normalized streams
     question.streams = streams.map(s => normalizeTag(s));
 
     return { valid: errors.length === 0, data: question, errors };
+}
+
+function parseCSVString(text: string): string[][] {
+    const rows: string[][] = [];
+    let currentRow: string[] = [];
+    let currentCell = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (inQuotes) {
+            if (char === '"' && nextChar === '"') {
+                currentCell += '"';
+                i++; // skip escaped quote
+            } else if (char === '"') {
+                inQuotes = false;
+            } else {
+                currentCell += char;
+            }
+        } else {
+            if (char === '"') {
+                inQuotes = true;
+            } else if (char === ',') {
+                currentRow.push(currentCell.trim());
+                currentCell = '';
+            } else if (char === '\n' || (char === '\r' && nextChar === '\n')) {
+                currentRow.push(currentCell.trim());
+                if (currentRow.some(c => c !== '')) {
+                    rows.push(currentRow);
+                }
+                currentRow = [];
+                currentCell = '';
+                if (char === '\r') i++; // skip \n
+            } else {
+                currentCell += char;
+            }
+        }
+    }
+    
+    // Add the last cell and row if not empty
+    if (currentCell !== '' || inQuotes) {
+        currentRow.push(currentCell.trim());
+    }
+    if (currentRow.length > 0 && currentRow.some(c => c !== '')) {
+        rows.push(currentRow);
+    }
+    
+    return rows;
 }
 
 /**
@@ -173,47 +226,25 @@ export async function parseCSV(file: File): Promise<ParseResult> {
                 return;
             }
 
-            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
-            if (lines.length < 2) {
+            const rawRows = parseCSVString(text);
+            if (rawRows.length < 2) {
                 resolve({ rows: [], meta: { totalRows: 0, validRows: 0, invalidRows: 0 } });
                 return;
             }
 
-            const headers = lines[0].split(',').map(h => h.trim());
+            const headers = rawRows[0].map(h => h.trim());
             const parsedRows: ParsedRow[] = [];
             let validCount = 0;
             let invalidCount = 0;
 
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i];
-                // Simple CSV split logic (same as before)
-                const rowValues: string[] = [];
-                let current = '';
-                let inQuote = false;
-
-                for (let j = 0; j < line.length; j++) {
-                    const char = line[j];
-                    if (char === '"') {
-                        inQuote = !inQuote;
-                    } else if (char === ',' && !inQuote) {
-                        rowValues.push(current.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
-                        current = '';
-                    } else {
-                        current += char;
-                    }
-                }
-                rowValues.push(current.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
-
-                if (rowValues.length < headers.length) {
-                    if (rowValues.length === 1 && rowValues[0] === '') continue;
-                }
+            for (let i = 1; i < rawRows.length; i++) {
+                const rowValues = rawRows[i];
 
                 // Map to CSVRow object
                 const rowObj: Record<string, string> = {};
                 headers.forEach((h, index) => {
-                    const cleanHeader = h.replace(/^"|"$/g, '').trim();
                     if (index < rowValues.length) {
-                        rowObj[cleanHeader] = rowValues[index];
+                        rowObj[h] = rowValues[index];
                     }
                 });
 
@@ -224,8 +255,9 @@ export async function parseCSV(file: File): Promise<ParseResult> {
                     row: i + 1, // Logical CSV row
                     data,
                     valid,
-                    errors
-                });
+                    errors,
+                    raw: rowObj // Store raw for inline editing
+                } as ParsedRow & { raw: any });
 
                 if (valid) validCount++;
                 else invalidCount++;

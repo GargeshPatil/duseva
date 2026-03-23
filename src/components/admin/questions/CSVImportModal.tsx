@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { FileUploader } from "./FileUploader";
 import { QuestionPreviewTable } from "./QuestionPreviewTable";
-import { parseCSV, ParseResult } from "@/utils/csvParser";
+import { parseCSV, ParseResult, validateAndMapRow, ParsedRow } from "@/utils/csvParser";
 import { firestoreService } from "@/services/firestoreService";
 import { Question } from "@/types/admin";
 import { Loader2, CheckCircle, AlertCircle, Upload, FileDown, AlertTriangle } from "lucide-react";
@@ -87,9 +87,9 @@ export function CSVImportModal({ isOpen, onClose, onSuccess, onPrepopulateFromCS
         ];
         // Match example
         const dummyRow2 = [
-            "match", "A:Apple|B:Banana", "1:Red|2:Yellow", "", "",
+            "match", "A:Apple|B:Banana|C:Cherry", "1:Red|2:Yellow|3:Green", "", "",
             "Match the fruits with their colors.", "", "", "", "",
-            "A-1, B-2", "Apples are red, bananas are yellow.", "Science", "Botany",
+            "A-1, B-2, C-3", "Apples are red, bananas are yellow, cherries are green.", "Science", "Botany",
             "Medium", "5", "1", "Science"
         ];
         // Passage example (Using passageText leaves passageId blank. The system auto-generates passageId)
@@ -113,6 +113,49 @@ export function CSVImportModal({ isOpen, onClose, onSuccess, onPrepopulateFromCS
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    const handleUpdateRow = (rowIndex: number, updatedRaw: any) => {
+        if (!parseResult) return;
+
+        const { valid, data, errors } = validateAndMapRow(updatedRaw);
+
+        const newRows = parseResult.rows.map(r => {
+            if (r.row === rowIndex) {
+                // Re-check duplicate if valid
+                let isDuplicate = false;
+                if (valid) {
+                    const existingSignatures = duplicates; // We rely on existing fetched dups loosely
+                    isDuplicate = existingSignatures.some(ex =>
+                        ex.text === (data.text || "").trim().toLowerCase() &&
+                        (!data.subject || ex.subject === (data.subject || "").trim().toLowerCase())
+                    );
+                }
+                
+                return {
+                    ...r,
+                    data,
+                    valid,
+                    errors,
+                    raw: updatedRaw,
+                    isDuplicate
+                } as ParsedRow & { raw: any, isDuplicate?: boolean };
+            }
+            return r;
+        });
+
+        const validRows = newRows.filter(r => r.valid).length;
+        const invalidRows = newRows.length - validRows;
+
+        setParseResult({
+            ...parseResult,
+            rows: newRows,
+            meta: {
+                ...parseResult.meta,
+                validRows,
+                invalidRows
+            }
+        });
     };
 
     const handleUpload = async () => {
@@ -248,7 +291,7 @@ export function CSVImportModal({ isOpen, onClose, onSuccess, onPrepopulateFromCS
                                     </div>
                                 )}
                             </div>
-                            <QuestionPreviewTable parseResult={parseResult} />
+                            <QuestionPreviewTable parseResult={parseResult} onUpdateRow={handleUpdateRow} />
                         </div>
                     )}
 
