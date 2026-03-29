@@ -28,6 +28,7 @@ export function useShowcaseEngine() {
     const [timeRemaining, setTimeRemaining] = useState(0);
     const [isTestStarted, setIsTestStarted] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [startTime, setStartTime] = useState<string | null>(null);
 
     // Integrity State (Dummy for Showcase)
@@ -126,6 +127,7 @@ export function useShowcaseEngine() {
                 }
             } catch (err) {
                 console.error("Test Init Error:", err);
+                setError("Network error fetching showcase test.");
             } finally {
                 setLoading(false);
             }
@@ -458,6 +460,7 @@ export function useShowcaseEngine() {
         timeRemaining,
         isTestStarted,
         loading,
+        error,
         currentSection,
         setCurrentSection,
         integrity: {
