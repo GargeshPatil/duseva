@@ -55,7 +55,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${inter.className} ${inter.variable} antialiased bg-surface-base text-text-primary min-h-screen relative transition-colors duration-300 overflow-x-hidden`}>
+      <body suppressHydrationWarning className={`${inter.className} ${inter.variable} antialiased bg-surface-base text-text-primary min-h-screen relative transition-colors duration-300 overflow-x-hidden`}>
         <ThemeProvider defaultTheme="system">
           <PremiumGradient variant="hero" />
           <PremiumCursorTracker />

@@ -31,6 +31,7 @@ export function useExamEngine(testId: string) {
     const [timeRemaining, setTimeRemaining] = useState(0);
     const [isTestStarted, setIsTestStarted] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [attemptId, setAttemptId] = useState<string | null>(null);
     const [startTime, setStartTime] = useState<string | null>(null);
 
@@ -175,6 +176,7 @@ export function useExamEngine(testId: string) {
                 }
             } catch (err) {
                 console.error("Test Init Error:", err);
+                setError("Database initialization failed. Please disable your Ad-Blocker/Privacy Extension or check your internet connection.");
             } finally {
                 setLoading(false);
             }
@@ -576,6 +578,7 @@ export function useExamEngine(testId: string) {
         timeRemaining,
         isTestStarted,
         loading,
+        error,
         currentSection,
         setCurrentSection,
         integrity: {

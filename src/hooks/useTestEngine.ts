@@ -19,6 +19,7 @@ export function useTestEngine(testId: string) {
     const [currentQIndex, setCurrentQIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, number>>({});
     const [questionStatus, setQuestionStatus] = useState<Record<string, QuestionStatus>>({});
+    const [error, setError] = useState<string | null>(null);
     const [timeRemaining, setTimeRemaining] = useState(0);
     const [isTestStarted, setIsTestStarted] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -168,6 +169,7 @@ export function useTestEngine(testId: string) {
                 }
             } catch (err) {
                 console.error("Test Init Error:", err);
+                setError("Database initialization failed. Please disable your Ad-Blocker/Privacy Extension or check your internet connection.");
             } finally {
                 setLoading(false);
             }
@@ -523,6 +525,7 @@ export function useTestEngine(testId: string) {
         timeRemaining,
         isTestStarted,
         loading,
+        error,
         integrity: {
             tabSwitches,
             showTabWarning,
