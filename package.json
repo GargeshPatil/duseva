@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@types/papaparse": "^5.5.2",
+    "canvas-confetti": "^1.9.4",
     "claude": "^0.1.1",
     "clsx": "^2.1.1",
     "firebase": "^12.9.0",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
