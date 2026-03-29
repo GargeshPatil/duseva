@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
 
 export async function POST(req: NextRequest) {
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-        console.error("Razorpay Keys Missing in API Route!");
-        return NextResponse.json({ error: "Server Configuration Error: Razorpay Keys Missing" }, { status: 500 });
+    const hasId = !!process.env.RAZORPAY_KEY_ID;
+    const hasSecret = !!process.env.RAZORPAY_KEY_SECRET;
+
+    if (!hasId || !hasSecret) {
+        console.error(`Razorpay Keys Missing! ID present: ${hasId}, Secret present: ${hasSecret}`);
+        return NextResponse.json({ 
+            error: `Server Configuration Error: Razorpay Keys Missing. (ID present: ${hasId}, Secret present: ${hasSecret})` 
+        }, { status: 500 });
     }
 
     const razorpay = new Razorpay({
