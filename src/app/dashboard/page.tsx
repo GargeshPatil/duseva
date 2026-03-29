@@ -1,19 +1,26 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
+import { CreditPackage } from "@/types/admin";
 import { motion, Variants } from "framer-motion";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { DashboardStatsGrid } from "@/components/dashboard/DashboardStatsGrid";
 import { DashboardPrepResources } from "@/components/dashboard/DashboardPrepResources";
 import { DashboardNextTargets } from "@/components/dashboard/DashboardNextTargets";
 import { DashboardInsightsHistory } from "@/components/dashboard/DashboardInsightsHistory";
+import { CreditPurchaseStrip } from "@/components/dashboard/CreditPurchaseStrip";
+import { PaymentSuccessModal } from "@/components/dashboard/PaymentSuccessModal";
 import { Target, Clock, Trophy, FileText, BrainCircuit } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 export default function DashboardPage() {
     const { user, userData, loading: authLoading } = useAuth();
     const router = useRouter();
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [addedCredits, setAddedCredits] = useState(0);
 
     const {
         stats,
@@ -30,6 +37,82 @@ export default function DashboardPage() {
             router.push('/auth/login');
         }
     }, [user, authLoading, router]);
+
+    const handleBuyPackage = async (pkg: CreditPackage) => {
+        if (!user || isProcessing) return;
+        setIsProcessing(true);
+        try {
+            const response = await fetch('/api/razorpay/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ packageId: pkg.id, amount: pkg.price, credits: pkg.credits })
+            });
+
+            const order = await response.json();
+
+            if (order.error) {
+                console.error("Order creation failed:", order.error);
+                alert("Failed to initiate payment. Please try again.");
+                setIsProcessing(false);
+                return;
+            }
+
+            const options = {
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                amount: order.amount,
+                currency: order.currency,
+                name: "CUET Mock Platform",
+                description: `Purchase ${pkg.credits} Credits`,
+                order_id: order.id,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                handler: async function (response: any) {
+                    console.log("Payment Successful", response);
+                    const verifyResponse = await fetch('/api/razorpay/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            packageId: pkg.id,
+                            credits: pkg.credits,
+                            userId: user.uid,
+                            amount: pkg.price
+                        })
+                    });
+
+                    const verifyData = await verifyResponse.json();
+
+                    if (verifyData.success) {
+                        setAddedCredits(pkg.credits);
+                        setShowSuccessModal(true);
+                    } else {
+                        alert("Payment verification failed. Please contact support.");
+                    }
+                },
+                prefill: {
+                    name: userData?.name || user.displayName || "",
+                    email: user.email || "",
+                },
+                theme: { color: "#F59E0B" }
+            };
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const rzp1 = new (window as any).Razorpay(options);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            rzp1.on('payment.failed', function (response: any) {
+                alert(response.error.description);
+                console.error("Payment Failed:", response.error);
+            });
+            rzp1.open();
+
+        } catch (error) {
+            console.error("Payment Error:", error);
+            alert("An unexpected error occurred.");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
     const statCards = [
         { title: "Tests Taken", value: stats.testsAttempted.toString(), icon: FileText, color: "from-blue-500/20 to-cyan-500/5", iconColor: "text-blue-400" },
@@ -72,6 +155,10 @@ export default function DashboardPage() {
             animate="visible"
             className="space-y-8 max-w-[1600px] mx-auto pb-20"
         >
+            <Script
+                id="razorpay-checkout-js"
+                src="https://checkout.razorpay.com/v1/checkout.js"
+            />
             {/* Header Hero */}
             <DashboardHero
                 userData={userData}
@@ -80,6 +167,11 @@ export default function DashboardPage() {
                 activeAttemptTest={activeAttemptTest}
                 itemVariants={itemVariants}
             />
+
+            {/* Credit Purchasing section */}
+            <motion.div variants={itemVariants}>
+                <CreditPurchaseStrip onBuyPackage={handleBuyPackage} />
+            </motion.div>
 
             {/* Stats Grid */}
             <DashboardStatsGrid statCards={statCards} itemVariants={itemVariants} />
@@ -96,6 +188,12 @@ export default function DashboardPage() {
                     <DashboardInsightsHistory insights={insights} recentAttempts={recentAttempts} />
                 </motion.div>
             </div>
+
+            <PaymentSuccessModal 
+                isOpen={showSuccessModal} 
+                onClose={() => setShowSuccessModal(false)} 
+                creditsAdded={addedCredits} 
+            />
         </motion.div>
     );
 }

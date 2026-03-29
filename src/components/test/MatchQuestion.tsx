@@ -1,5 +1,3 @@
-import React from 'react';
-import Image from 'next/image';
 import { sanitizeText } from '@/utils/sanitizeText';
 
 interface MatchQuestionProps {
@@ -17,6 +15,7 @@ export function MatchQuestion({ question: q, selectedOption, onOptionSelect }: M
             {q.text && (
                 <div 
                     className="text-[16px] leading-relaxed text-black rich-text-content"
+                    style={{ whiteSpace: "pre-line" }}
                     dangerouslySetInnerHTML={{ __html: sanitizeText(q.text) }}
                 />
             )}
@@ -24,13 +23,13 @@ export function MatchQuestion({ question: q, selectedOption, onOptionSelect }: M
             {/* Render Image if exists */}
             {q.imageUrl && (
                 <div className="w-full flex justify-center my-4">
-                    <Image 
+                    <img 
                         src={q.imageUrl} 
                         alt="Match Question Image"
-                        width={600}
-                        height={400}
-                        className="object-contain"
-                        style={{ maxWidth: '100%', height: 'auto' }}
+                        style={{ maxHeight: "300px", objectFit: "contain", maxWidth: "100%" }}
+                        onError={(e) => {
+                            e.currentTarget.src = "/fallback-image.png";
+                        }}
                     />
                 </div>
             )}
@@ -80,7 +79,7 @@ export function MatchQuestion({ question: q, selectedOption, onOptionSelect }: M
                             />
                             <span className="text-[12px] font-bold text-black mt-1">({optIdx + 1})</span>
                         </div>
-                        <div className="flex-1 flex flex-col">
+                        <div className="flex-1 flex flex-col" style={{ whiteSpace: "pre-line" }}>
                             <span className="text-[15px] text-black mt-0.5" dangerouslySetInnerHTML={{ __html: sanitizeText(optText) }} />
                         </div>
                     </label>

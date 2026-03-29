@@ -7,37 +7,25 @@ export interface User {
     testsTaken: number;
     avgScore: number;
     isActive: boolean;
-    paymentStatus: 'free' | 'paid';
+    credits: number;
+    totalCreditsPurchased: number;
     stream?: 'Science' | 'Commerce' | 'Humanities';
     targetUniversity?: string;
     onboardingCompleted?: boolean;
 }
 
-export interface Passage { id: string; title?: string; text: string; createdAt?: string; updatedAt?: string; }
-
-export interface SubQuestion {
+export interface Question {
+    questionType?: 'mcq' | 'match';
+    matchPairs?: { left: string; right: string }[];
+    passageId?: string; // identity tracking for analysis grouping
+    passageText?: string; // standalone context property
     id: string;
-    type: 'mcq' | 'match';
     text: string;
     imageUrl?: string;
     options: string[];
-    correctOption: number;
-    explanation?: string;
-    matchPairs?: { left: string; right: string }[];
-}
-
-export interface Question {
-    questionType?: 'mcq' | 'match' | 'passage';
-    matchPairs?: { left: string; right: string }[];
-    passageId?: string;
-    subQuestions?: SubQuestion[];
-    id: string;
-    text: string;
-    imageUrl?: string; // New: optional image support
-    options: string[];
     correctOption: number; // Index 0-3
     explanation?: string;
-    testId?: string; // Optional (deprecated for new questions, kept for backward compat)
+    testId?: string;
     stream?: 'Science' | 'Commerce' | 'Humanities' | 'General';
     tags?: string[];
     difficulty?: 'Easy' | 'Medium' | 'Hard';
@@ -56,8 +44,6 @@ export interface Test {
     difficulty: 'Easy' | 'Medium' | 'Hard';
     category: 'Subject' | 'General' | 'Full Mock';
     streams: string[]; // Updated: Array to support multiple streams (Science, Commerce, Humanities, General, English)
-    price: 'free' | 'paid';
-    priceAmount?: number;
     questions?: Question[]; // Legacy: embedded questions
     questionIds?: string[]; // New: references to QuestionBank
     attempts: number;
@@ -68,18 +54,7 @@ export interface Test {
     sections?: any[]; // Keep existing structure if any
 }
 
-export interface Bundle {
-    id: string;
-    name: string;
-    description: string;
-    includedTests: string[]; // Array of Test IDs
-    price: number;
-    originalPrice?: number;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-    coverImage?: string;
-}
+
 
 export interface CMSContent {
     id: string;
@@ -126,11 +101,20 @@ export interface MediaAsset {
     uploadedAt: string;
 }
 
+export interface CreditPackage {
+    id: string;
+    credits: number;
+    price: number;
+    isPopular: boolean;
+    description?: string;
+}
+
 export interface SiteSettings {
     siteName: string;
     supportEmail: string;
     currency: string;
     maintenanceMode: boolean;
+    creditPackages?: CreditPackage[];
 }
 
 export interface AuditLog {

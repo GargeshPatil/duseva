@@ -22,7 +22,9 @@ export interface UserData {
     createdAt: Timestamp;
     lastLoginAt: Timestamp;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    purchasedTests: Record<string, any>; // Map for purchased tests
+    purchasedTests?: Record<string, any>; // Legacy map for purchased tests (keep optional for backwards compat if needed, or remove. Let's replace with credits)
+    credits: number;
+    totalCreditsPurchased: number;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     performanceSummary: Record<string, any>; // Map for performance summary
     stream?: 'Science' | 'Commerce' | 'Humanities';
@@ -113,6 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             createdAt: Timestamp.now(),
             lastLoginAt: Timestamp.now(),
             purchasedTests: {},
+            credits: 10,
+            totalCreditsPurchased: 0,
             performanceSummary: {}
         };
 
@@ -144,6 +148,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 createdAt: Timestamp.now(),
                 lastLoginAt: Timestamp.now(),
                 purchasedTests: {},
+                credits: 10,
+                totalCreditsPurchased: 0,
                 performanceSummary: {}
             };
             await setDoc(userDocRef, newUser);

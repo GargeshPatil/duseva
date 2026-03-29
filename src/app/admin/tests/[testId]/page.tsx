@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft, Save, Loader2, Plus, Library, Upload } from "lucide-react";
 import { firestoreService } from "@/services/firestoreService";
-import { Test, Question, Passage } from "@/types/admin";
+import { Test, Question } from "@/types/admin";
 import Link from "next/link";
 
 import { TestMetadata } from "@/components/admin/test-builder/TestMetadata";
@@ -28,7 +28,6 @@ export default function TestBuilderPage() {
         totalMarks: 200,
         difficulty: "Medium",
         category: "Subject",
-        price: "free",
         status: "draft",
         questions: [],
         questionIds: [],
@@ -36,14 +35,12 @@ export default function TestBuilderPage() {
     });
 
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [passages, setPassages] = useState<Passage[]>([]);
     const [loading, setLoading] = useState(!isNew);
     const [saving, setSaving] = useState(false);
     const [isBankOpen, setIsBankOpen] = useState(false);
     const [isCSVModalOpen, setIsCSVModalOpen] = useState(false);
 
     useEffect(() => {
-        firestoreService.getPassages().then(setPassages).catch(console.error);
         if (!isNew) {
             loadTest();
         } else {
@@ -86,35 +83,23 @@ export default function TestBuilderPage() {
             for (const q of questions) {
                 let savedQ = { ...q };
                 
-                // Handle inline passage creation
-                let finalPassageId = savedQ.passageId;
-                const passageTextToCreate = (savedQ as any).passageText;
-                
-                if (savedQ.questionType === "passage" && passageTextToCreate && passageTextToCreate.trim() !== "") {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const newId = await firestoreService.createPassage({ text: passageTextToCreate });
-                    if (newId) {
-                        finalPassageId = newId;
-                    } else {
-                        throw new Error("Failed to create the new passage.");
+                // Generate passageId natively if not present
+                if (savedQ.passageText && savedQ.passageText.trim() !== "") {
+                    if (!savedQ.passageId) {
+                        try {
+                            savedQ.passageId = "passage_" + btoa(encodeURIComponent(savedQ.passageText.trim())).slice(0, 12);
+                        } catch(e) {
+                            savedQ.passageId = "passage_" + Date.now().toString(36);
+                        }
                     }
-                } else if (savedQ.questionType === "passage" && !finalPassageId) {
-                    throw new Error("Please select or create a passage for passage-based questions.");
-                }
-
-                if (savedQ.questionType === "passage") {
-                    savedQ.passageId = finalPassageId;
                 } else {
-                    delete savedQ.passageId;
+                    delete savedQ.passageId; // Remove passage mapping if no text present
                 }
                 
                 // Clean up transient UI fields
                 if (savedQ.questionType !== "match") {
                     delete savedQ.matchPairs;
                 }
-                
-                // Remove temporary field before uploading
-                delete (savedQ as any).passageText;
 
                 // If it has a temp ID (starts with temp_) or is empty/null, create it as new
                 if (!savedQ.id || savedQ.id.startsWith('temp_')) {
@@ -290,7 +275,6 @@ export default function TestBuilderPage() {
                     <TestQuestionList
                         questions={questions}
                         setQuestions={setQuestions}
-                        passages={passages}
                     />
 
                     {/* Floating Add Button logic */}

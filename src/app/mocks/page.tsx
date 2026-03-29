@@ -5,7 +5,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { firestoreService } from "@/services/firestoreService";
-import { Test, Bundle } from "@/types/admin";
+import { Test } from "@/types/admin";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { StreamSelectionView } from "@/components/mocks/StreamSelectionView";
@@ -18,7 +18,6 @@ export default function MocksPage() {
     const [view, setView] = useState<'stream-selection' | 'directory'>('stream-selection');
     const [selectedStream, setSelectedStream] = useState<string | null>(null);
     const [tests, setTests] = useState<Test[]>([]);
-    const [bundles, setBundles] = useState<Bundle[]>([]);
     const [loading, setLoading] = useState(true);
 
     const { scrollYProgress } = useScroll();
@@ -44,12 +43,8 @@ export default function MocksPage() {
     async function loadData() {
         setLoading(true);
         try {
-            const [testsData, bundlesData] = await Promise.all([
-                firestoreService.getTests(true),
-                firestoreService.getBundles(true)
-            ]);
+            const testsData = await firestoreService.getTests(true);
             setTests(testsData);
-            setBundles(bundlesData);
         } catch (error) {
             console.error("Failed to load data:", error);
         } finally {
@@ -73,13 +68,7 @@ export default function MocksPage() {
         if (!selectedStream) return true;
         const testStreams = test.streams || [];
         return testStreams.includes(selectedStream) || testStreams.includes('General');
-    }).sort((a, b) => {
-        if (a.price === 'free' && b.price !== 'free') return -1;
-        if (b.price === 'free' && a.price !== 'free') return 1;
-        return 0;
     });
-
-    const filteredBundles = bundles;
 
     return (
         <div className="min-h-screen flex flex-col font-sans bg-slate-950 text-white selection:bg-cta-primary/30 selection:text-white relative overflow-hidden">
@@ -107,7 +96,6 @@ export default function MocksPage() {
                             selectedStream={selectedStream}
                             loading={loading}
                             filteredTests={filteredTests}
-                            filteredBundles={filteredBundles}
                             onClearPreference={handleClearPreference}
                         />
                     )}

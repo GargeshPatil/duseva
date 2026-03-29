@@ -12,13 +12,12 @@ import {
 import { OverviewTab } from "@/components/admin/management/OverviewTab";
 import { QuestionsTab } from "@/components/admin/management/QuestionsTab";
 import { TestsTab } from "@/components/admin/management/TestsTab";
-import { BundlesTab } from "@/components/admin/management/BundlesTab";
-import { PricingTab } from "@/components/admin/management/PricingTab";
+import { CreditsTab } from "@/components/admin/management/CreditsTab";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
-type TabId = 'overview' | 'questions' | 'tests' | 'bundles' | 'pricing';
+type TabId = 'overview' | 'questions' | 'tests' | 'credits';
 
 export default function TestManagementPage() {
     const searchParams = useSearchParams();
@@ -32,7 +31,7 @@ export default function TestManagementPage() {
     useEffect(() => {
         setMounted(true);
         const initialTab = searchParams.get('tab') as TabId;
-        if (initialTab && ['overview', 'questions', 'tests', 'bundles', 'pricing'].includes(initialTab)) {
+        if (initialTab && ['overview', 'questions', 'tests', 'credits'].includes(initialTab)) {
             setActiveTab(initialTab);
         }
     }, [searchParams]);
@@ -53,8 +52,7 @@ export default function TestManagementPage() {
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'questions', label: 'Question Bank', icon: Library },
         { id: 'tests', label: 'Tests', icon: FileText },
-        { id: 'bundles', label: 'Bundles', icon: Package },
-        { id: 'pricing', label: 'Pricing', icon: CreditCard },
+        { id: 'credits', label: 'Credit Packages', icon: CreditCard },
     ] as const;
 
     const containerVariants: Variants = {
@@ -148,8 +146,7 @@ export default function TestManagementPage() {
                                     {activeTab === 'overview' && <OverviewTab onNavigate={(tab) => handleTabChange(tab as TabId)} />}
                                     {activeTab === 'questions' && <QuestionsTab />}
                                     {activeTab === 'tests' && <TestsTab />}
-                                    {activeTab === 'bundles' && <BundlesTab />}
-                                    {activeTab === 'pricing' && <PricingTab />}
+                                    {activeTab === 'credits' && <CreditsTab />}
                                 </motion.div>
                             ) : null}
                         </AnimatePresence>

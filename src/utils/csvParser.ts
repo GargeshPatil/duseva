@@ -1,16 +1,16 @@
-
+import Papa from 'papaparse';
 import { Question } from "@/types/admin";
 import { normalizeTag } from "./tagNormalizer";
 import { sanitizeObject } from "./sanitizeText";
 
 export interface CSVRow {
     questionType?: string; // mcq, match, passage
-    questionText: string;
-    optionA: string;
-    optionB: string;
-    optionC: string;
-    optionD: string;
-    correctAnswer: string;
+    questionText?: string;
+    optionA?: string;
+    optionB?: string;
+    optionC?: string;
+    optionD?: string;
+    correctAnswer?: string;
     explanation?: string;
     subjectTag?: string;
     topicTag?: string;
@@ -20,11 +20,10 @@ export interface CSVRow {
     streams?: string;
     listA?: string; // For match questions
     listB?: string; // For match questions
-    passageId?: string; // For passage questions
-    passageText?: string; // For linking new passage
+    passage?: string; // For linking new passage
+    subQuestionType?: string; // mcq, match (for passage subquestions)
+    imageUrl?: string;
 }
-
-// ... types updated below ...
 
 export interface ParsedRow {
     row: number; // CSV row index (1-based)
@@ -49,6 +48,22 @@ export interface ParseError {
     column?: string;
 }
 
+// Ensure newline safety
+function normalizeNewlines(text: string | null | undefined): string {
+    if (!text) return "";
+    let safeText = text;
+    if (safeText.includes("\r")) {
+        safeText = safeText.replace(/\r\n/g, "\n");
+    }
+    return safeText;
+}
+
+function validateQuestion(q: Partial<Question>): boolean {
+    if (!q.text) return false;
+    if (q.questionType === "match" && (!q.matchPairs || q.matchPairs.length === 0)) return false;
+    return true;
+}
+
 /**
  * Validates a single CSV row and maps it to a Question object.
  * Always returns data (best effort) even if invalid.
@@ -57,23 +72,35 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
     const row = sanitizeObject(rawRow);
     const errors: string[] = [];
 
-    // Question Type
-    let qType: 'mcq' | 'match' | 'passage' = 'mcq';
-    if (row.questionType) {
-        const t = row.questionType.trim().toLowerCase();
-        if (['mcq', 'match', 'passage'].includes(t)) {
-            qType = t as 'mcq' | 'match' | 'passage';
-        } else {
-            errors.push(`Invalid Question Type '${t}'. Expected 'mcq', 'match', or 'passage'.`);
-        }
+    // Debug logging (TEMP — IMPORTANT)
+    console.log("CSV ROW:", row);
+
+    // Normalize newlines for all text fields
+    const questionText = normalizeNewlines(row.questionText);
+    const passageKey = normalizeNewlines(row.passage?.trim());
+
+    if (row.imageUrl && !row.imageUrl.startsWith("http")) {
+        console.warn("Invalid image URL:", row.imageUrl);
     }
 
-    // 1. Required Fields
-    if (!row.questionText?.trim()) errors.push("Missing Question Text");
+    // Normalization & Initial Types
+    let qType = row.questionType?.trim().toLowerCase() as 'mcq' | 'match' | 'passage';
+    
+    if (!['mcq', 'match', 'passage'].includes(qType)) {
+        errors.push(`Invalid Question Type '${row.questionType}'. Expected 'mcq' or 'match'.`);
+        qType = 'mcq';
+    }
+
+    // Convert legacy passage type to its actual sub-question type, defaulting to mcq
+    if (qType === 'passage') {
+        qType = (row.subQuestionType?.trim().toLowerCase() as 'mcq' | 'match') || 'mcq';
+    }
+
+    if (!questionText) errors.push("Missing Question Text");
+
     if (!row.optionA?.trim() || !row.optionB?.trim() || !row.optionC?.trim() || !row.optionD?.trim()) {
         errors.push("Missing one or more Options (A-D)");
     }
-    if (!row.correctAnswer?.trim()) errors.push("Missing Correct Answer");
 
     let matchPairs: { left: string, right: string }[] | undefined = undefined;
     if (qType === 'match') {
@@ -94,125 +121,72 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
         }
     }
 
-    if (qType === 'passage') {
-        if (!row.passageId?.trim() && !row.passageText?.trim()) {
-            errors.push("Passage questions require either 'Passage ID' or 'Passage Text'.");
-        }
-    }
-
-    // 2. Correct Answer Validation
     let correctOption = -1;
     const ans = row.correctAnswer?.trim().toUpperCase();
     const validMap: Record<string, number> = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, '1': 0, '2': 1, '3': 2, '4': 3 };
 
     if (ans && validMap[ans] !== undefined) {
         correctOption = validMap[ans];
-    } else if (ans) {
+    } else {
         errors.push(`Invalid Correct Answer '${ans}'. Expected A, B, C, D or 1, 2, 3, 4.`);
     }
 
-    // 3. Difficulty Validation
     const difficulty = row.difficulty?.trim();
     if (difficulty && !['Easy', 'Medium', 'Hard'].includes(difficulty)) {
         errors.push(`Invalid Difficulty '${difficulty}'. Expected Easy, Medium, or Hard.`);
     }
 
-    // 4. Numeric Validation
     const marks = row.marks ? parseFloat(row.marks) : undefined;
     if (row.marks && isNaN(marks!)) errors.push("Marks must be a number.");
 
     const negativeMarks = row.negativeMarks ? parseFloat(row.negativeMarks) : undefined;
     if (row.negativeMarks && isNaN(negativeMarks!)) errors.push("Negative Marks must be a number.");
 
-    // 5. Streams Parsing
     const streams = row.streams ? row.streams.split('|').map(s => s.trim()).filter(Boolean) : [];
 
-    // Map to Question Object (Best Effort)
     const question: Partial<Question> = {
         questionType: qType,
-        text: row.questionText?.trim() || "",
+        text: questionText,
         options: [
-            row.optionA?.trim() || "",
-            row.optionB?.trim() || "",
-            row.optionC?.trim() || "",
-            row.optionD?.trim() || ""
+            normalizeNewlines(row.optionA),
+            normalizeNewlines(row.optionB),
+            normalizeNewlines(row.optionC),
+            normalizeNewlines(row.optionD)
         ],
-        correctOption: correctOption, // -1 if invalid
-        explanation: row.explanation?.trim(),
+        correctOption: correctOption,
+        explanation: normalizeNewlines(row.explanation),
         subject: normalizeTag(row.subjectTag || ""),
         tags: row.topicTag ? [normalizeTag(row.topicTag || "")] : [],
         difficulty: (difficulty as 'Easy' | 'Medium' | 'Hard') || 'Medium',
         marks: marks,
         negativeMarks: negativeMarks,
-        // We will store the primary stream in 'stream' for backward compat.
         stream: streams.length > 0 ? (normalizeTag(streams[0]) as Question['stream']) : undefined,
+        imageUrl: row.imageUrl,
+        streams: streams.map(s => normalizeTag(s))
     };
 
     if (qType === 'match' && matchPairs) {
         question.matchPairs = matchPairs;
     }
-    if (qType === 'passage') {
-        if (row.passageId?.trim()) {
-            question.passageId = row.passageId.trim();
-        } else if (row.passageText?.trim()) {
-            // Store temporarily for the uploader Modal to process
-            (question as any).passageText = row.passageText.trim();
+
+    if (passageKey) {
+        question.passageText = passageKey;
+        // Simple base64 encode for id generation (with fallback for unicode)
+        try {
+            question.passageId = "passage_" + btoa(encodeURIComponent(passageKey)).slice(0, 12);
+        } catch(e) {
+            question.passageId = "passage_" + Date.now().toString(36);
         }
     }
 
-    question.streams = streams.map(s => normalizeTag(s));
+    // FINAL VALIDATION (STRICT)
+    if (!validateQuestion(question)) {
+        errors.push("Failed final data validation layer.");
+    }
+    
+    console.log("PARSED QUESTION:", question);
 
     return { valid: errors.length === 0, data: question, errors };
-}
-
-function parseCSVString(text: string): string[][] {
-    const rows: string[][] = [];
-    let currentRow: string[] = [];
-    let currentCell = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const nextChar = text[i + 1];
-
-        if (inQuotes) {
-            if (char === '"' && nextChar === '"') {
-                currentCell += '"';
-                i++; // skip escaped quote
-            } else if (char === '"') {
-                inQuotes = false;
-            } else {
-                currentCell += char;
-            }
-        } else {
-            if (char === '"') {
-                inQuotes = true;
-            } else if (char === ',') {
-                currentRow.push(currentCell.trim());
-                currentCell = '';
-            } else if (char === '\n' || (char === '\r' && nextChar === '\n')) {
-                currentRow.push(currentCell.trim());
-                if (currentRow.some(c => c !== '')) {
-                    rows.push(currentRow);
-                }
-                currentRow = [];
-                currentCell = '';
-                if (char === '\r') i++; // skip \n
-            } else {
-                currentCell += char;
-            }
-        }
-    }
-    
-    // Add the last cell and row if not empty
-    if (currentCell !== '' || inQuotes) {
-        currentRow.push(currentCell.trim());
-    }
-    if (currentRow.length > 0 && currentRow.some(c => c !== '')) {
-        rows.push(currentRow);
-    }
-    
-    return rows;
 }
 
 /**
@@ -220,112 +194,57 @@ function parseCSVString(text: string): string[][] {
  */
 export async function parseCSV(file: File): Promise<ParseResult> {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const text = e.target?.result as string;
-            if (!text) {
-                resolve({ rows: [], meta: { totalRows: 0, validRows: 0, invalidRows: 0 } });
-                return;
-            }
+        Papa.parse<CSVRow>(file, {
+            header: true,
+            skipEmptyLines: false,
+            newline: "\n",
+            complete: (results: any) => {
+                const rawRows = results.data;
+                const normalQuestions: ParsedRow[] = [];
+                let rowCounter = 2; // header is 1
 
-            const rawRows = parseCSVString(text);
-            if (rawRows.length < 2) {
-                resolve({ rows: [], meta: { totalRows: 0, validRows: 0, invalidRows: 0 } });
-                return;
-            }
+                for (let i = 0; i < rawRows.length; i++) {
+                    const rowObj = rawRows[i];
+                    // Skip entirely empty lines
+                    if (!rowObj.questionText && !rowObj.passage && Object.keys(rowObj).every(k => !rowObj[k as keyof CSVRow])) {
+                        continue;
+                    }
 
-            const headers = rawRows[0].map(h => h.trim());
-            const parsedRows: ParsedRow[] = [];
-            let currentPassageRow: (ParsedRow & { raw: any }) | null = null;
+                    // For backward compatibility, ignore parent passage rows without questions entirely
+                    // since we require all questions to be flat and independent
+                    if ((!rowObj.questionText || rowObj.questionText.trim() === '') && rowObj.passage) {
+                        continue;
+                    }
 
-            for (let i = 1; i < rawRows.length; i++) {
-                const rowValues = rawRows[i];
+                    const { valid, data, errors } = validateAndMapRow(rowObj);
+                    
+                    const newParsedRow = {
+                        row: rowCounter,
+                        data: { ...data },
+                        valid,
+                        errors,
+                        raw: rowObj
+                    } as ParsedRow & { raw: any };
 
-                // Map to CSVRow object
-                let rowObj: Record<string, string> = {};
-                headers.forEach((h, index) => {
-                    if (index < rowValues.length) {
-                        rowObj[h] = rowValues[index];
+                    normalQuestions.push(newParsedRow);
+                    rowCounter++;
+                }
+
+                const validCount = normalQuestions.filter(r => r.valid).length;
+                const invalidCount = normalQuestions.filter(r => !r.valid).length;
+
+                resolve({
+                    rows: normalQuestions,
+                    meta: {
+                        totalRows: validCount + invalidCount,
+                        validRows: validCount,
+                        invalidRows: invalidCount
                     }
                 });
-
-                // Validate
-                const { valid, data, errors } = validateAndMapRow(rowObj as unknown as CSVRow);
-
-                const newParsedRow = {
-                    row: i + 1, // Logical CSV row
-                    data,
-                    valid,
-                    errors,
-                    raw: rowObj // Store raw for inline editing
-                } as ParsedRow & { raw: any };
-
-                // Grouping Logic
-                if (data.questionType === 'passage') {
-                    newParsedRow.data.subQuestions = [];
-                    // If it has its own question text, treat it as the first sub-question
-                    if (data.text && data.text.trim() !== '') {
-                        newParsedRow.data.subQuestions.push({
-                            id: 'sq_' + Date.now() + i,
-                            type: 'mcq',
-                            text: data.text,
-                            options: data.options || [],
-                            correctOption: data.correctOption || 0,
-                            explanation: data.explanation
-                        });
-                        // Clear the top-level text so it acts purely as a container
-                        newParsedRow.data.text = '';
-                    }
-                    currentPassageRow = newParsedRow;
-                    parsedRows.push(newParsedRow);
-                } else if ((data.questionType === 'mcq' || data.questionType === 'match') && ((rowObj as any).passageText || (rowObj as any).passageId)) {
-                    // It references a passage.
-                    if (currentPassageRow && 
-                       (((rowObj as any).passageText && (rowObj as any).passageText === (currentPassageRow.raw as any).passageText) || 
-                        ((rowObj as any).passageId && (rowObj as any).passageId === (currentPassageRow.raw as any).passageId))) {
-                        
-                        currentPassageRow.data.subQuestions!.push({
-                            id: 'sq_' + Date.now() + i,
-                            type: data.questionType,
-                            text: data.text || '',
-                            options: data.options || [],
-                            correctOption: data.correctOption || 0,
-                            explanation: data.explanation,
-                            matchPairs: data.matchPairs
-                        });
-                        
-                        // Absorb row. If invalid, invalidate parent.
-                        if (!valid) {
-                            currentPassageRow.valid = false;
-                            currentPassageRow.errors.push(`Sub-question at row ${i+1} invalid: ${errors.join(', ')}`);
-                        }
-                    } else {
-                        // Independent question
-                        currentPassageRow = null;
-                        parsedRows.push(newParsedRow);
-                    }
-                } else {
-                    currentPassageRow = null;
-                    parsedRows.push(newParsedRow);
-                }
+            },
+            error: (error: Error) => {
+                reject(error);
             }
-
-            // Recalculate valid/invalid counts due to grouping
-            const validCount = parsedRows.filter(r => r.valid).length;
-            const invalidCount = parsedRows.filter(r => !r.valid).length;
-
-            resolve({
-                rows: parsedRows,
-                meta: {
-                    totalRows: validCount + invalidCount,
-                    validRows: validCount,
-                    invalidRows: invalidCount
-                }
-            });
-        };
-        reader.onerror = () => {
-            reject(new Error("Failed to read file"));
-        };
-        reader.readAsText(file);
+        });
     });
 }

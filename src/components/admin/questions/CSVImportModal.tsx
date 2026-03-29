@@ -74,7 +74,7 @@ export function CSVImportModal({ isOpen, onClose, onSuccess, onPrepopulateFromCS
 
     const handleDownloadTemplate = () => {
         const headers = [
-            "questionType", "listA", "listB", "passageId", "passageText",
+            "questionType", "listA", "listB", "passage", "imageUrl",
             "questionText", "optionA", "optionB", "optionC", "optionD",
             "correctAnswer", "explanation", "subjectTag", "topicTag",
             "difficulty", "marks", "negativeMarks", "streams"
@@ -83,28 +83,37 @@ export function CSVImportModal({ isOpen, onClose, onSuccess, onPrepopulateFromCS
             "mcq", "", "", "", "",
             "What is the capital of France?", "London", "Berlin", "Paris", "Madrid",
             "C", "Paris is the capital of France.", "Geography", "World Capitals",
-            "Easy", "5", "1", "Humanities"
+            "Easy", "5", "1", "Humanities|General"
         ];
-        // Match example
+        // Match example requires fully formed options where the option is the mapped relationship
         const dummyRow2 = [
             "match", "A:Apple|B:Banana|C:Cherry", "1:Red|2:Yellow|3:Green", "", "",
-            "Match the fruits with their colors.", "", "", "", "",
-            "A-1, B-2, C-3", "Apples are red, bananas are yellow, cherries are green.", "Science", "Botany",
+            "Match the fruits with their colors.", 
+            "A-1, B-2, C-3", "A-2, B-3, C-1", "A-3, B-1, C-2", "A-1, B-3, C-2",
+            "A", "Apples are red, bananas are yellow, cherries are green.", "Science", "Botany",
             "Medium", "5", "1", "Science"
         ];
-        // Passage example (Using passageText leaves passageId blank. The system auto-generates passageId)
+        // Passage example adds passage context directly to an mcq question
         const dummyRow3 = [
-            "passage", "", "", "", "This is a sample passage text. System will auto-create passageId for it.",
-            "According to the passage what is it?", "A sample", "A book", "A movie", "A song",
-            "A", "The passage explicitly says it is a sample.", "English", "Reading Comprehension",
-            "Hard", "5", "1", "General"
+            "mcq", "", "", "The quick brown fox jumps over the lazy dog. It was a sunny day.", "",
+            "What color is the fox?", "Brown", "Red", "White", "Black",
+            "A", "The passage states the fox is brown.", "English", "Reading Comprehension",
+            "Easy", "5", "1", "General"
+        ];
+        const dummyRow4 = [
+            "match", "A:Sunny|B:Rainy", "1:Nice Day|2:Bad Day", "The quick brown fox jumps over the lazy dog. It was a sunny day.", "",
+            "Match the weather to the day type according to the passage.", 
+            "A-1, B-2", "A-2, B-1", "A-1, B-1", "A-2, B-2",
+            "A", "The passage implies sunny days are nice.", "English", "Reading Comprehension",
+            "Medium", "5", "1", "General"
         ];
 
-        const csvContent = "data:text/csv;charset=utf-8,"
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF"
             + headers.join(",") + "\n"
-            + dummyRow1.map(val => `"${val}"`).join(",") + "\n"
-            + dummyRow2.map(val => `"${val}"`).join(",") + "\n"
-            + dummyRow3.map(val => `"${val}"`).join(",");
+            + dummyRow1.map(val => `"${val.replace(/"/g, '""')}"`).join(",") + "\n"
+            + dummyRow2.map(val => `"${val.replace(/"/g, '""')}"`).join(",") + "\n"
+            + dummyRow3.map(val => `"${val.replace(/"/g, '""')}"`).join(",") + "\n"
+            + dummyRow4.map(val => `"${val.replace(/"/g, '""')}"`).join(",");
 
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -178,36 +187,8 @@ export function CSVImportModal({ isOpen, onClose, onSuccess, onPrepopulateFromCS
 
         let questionsToUpload = validRows.map(r => r.data);
 
-        // --- Handle Passage Creation ---
-        // Group by passageText to avoid creating duplicates for the same passage in one CSV
-        const passageTextMap = new Map<string, string>(); // text -> new passageId
-
-        for (const q of questionsToUpload) {
-            // we attached passageText temporally on q (which is Partial<Question> anyway and passes down)
-            const passageText = (q as any).passageText;
-            if (q.questionType === 'passage' && passageText && !q.passageId) {
-                if (!passageTextMap.has(passageText)) {
-                    // Create passage
-                    const newId = await firestoreService.createPassage({ text: passageText });
-                    if (newId) passageTextMap.set(passageText, newId);
-                }
-            }
-        }
-
-        // Assign created passageIds
-        questionsToUpload = questionsToUpload.map(q => {
-            const passageText = (q as any).passageText;
-            if (q.questionType === 'passage' && passageText && !q.passageId) {
-                const createdId = passageTextMap.get(passageText);
-                if (createdId) {
-                    q.passageId = createdId;
-                }
-            }
-            // Clean up temporary property
-            const finalQ = { ...q };
-            delete (finalQ as any).passageText;
-            return finalQ;
-        });
+        // The CSV Parser has already grouped passage rows into single Question objects with subQuestions arrays.
+        // We can upload them directly without external dependencies.
 
         if (onPrepopulateFromCSV) {
             onPrepopulateFromCSV(questionsToUpload);

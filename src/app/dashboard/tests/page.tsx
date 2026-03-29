@@ -6,10 +6,9 @@ import { Test, TestAttempt } from "@/types/admin";
 import { useAuth } from "@/context/AuthContext";
 import { TestCard } from "@/components/dashboard/TestCard";
 import { Search, Sparkles, BookOpen, Clock } from "lucide-react";
-import { PaymentModal } from "@/components/dashboard/PaymentModal";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
-type FilterType = 'All' | 'Full Mock' | 'Subject' | 'General' | 'PYQ' | 'Free';
+type FilterType = 'All' | 'Full Mock' | 'Subject' | 'General' | 'PYQ';
 
 export default function MockTestsPage() {
     const { user, userData } = useAuth();
@@ -19,7 +18,6 @@ export default function MockTestsPage() {
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
     const [searchQuery, setSearchQuery] = useState("");
 
-    const [selectedTestToUnlock, setSelectedTestToUnlock] = useState<Test | null>(null);
 
     useEffect(() => {
         async function loadData() {
@@ -49,7 +47,6 @@ export default function MockTestsPage() {
 
         // Category filter
         if (activeFilter === 'All') return true;
-        if (activeFilter === 'Free') return test.price === 'free';
 
         // PYQ specialized filter
         if (activeFilter === 'PYQ') {
@@ -68,17 +65,6 @@ export default function MockTestsPage() {
         return completed ? 'completed' : 'new';
     };
 
-    const handleUnlock = (test: Test) => {
-        setSelectedTestToUnlock(test);
-    };
-
-    const onPaymentSuccess = async () => {
-        if (selectedTestToUnlock && user) {
-            // Mock purchase update in local state for immediate feedback
-        }
-        setSelectedTestToUnlock(null);
-        window.location.reload();
-    };
 
     if (loading) {
         return (
@@ -149,7 +135,7 @@ export default function MockTestsPage() {
 
             {/* Filters */}
             <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none px-2">
-                {(['All', 'PYQ', 'Full Mock', 'Subject', 'General', 'Free'] as FilterType[]).map((filter) => (
+                {(['All', 'PYQ', 'Full Mock', 'Subject', 'General'] as FilterType[]).map((filter) => (
                     <button
                         key={filter}
                         onClick={() => setActiveFilter(filter)}
@@ -179,7 +165,6 @@ export default function MockTestsPage() {
                     >
                         {filteredTests.map(test => {
                             const state = getAttemptState(test.id);
-                            const isPurchased = !!user?.uid && (test.price === 'free' || !!userData?.purchasedTests?.[test.id]);
 
                             return (
                                 <motion.div key={test.id} variants={itemVariants} layout>
@@ -187,8 +172,6 @@ export default function MockTestsPage() {
                                         test={test}
                                         isInProgress={state === 'in_progress'}
                                         isAttempted={state === 'completed'}
-                                        isPurchased={isPurchased}
-                                        onUnlock={handleUnlock}
                                     />
                                 </motion.div>
                             );
@@ -211,14 +194,7 @@ export default function MockTestsPage() {
                 )}
             </AnimatePresence>
 
-            {selectedTestToUnlock && (
-                <PaymentModal
-                    isOpen={!!selectedTestToUnlock}
-                    onClose={() => setSelectedTestToUnlock(null)}
-                    test={selectedTestToUnlock}
-                    onUnlock={onPaymentSuccess}
-                />
-            )}
+
         </div>
     );
 }

@@ -102,8 +102,7 @@ export default function SeedTestPage() {
                 totalMarks: 40,
                 difficulty: 'Easy',
                 category: 'General',
-                status: 'published',
-                price: 'free'
+                status: 'published'
             });
 
             if (newId) {

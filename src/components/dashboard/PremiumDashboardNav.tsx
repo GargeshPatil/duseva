@@ -7,6 +7,8 @@ import { Settings } from "lucide-react";
 import { DashboardNavTabs } from "@/components/dashboard/DashboardNavTabs";
 import { DashboardNavProfile } from "@/components/dashboard/DashboardNavProfile";
 
+import { CreditWallet } from "@/components/dashboard/CreditWallet";
+
 export function PremiumDashboardNav() {
     const pathname = usePathname();
 
@@ -28,6 +30,8 @@ export function PremiumDashboardNav() {
 
                 {/* Right Section: Actions & Profile */}
                 <div className="flex items-center gap-4">
+                    <CreditWallet variant="nav" />
+                    
                     <Link
                         href="/dashboard/settings"
                         className={`p-2 rounded-full transition-colors ${pathname === '/dashboard/settings' ? 'bg-white/10 text-white' : 'text-text-muted hover:bg-white/5 hover:text-white'

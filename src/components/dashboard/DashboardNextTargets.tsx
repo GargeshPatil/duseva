@@ -22,9 +22,8 @@ export function DashboardNextTargets({ recommendedTests, userData }: DashboardNe
             {recommendedTests.length > 0 ? (
                 <div className="grid sm:grid-cols-2 gap-4">
                     {recommendedTests.map((test) => {
-                        const isLocked = test.price === 'paid' && !userData?.purchasedTests?.[test.id];
                         return (
-                            <Link key={test.id} href={isLocked ? '#' : `/test/${test.id}`} className="block group">
+                            <Link key={test.id} href={`/test/${test.id}`} className="block group">
                                 <div className="relative h-full bg-surface-card/60 backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] hover:border-white/20 transition-all duration-300 overflow-hidden flex flex-col shadow-lg">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-110" />
 
@@ -35,11 +34,6 @@ export function DashboardNextTargets({ recommendedTests, userData }: DashboardNe
                                             }`}>
                                             {test.difficulty || 'Medium'}
                                         </span>
-                                        {isLocked && (
-                                            <span className="bg-cta-primary/20 text-white border border-cta-primary/30 px-3 py-1 rounded-full text-xs font-bold tracking-wider">
-                                                PREMIUM
-                                            </span>
-                                        )}
                                     </div>
 
                                     <h3 className="font-bold text-white text-xl leading-tight mb-4 relative z-10 group-hover:text-cta-primary transition-colors">

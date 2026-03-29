@@ -19,7 +19,7 @@ export function Navbar() {
 
     const navLinks = [
         { name: 'CUET 2026', href: '/cuet-2026' },
-        { name: 'CUET Mocks', href: '/mocks' },
+        { name: 'CUET Mocks', href: user ? '/dashboard' : '/auth/signup' },
     ];
 
     useEffect(() => {
@@ -121,11 +121,11 @@ export function Navbar() {
                         <div className="w-[124px] h-[42px] rounded-xl bg-surface-elevated animate-pulse border border-border/80 blur-sm"></div>
                     )}
                     <Link
-                        href="/mocks"
+                        href={user ? '/dashboard' : '/test/showcase'}
                         className="relative group text-sm font-bold px-7 py-2.5 rounded-xl bg-gradient-to-r from-cta-primary to-cta-hover text-white transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] hover:-translate-y-1 active:scale-95 overflow-hidden"
                     >
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                        <span className="relative z-10">Give a Mock</span>
+                        <span className="relative z-10">{user ? "Dashboard" : "Give a Mock"}</span>
                     </Link>
                 </div>
 
@@ -222,11 +222,11 @@ export function Navbar() {
                                     <div className="w-full h-[52px] rounded-xl bg-white/5 animate-pulse border border-white/10"></div>
                                 )}
                                 <Link
-                                    href="/mocks"
+                                    href={user ? '/dashboard' : '/test/showcase'}
                                     onClick={() => setIsOpen(false)}
                                     className="w-full text-center py-3.5 rounded-xl bg-gradient-to-r from-cta-primary to-cta-hover text-white font-black hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all uppercase tracking-wide"
                                 >
-                                    Give a Mock
+                                    {user ? "Dashboard" : "Give a Mock"}
                                 </Link>
                             </div>
                         </motion.div>

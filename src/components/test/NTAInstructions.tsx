@@ -12,7 +12,7 @@ interface Props {
 export default function NTAInstructions({ testId }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -27,6 +27,10 @@ export default function NTAInstructions({ testId }: Props) {
   const handleProceed = () => {
     if (!agreed) {
       setShowModal(true);
+      return;
+    }
+    if ((userData?.credits || 0) < 1) {
+      alert("Insufficient Credits. Please purchase more credits from your dashboard to start tests.");
       return;
     }
     // Proceed to test

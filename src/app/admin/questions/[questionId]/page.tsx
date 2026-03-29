@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ArrowLeft, Save, Plus, Trash2, Loader2, Check } from "lucide-react";
 import { firestoreService } from "@/services/firestoreService";
-import { Question, Passage } from "@/types/admin";
+import { Question } from "@/types/admin";
 import Link from "next/link";
 
 export default function QuestionEditorPage() {
@@ -26,15 +26,12 @@ export default function QuestionEditorPage() {
         explanation: "",
         testId: prefillTestId || "",
         matchPairs: [{ left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }],
-        passageId: ""
+        passageText: ""
     });
 
     const [loading, setLoading] = useState(!isNew);
     const [saving, setSaving] = useState(false);
     const [tests, setTests] = useState<{ id: string, title: string }[]>([]);
-    const [passages, setPassages] = useState<Passage[]>([]);
-    const [newPassageText, setNewPassageText] = useState("");
-    const [isCreatingPassage, setIsCreatingPassage] = useState(false);
 
     useEffect(() => {
          
@@ -44,12 +41,8 @@ export default function QuestionEditorPage() {
     async function loadData() {
         // Load tests for dropdown
         try {
-            const [t, p] = await Promise.all([
-                firestoreService.getTests(),
-                firestoreService.getPassages()
-            ]);
+            const t = await firestoreService.getTests();
             setTests(t.map(test => ({ id: test.id, title: test.title })));
-            setPassages(p);
         } catch (e) {
             console.error("Failed to load tests", e);
         }
@@ -86,27 +79,20 @@ export default function QuestionEditorPage() {
 
         setSaving(true);
         try {
-            let finalPassageId = question.passageId;
-
-            if (question.questionType === "passage" && isCreatingPassage && newPassageText.trim() !== "") {
-                const newId = await firestoreService.createPassage({ text: newPassageText });
-                if (newId) {
-                    finalPassageId = newId;
-                } else {
-                    alert("Failed to create the new passage.");
-                    setSaving(false);
-                    return;
+            let generatedPassageId = null;
+            if (question.passageText && question.passageText.trim() !== "") {
+                try {
+                    generatedPassageId = "passage_" + btoa(encodeURIComponent(question.passageText.trim())).slice(0, 12);
+                } catch(e) {
+                    generatedPassageId = "passage_" + Date.now().toString(36);
                 }
-            } else if (question.questionType === "passage" && !finalPassageId) {
-                alert("Please select or create a passage for this question.");
-                setSaving(false);
-                return;
             }
 
             const questionDataToSave: any = {
                 ...question,
-                passageId: question.questionType === "passage" ? finalPassageId : null,
-                matchPairs: question.questionType === "match" ? question.matchPairs : null
+                matchPairs: question.questionType === "match" ? question.matchPairs : null,
+                passageText: question.passageText?.trim() || null,
+                passageId: generatedPassageId
             };
 
             if (isNew) {
@@ -164,70 +150,31 @@ export default function QuestionEditorPage() {
                                 <select
                                     className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm"
                                     value={question.questionType || "mcq"}
-                                    onChange={(e) => setQuestion({ ...question, questionType: e.target.value as "mcq" | "match" | "passage" })}
+                                    onChange={(e) => setQuestion({ ...question, questionType: e.target.value as "mcq" | "match" })}
                                 >
                                     <option value="mcq">Standard MCQ</option>
                                     <option value="match">Match the Following</option>
-                                    <option value="passage">Passage-based</option>
                                 </select>
                             </div>
                         </div>
 
-                        {question.questionType === "passage" && (
-                            <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg space-y-4">
-                                <h4 className="font-medium text-blue-900 text-sm">Passage Selection</h4>
-                                <div className="flex gap-4 mb-2">
-                                    <label className="flex items-center gap-2 text-sm text-slate-700">
-                                        <input
-                                            type="radio"
-                                            checked={!isCreatingPassage}
-                                            onChange={() => setIsCreatingPassage(false)}
-                                            className="text-blue-600 focus:ring-blue-500 h-4 w-4"
-                                        />
-                                        Select Existing
-                                    </label>
-                                    <label className="flex items-center gap-2 text-sm text-slate-700">
-                                        <input
-                                            type="radio"
-                                            checked={isCreatingPassage}
-                                            onChange={() => setIsCreatingPassage(true)}
-                                            className="text-blue-600 focus:ring-blue-500 h-4 w-4"
-                                        />
-                                        Create New
-                                    </label>
-                                </div>
-
-                                {!isCreatingPassage ? (
-                                    <select
-                                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm"
-                                        value={question.passageId || ""}
-                                        onChange={(e) => setQuestion({ ...question, passageId: e.target.value })}
-                                    >
-                                        <option value="">-- Select a Passage --</option>
-                                        {passages.map(p => (
-                                            <option key={p.id} value={p.id}>
-                                                {p.text.length > 80 ? p.text.substring(0, 80) + "..." : p.text}
-                                            </option>
-                                        ))}
-                                    </select>
-                                ) : (
-                                    <textarea
-                                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[120px]"
-                                        value={newPassageText}
-                                        onChange={(e) => setNewPassageText(e.target.value)}
-                                        placeholder="Enter passage text here. This passage will be created when you save the question."
-                                    />
-                                )}
-                            </div>
-                        )}
+                        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg space-y-4">
+                            <h4 className="font-medium text-blue-900 text-sm">Optional Passage Text</h4>
+                            <textarea
+                                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[120px]"
+                                value={question.passageText || ""}
+                                onChange={(e) => setQuestion({ ...question, passageText: e.target.value })}
+                                placeholder="Enter passage context here if this query links to a passage..."
+                            />
+                        </div>
 
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                {question.questionType === "passage" ? "Question Text related to Passage" : "Question Text"}
+                                Question Text
                             </label>
                             <textarea
                                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[100px]"
-                                value={question.text}
+                                value={question.text || ""}
                                 onChange={(e) => setQuestion({ ...question, text: e.target.value })}
                                 placeholder="Enter the question here..."
                             />

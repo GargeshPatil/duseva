@@ -14,19 +14,19 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { testId, amount } = body;
+        const { packageId, amount, credits } = body;
 
-        console.log("Creating Razorpay order for test:", testId, "Amount:", amount);
+        console.log("Creating Razorpay order for package:", packageId, "Amount:", amount);
 
-        if (!testId || !amount) {
+        if (!packageId || !amount) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
         const options = {
             amount: Math.round(amount * 100), // Razorpay accepts amount in paise
             currency: "INR",
-            receipt: `rcpt_${testId}_${Date.now()}`.substring(0, 40),
-            notes: { testId: testId }
+            receipt: `rcpt_${packageId}_${Date.now()}`.substring(0, 40),
+            notes: { packageId: packageId, credits: credits }
         };
 
         const order = await razorpay.orders.create(options);

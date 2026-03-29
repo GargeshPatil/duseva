@@ -23,8 +23,6 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
     const [stats, setStats] = useState({
         tests: 0,
         questions: 0,
-        bundles: 0,
-        activeBundles: 0,
         publishedTests: 0
     });
     const [loading, setLoading] = useState(true);
@@ -35,18 +33,15 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
 
     async function loadStats() {
         try {
-            const [tests, questions, bundles] = await Promise.all([
+            const [tests, questions] = await Promise.all([
                 firestoreService.getTests(),
-                firestoreService.getQuestions(),
-                firestoreService.getBundles()
+                firestoreService.getQuestions()
             ]);
 
             setStats({
                 tests: tests.length,
                 publishedTests: tests.filter(t => t.status === 'published').length,
-                questions: questions.length,
-                bundles: bundles.length,
-                activeBundles: bundles.filter(b => b.isActive).length
+                questions: questions.length
             });
         } catch (error) {
             console.warn("Failed to load stats", error);
@@ -121,19 +116,11 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
                     onClick={() => onNavigate('tests')}
                 />
                 <StatCard
-                    title="Test Bundles"
-                    value={stats.bundles}
-                    subtext={`${stats.activeBundles} Active`}
-                    icon={Package}
-                    color="from-purple-500/20 to-pink-500/5"
-                    onClick={() => onNavigate('bundles')}
-                />
-                <StatCard
-                    title="Pricing Rules"
+                    title="Credit Pricing"
                     value="Manage"
                     icon={TrendingUp}
                     color="from-emerald-500/20 to-teal-500/5"
-                    onClick={() => onNavigate('pricing')}
+                    onClick={() => onNavigate('credits')}
                 />
             </motion.div>
 
@@ -165,14 +152,6 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
                             <PlusCircle className="h-5 w-5 text-emerald-400" />
                             <span className="font-semibold">Add Content to Bank</span>
                         </Button>
-                        <Button
-                            variant="secondary"
-                            className="w-full justify-start h-14 bg-black/20 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 transition-all rounded-xl focus:ring-0 gap-3"
-                            onClick={() => window.location.href = '/admin/bundles/new'}
-                        >
-                            <PlusCircle className="h-5 w-5 text-purple-400" />
-                            <span className="font-semibold">Create Test Bundle</span>
-                        </Button>
                     </div>
                 </div>
 
@@ -192,7 +171,7 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
                         </div>
                         <div className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
                             <CheckCircle className="h-5 w-5 text-emerald-400" />
-                            <span className="text-white font-medium">Pricing & Bundle Engine: <strong className="text-emerald-400 ml-1">Active</strong></span>
+                            <span className="text-white font-medium">Credit & Pricing Engine: <strong className="text-emerald-400 ml-1">Active</strong></span>
                         </div>
 
                         <div className="mt-8 pt-8 border-t border-white/10">

@@ -1,15 +1,14 @@
 import React, { useState } from "react";
-import { Question, Passage } from "@/types/admin";
+import { Question } from "@/types/admin";
 import { UnifiedQuestionCard } from "./UnifiedQuestionCard";
 import { Reorder } from "framer-motion";
 
 interface TestQuestionListProps {
     questions: Question[];
     setQuestions: (questions: Question[]) => void;
-    passages: Passage[];
 }
 
-export function TestQuestionList({ questions, setQuestions, passages }: TestQuestionListProps) {
+export function TestQuestionList({ questions, setQuestions }: TestQuestionListProps) {
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const handleQuestionChange = (index: number, updated: Question) => {
         const newQuestions = [...questions];
@@ -50,7 +49,6 @@ export function TestQuestionList({ questions, setQuestions, passages }: TestQues
                         onDuplicate={() => handleDuplicate(index)}
                         isExpanded={expandedId === q.id}
                         onToggleExpand={() => setExpandedId(expandedId === q.id ? null : q.id)}
-                        passages={passages}
                     />
                 ))}
             </Reorder.Group>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { UnifiedQuestionCard } from "@/components/admin/test-builder/UnifiedQuestionCard";
-import { Question, Passage } from "@/types/admin";
+import { Question } from "@/types/admin";
 import { firestoreService } from "@/services/firestoreService";
 import { Loader2 } from "lucide-react";
 
@@ -17,7 +17,6 @@ export function QuestionEditorModal({ isOpen, onClose, questionId, onSuccess }: 
     const [question, setQuestion] = useState<Question | null>(null);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [passages, setPassages] = useState<Passage[]>([]);
 
     useEffect(() => {
         if (!isOpen) {
@@ -31,9 +30,6 @@ export function QuestionEditorModal({ isOpen, onClose, questionId, onSuccess }: 
     const loadData = async () => {
         setLoading(true);
         try {
-            // Load passages
-            const p = await firestoreService.getPassages();
-            setPassages(p);
 
             if (questionId) {
                 // To fetch a single question reliably, we could fetch all and find, or just use getQuestions
@@ -81,36 +77,23 @@ export function QuestionEditorModal({ isOpen, onClose, questionId, onSuccess }: 
                 return;
             }
         }
+        let generatedPassageId = null;
+        if (question.passageText && question.passageText.trim() !== "") {
+            try {
+                generatedPassageId = "passage_" + btoa(encodeURIComponent(question.passageText.trim())).slice(0, 12);
+            } catch(e) {
+                generatedPassageId = "passage_" + Date.now().toString(36);
+            }
+        }
 
         setSaving(true);
         try {
-            let finalPassageId = question.passageId;
-            const passageTextToCreate = (question as any).passageText;
-
-            // Handle inline passage creation
-            if (question.questionType === "passage" && passageTextToCreate && passageTextToCreate.trim() !== "") {
-                const newId = await firestoreService.createPassage({ text: passageTextToCreate });
-                if (newId) {
-                    finalPassageId = newId;
-                } else {
-                    alert("Failed to create the new passage.");
-                    setSaving(false);
-                    return;
-                }
-            } else if (question.questionType === "passage" && !finalPassageId) {
-                alert("Please select or create a passage for this question.");
-                setSaving(false);
-                return;
-            }
-
             const payload: any = {
                 ...question,
-                passageId: question.questionType === "passage" ? finalPassageId : null,
-                matchPairs: question.questionType === "match" ? question.matchPairs : null
+                matchPairs: question.questionType === "match" ? question.matchPairs : null,
+                passageText: question.passageText?.trim() || null,
+                passageId: generatedPassageId
             };
-
-            // Remove temporary fields
-            delete payload.passageText;
 
             if (questionId) {
                 await firestoreService.updateQuestion(question.id, payload);
@@ -149,14 +132,13 @@ export function QuestionEditorModal({ isOpen, onClose, questionId, onSuccess }: 
                     ) : question ? (
                         <div className="w-full">
                             {/* We re-use UnifiedQuestionCard with isDragDisabled=true so it displays full-width and permanently expanded essentially */}
-                            <UnifiedQuestionCard
-                                question={question}
-                                onChange={setQuestion}
-                                isExpanded={true}
-                                onToggleExpand={() => { }} // Disabled toggle for modal
-                                passages={passages}
-                                isDragDisabled={true}
-                            />
+                                <UnifiedQuestionCard
+                                    question={question}
+                                    onChange={setQuestion}
+                                    isExpanded={true}
+                                    onToggleExpand={() => { }} // Disabled toggle for modal
+                                    isDragDisabled={true}
+                                />
                         </div>
                     ) : (
                         <div className="text-center py-12 text-semantic-error">Failed to load question</div>

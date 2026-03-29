@@ -134,44 +134,6 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
                         })}
                     </div>
                 </div>
-
-                {/* Pricing */}
-                <div className="md:col-span-2 bg-surface-elevated p-4 rounded-lg border border-border">
-                    <label className="block text-sm font-medium text-text-secondary mb-2">Pricing Configuration</label>
-                    <div className="flex flex-wrap gap-4 items-center">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="radio"
-                                name="price"
-                                checked={test.price === 'free'}
-                                onChange={() => handleChange('price', 'free')}
-                            />
-                            <span className="text-sm text-text-secondary">Free</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="radio"
-                                name="price"
-                                checked={test.price === 'paid'}
-                                onChange={() => handleChange('price', 'paid')}
-                            />
-                            <span className="text-sm text-text-secondary">Paid</span>
-                        </label>
-
-                        {test.price === 'paid' && (
-                            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
-                                <span className="text-sm text-text-muted">Amount (₹):</span>
-                                <Input
-                                    type="number"
-                                    min={0}
-                                    className="w-32 h-9"
-                                    value={test.priceAmount || 0}
-                                    onChange={(e) => handleChange('priceAmount', parseFloat(e.target.value))}
-                                />
-                            </div>
-                        )}
-                    </div>
-                </div>
             </div>
         </div>
     );

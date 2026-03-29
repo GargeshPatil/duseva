@@ -19,7 +19,7 @@ import {
     writeBatch
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { User, Test, Question, CMSContent, SiteSettings, AuditLog, DashboardStats, Transaction, TestAttempt, TestResult, Bundle, Passage } from "@/types/admin";
+import { User, Test, Question, CMSContent, SiteSettings, AuditLog, DashboardStats, Transaction, TestAttempt, TestResult } from "@/types/admin";
 import { UserData } from "@/context/AuthContext";
 
 // Helper to remove undefined fields recursively
@@ -46,43 +46,6 @@ function cleanData(data: any): any {
 
 export const firestoreService = {
     // --- Test Engine ---
-    async startTestAttempt(userId: string, testId: string, durationMinutes: number): Promise<string | null> {
-        try {
-            const attemptsRef = collection(db, "testAttempts");
-
-            // Check if there's an active attempt first?
-            const q = query(
-                attemptsRef,
-                where("userId", "==", userId),
-                where("testId", "==", testId),
-                where("status", "==", "in_progress")
-            );
-            const snapshot = await getDocs(q);
-
-            if (!snapshot.empty) {
-                console.log("Resuming existing attempt:", snapshot.docs[0].id);
-                return snapshot.docs[0].id;
-            }
-
-            const newAttempt: Omit<TestAttempt, 'id'> = {
-                userId,
-                testId,
-                startTime: new Date().toISOString(),
-                answers: {},
-                timeRemaining: durationMinutes * 60,
-                status: 'in_progress',
-                currentQuestionIndex: 0,
-                questionStatus: {}
-            };
-
-            const docRef = await addDoc(attemptsRef, newAttempt);
-            return docRef.id;
-        } catch (error) {
-            console.error("Error starting test attempt:", error);
-            return null;
-        }
-    },
-
     async updateTestAttempt(attemptId: string, data: Partial<TestAttempt>): Promise<boolean> {
         try {
             const attemptRef = doc(db, "testAttempts", attemptId);
@@ -226,7 +189,8 @@ export const firestoreService = {
                     testsTaken: data.performanceSummary?.totalTestsAttempted || 0,
                     avgScore: data.performanceSummary?.overallAverageScore || 0,
                     isActive: true, // Logic could be added based on lastLoginAt
-                    paymentStatus: Object.keys(data.purchasedTests || {}).length > 0 ? 'paid' : 'free'
+                    credits: data.credits || 0,
+                    totalCreditsPurchased: data.totalCreditsPurchased || 0
                 };
             });
             return users;
@@ -272,8 +236,6 @@ export const firestoreService = {
                     totalMarks: data.totalMarks,
                     difficulty: (data.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard',
                     category: (data.category || 'Subject') as 'Subject' | 'General' | 'Full Mock',
-                    price: data.isPaid ? 'paid' : 'free',
-                    priceAmount: data.price ? Number(data.price) : (data.isPaid ? 99 : 0),
                     questions: [],
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
@@ -306,8 +268,6 @@ export const firestoreService = {
                     totalMarks: data.totalMarks,
                     difficulty: (data.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard',
                     category: (data.category || 'Subject') as 'Subject' | 'General' | 'Full Mock',
-                    price: data.isPaid ? 'paid' : 'free',
-                    priceAmount: data.price ? Number(data.price) : (data.isPaid ? 99 : 0),
                     questions: [],
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
@@ -337,8 +297,6 @@ export const firestoreService = {
                 difficulty: testData.difficulty,
                 category: testData.category,
                 streams: Array.isArray(testData.streams) ? testData.streams : (testData.streams ? [testData.streams] : ['General']), // Default to General
-                isPaid: testData.price === 'paid',
-                price: testData.price === 'paid' ? 99 : 0, // Default price logic, update as needed
                 isVisible: true,
                 isPublished: testData.status === 'published',
                 createdAt: Timestamp.now(),
@@ -372,7 +330,6 @@ export const firestoreService = {
             if (updates.totalMarks) firestoreUpdates.totalMarks = updates.totalMarks;
             if (updates.difficulty) firestoreUpdates.difficulty = updates.difficulty;
             if (updates.status) firestoreUpdates.isPublished = updates.status === 'published';
-            if (updates.price) firestoreUpdates.isPaid = updates.price === 'paid';
             if (updates.streams) firestoreUpdates.streams = updates.streams;
             if (updates.questionIds) firestoreUpdates.questionIds = updates.questionIds;
 
@@ -390,70 +347,6 @@ export const firestoreService = {
             return true;
         } catch (error) {
             console.error("Error deleting test:", error);
-            return false;
-        }
-    },
-
-    // --- Bundles ---
-    async getBundles(activeOnly: boolean = false): Promise<Bundle[]> {
-        try {
-            const bundlesRef = collection(db, "bundles");
-            let q;
-            if (activeOnly) {
-                q = query(bundlesRef, where("isActive", "==", true), orderBy("createdAt", "desc"));
-            } else {
-                q = query(bundlesRef, orderBy("createdAt", "desc"));
-            }
-
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bundle));
-        } catch (error) {
-            console.warn("Notice: Error fetching bundles (usually permission related):", error);
-            return [];
-        }
-    },
-
-    async getBundle(id: string): Promise<Bundle | null> {
-        try {
-            const docRef = doc(db, "bundles", id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                return { id: docSnap.id, ...docSnap.data() } as Bundle;
-            }
-            return null;
-        } catch (error) {
-            console.error("Error fetching bundle:", error);
-            return null;
-        }
-    },
-
-    async createBundle(bundleData: Partial<Bundle>): Promise<string | null> {
-        try {
-            const bundlesRef = collection(db, "bundles");
-            const newBundle = {
-                ...bundleData,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                isActive: bundleData.isActive ?? true
-            };
-            const docRef = await addDoc(bundlesRef, newBundle);
-            return docRef.id;
-        } catch (error) {
-            console.error("Error creating bundle:", error);
-            return null;
-        }
-    },
-
-    async updateBundle(id: string, updates: Partial<Bundle>): Promise<boolean> {
-        try {
-            const bundleRef = doc(db, "bundles", id);
-            await updateDoc(bundleRef, {
-                ...updates,
-                updatedAt: new Date().toISOString()
-            });
-            return true;
-        } catch (error) {
-            console.error("Error updating bundle:", error);
             return false;
         }
     },
@@ -479,9 +372,8 @@ export const firestoreService = {
                 const snapshots = await Promise.all(promises);
                 const allDocs = snapshots.flatMap(snap => snap.docs);
 
-                // Sort to match input order if needed, or by created? 
-                // For now, just return them.
-                return allDocs.map(doc => {
+                // Sort to exactly match the input order of IDs
+                const mappedDocs = allDocs.map(doc => {
                     const data = doc.data();
                     return {
                         id: doc.id,
@@ -497,9 +389,14 @@ export const firestoreService = {
                         questionType: data.questionType,
                         matchPairs: data.matchPairs,
                         passageId: data.passageId,
+                        passageText: data.passageText,
+                        subQuestions: data.subQuestions || [],
                         imageUrl: data.imageUrl,
                     } as Question;
                 });
+
+                const idOrder = new Map(filters.ids.map((id, index) => [id, index]));
+                return mappedDocs.sort((a, b) => (idOrder.get(a.id) ?? Infinity) - (idOrder.get(b.id) ?? Infinity));
             }
 
             // 2. Standard Filtering
@@ -541,6 +438,8 @@ export const firestoreService = {
                     questionType: data.questionType,
                     matchPairs: data.matchPairs,
                     passageId: data.passageId,
+                    passageText: data.passageText,
+                    subQuestions: data.subQuestions || [],
                     imageUrl: data.imageUrl,
                     createdAt: data.createdAt // extract for sorting
                 } as Question & { createdAt?: any };
@@ -610,6 +509,8 @@ export const firestoreService = {
                 const questionsRef = collection(db, "questions");
 
                 chunk.forEach(q => {
+                    // Passage type obsolete
+
                     const newRef = doc(questionsRef); // Generate ID automatically
                     const newQuestion = {
                         ...q,
@@ -774,81 +675,7 @@ export const firestoreService = {
         }
     },
 
-    // --- Passages ---
-    async getPassages(): Promise<Passage[]> {
-        try {
-            const passagesRef = collection(db, "passages");
-            const q = query(passagesRef, orderBy("createdAt", "desc"));
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Passage));
-        } catch (error) {
-            console.error("Error fetching passages:", error);
-            return [];
-        }
-    },
-
-    async getPassage(id: string): Promise<Passage | null> {
-        try {
-            const docRef = doc(db, "passages", id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                return { id: docSnap.id, ...docSnap.data() } as Passage;
-            }
-            return null;
-        } catch (error) {
-            console.error("Error fetching passage:", error);
-            return null;
-        }
-    },
-
-    async createPassage(passageData: Partial<Passage>): Promise<string | null> {
-        try {
-            const passagesRef = collection(db, "passages");
-            const newPassage = {
-                ...passageData,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            const docRef = await addDoc(passagesRef, cleanData(newPassage));
-            return docRef.id;
-        } catch (error) {
-            console.error("Error creating passage:", error);
-            return null;
-        }
-    },
-
-    async updatePassage(id: string, updates: Partial<Passage>): Promise<boolean> {
-        try {
-            const passageRef = doc(db, "passages", id);
-            await updateDoc(passageRef, cleanData({
-                ...updates,
-                updatedAt: new Date().toISOString()
-            }));
-            return true;
-        } catch (error) {
-            console.error("Error updating passage:", error);
-            return false;
-        }
-    },
-
-    async deletePassage(id: string): Promise<boolean> {
-        try {
-            // Block deletion if questions are linked to this passage
-            const questionsRef = collection(db, "questions");
-            const qCount = query(questionsRef, where("passageId", "==", id), limit(1));
-            const snapshot = await getDocs(qCount);
-
-            if (!snapshot.empty) {
-                throw new Error("Cannot delete passage. Existing questions are heavily linked to it.");
-            }
-
-            await deleteDoc(doc(db, "passages", id));
-            return true;
-        } catch (error) {
-            console.error("Error deleting passage:", error);
-            throw error; // Rethrow to let the UI catch and alert the specific error message
-        }
-    },
+    // --- Passages (Removed - Now using inline nested subQuestions) ---
 
     // --- CMS ---
     async getCMSContent(): Promise<CMSContent[]> {
@@ -913,7 +740,8 @@ export const firestoreService = {
                     siteName: data.siteName || "CUET Mock Platform",
                     supportEmail: data.supportEmail || "support@example.com",
                     currency: data.currency || "INR",
-                    maintenanceMode: data.maintenanceMode || false
+                    maintenanceMode: data.maintenanceMode || false,
+                    creditPackages: data.creditPackages || []
                 } as SiteSettings;
             }
 
@@ -921,7 +749,15 @@ export const firestoreService = {
                 siteName: "CUET Mock Platform",
                 supportEmail: "support@example.com",
                 currency: "INR",
-                maintenanceMode: false
+                maintenanceMode: false,
+                creditPackages: [
+                    { id: "pkg-1", credits: 1, price: 99, isPopular: false },
+                    { id: "pkg-3", credits: 3, price: 279, isPopular: false },
+                    { id: "pkg-5", credits: 5, price: 449, isPopular: false },
+                    { id: "pkg-10", credits: 10, price: 799, isPopular: true },
+                    { id: "pkg-20", credits: 20, price: 1499, isPopular: false },
+                    { id: "pkg-40", credits: 40, price: 2499, isPopular: false }
+                ]
             };
         } catch (error) {
             console.error("Error fetching settings:", error);
@@ -929,7 +765,15 @@ export const firestoreService = {
                 siteName: "CUET Mock Platform",
                 supportEmail: "support@example.com",
                 currency: "INR",
-                maintenanceMode: false
+                maintenanceMode: false,
+                creditPackages: [
+                    { id: "pkg-1", credits: 1, price: 99, isPopular: false },
+                    { id: "pkg-3", credits: 3, price: 279, isPopular: false },
+                    { id: "pkg-5", credits: 5, price: 449, isPopular: false },
+                    { id: "pkg-10", credits: 10, price: 799, isPopular: true },
+                    { id: "pkg-20", credits: 20, price: 1499, isPopular: false },
+                    { id: "pkg-40", credits: 40, price: 2499, isPopular: false }
+                ]
             };
         }
     },

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Test, TestAttempt } from "@/types/admin";
 import { User } from "firebase/auth";
 
+
 interface DashboardHeroProps {
     userData: any;
     user: User | null;
@@ -19,9 +20,11 @@ export function DashboardHero({ userData, user, activeAttempt, activeAttemptTest
             <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-purple-500/10 rounded-full blur-[80px] pointer-events-none" />
 
             <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-sm font-medium mb-6">
-                        <Sparkles className="h-4 w-4 text-yellow-400" /> Welcome back to your hub
+                <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-20">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-sm font-medium">
+                            <Sparkles className="h-4 w-4 text-yellow-400" /> Welcome back to your hub
+                        </div>
                     </div>
                     <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60 tracking-tight leading-tight">
                         Ready to crush it,<br />

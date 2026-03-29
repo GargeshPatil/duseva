@@ -107,24 +107,18 @@ export function QuestionPreviewTable({ parseResult, onUpdateRow }: QuestionPrevi
                                                 <div className="flex flex-col gap-1">
                                                     <div className="flex items-center gap-2">
                                                         <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase border shrink-0 ${q.questionType === 'match' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                                                            q.questionType === 'passage' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                                                                'bg-surface-elevated text-text-secondary border-border'
+                                                            'bg-surface-elevated text-text-secondary border-border'
                                                             }`}>
                                                             {q.questionType || 'MCQ'}
                                                         </span>
                                                         <span className="text-text-primary text-sm truncate" title={q.text}>{q.text || <span className="text-text-muted italic">Missing Text</span>}</span>
                                                     </div>
                                                     
-                                                    {q.questionType === 'passage' && (
+                                                    {(q as any).passageText && (
                                                         <div className="flex flex-col gap-1 items-start mt-0.5">
-                                                            <span className="text-[10px] text-blue-400/80 truncate block text-left max-w-full" title={(q as any).passageText || q.passageId}>
-                                                                <span className="font-semibold uppercase mr-1">Passage:</span> {(q as any).passageText || q.passageId}
+                                                            <span className="text-[10px] text-blue-400/80 truncate block text-left max-w-full" title={(q as any).passageText}>
+                                                                <span className="font-semibold uppercase mr-1">Passage Context:</span> {(q as any).passageText}
                                                             </span>
-                                                            {q.subQuestions && q.subQuestions.length > 0 && (
-                                                                <span className="text-[10px] font-bold text-cta-primary bg-cta-primary/10 border border-cta-primary/20 px-2 py-0.5 rounded">
-                                                                    {q.subQuestions.length} Sub-question{q.subQuestions.length !== 1 ? 's' : ''} bundled
-                                                                </span>
-                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
@@ -249,7 +243,6 @@ function EditRowForm({ row, onSave, onCancel }: { row: any, onSave: (r: any) => 
                             >
                                 <option value="mcq">MCQ</option>
                                 <option value="match">Match the Following</option>
-                                <option value="passage">Passage-based</option>
                             </select>
                         </div>
                         
@@ -259,31 +252,24 @@ function EditRowForm({ row, onSave, onCancel }: { row: any, onSave: (r: any) => 
                                 value={raw.questionText || ""} 
                                 onChange={(e) => handleChange('questionText', e.target.value)}
                                 className="w-full text-sm bg-surface-card border border-border rounded px-2 py-1.5 focus:ring-1 focus:ring-cta-primary outline-none min-h-[60px] resize-y"
+                                style={{ whiteSpace: "pre-wrap" }}
                                 placeholder="Enter the main question text..."
                             />
                         </div>
 
                         {/* Passage Specifics */}
-                        {isPassage && (
-                            <div className="col-span-12 grid grid-cols-2 gap-4 bg-blue-500/5 p-3 rounded border border-blue-500/20">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-blue-400 uppercase mb-1">Passage Text (To Create New)</label>
-                                    <textarea 
-                                        value={raw.passageText || ""} 
-                                        onChange={(e) => handleChange('passageText', e.target.value)}
-                                        className="w-full text-sm bg-surface-card border border-border rounded px-2 py-1.5 focus:ring-1 focus:ring-cta-primary outline-none min-h-[60px]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-blue-400 uppercase mb-1">OR Passage ID (Link Existing)</label>
-                                    <input 
-                                        value={raw.passageId || ""} 
-                                        onChange={(e) => handleChange('passageId', e.target.value)}
-                                        className="w-full text-sm bg-surface-card border border-border rounded px-2 py-1.5 focus:ring-1 focus:ring-cta-primary outline-none"
-                                    />
-                                </div>
+                        <div className="col-span-12 bg-blue-500/5 p-3 rounded border border-blue-500/20">
+                            <div>
+                                <label className="block text-[10px] font-bold text-blue-400 uppercase mb-1">Optional Passage Text</label>
+                                <textarea 
+                                    value={raw.passageText || ""} 
+                                    onChange={(e) => handleChange('passageText', e.target.value)}
+                                    className="w-full text-sm bg-surface-card border border-border rounded px-2 py-1.5 focus:ring-1 focus:ring-cta-primary outline-none min-h-[60px]"
+                                    style={{ whiteSpace: "pre-wrap" }}
+                                    placeholder="Enter passage context here if this query links to a passage..."
+                                />
                             </div>
-                        )}
+                        </div>
 
                         {/* Match Specifics */}
                         {isMatch && (

@@ -6,8 +6,7 @@ import {
   Test,
   Question,
   QuestionStatus,
-  TestResult,
-  Passage
+  TestResult
 } from '@/types/admin';
 
 export function useTestEngine(testId: string) {
@@ -17,7 +16,6 @@ export function useTestEngine(testId: string) {
     // Core State
     const [test, setTest] = useState<Test | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [passages, setPassages] = useState<Record<string, Passage>>({});
     const [currentQIndex, setCurrentQIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, number>>({});
     const [questionStatus, setQuestionStatus] = useState<Record<string, QuestionStatus>>({});
@@ -115,41 +113,7 @@ export function useTestEngine(testId: string) {
                         qs = await firestoreService.getQuestions({ testId });
                     }
 
-                    // Flatten passage sub-questions
-                    const flattenedQs: Question[] = [];
-                    qs.forEach(q => {
-                        if (q.questionType === 'passage' && q.subQuestions && q.subQuestions.length > 0) {
-                            q.subQuestions.forEach(subQ => {
-                                flattenedQs.push({
-                                    ...subQ,
-                                    questionType: subQ.type as any,
-                                    passageId: q.passageId,
-                                    stream: q.stream,
-                                    difficulty: q.difficulty,
-                                    marks: q.marks,
-                                    negativeMarks: q.negativeMarks,
-                                    subject: q.subject,
-                                    isSubQuestion: true 
-                                } as unknown as Question);
-                            });
-                        } else {
-                            flattenedQs.push(q);
-                        }
-                    });
-                    qs = flattenedQs;
-
                     setQuestions(qs);
-
-                    // Fetch associated passages
-                    const passageIds = Array.from(new Set(qs.filter(q => q.passageId).map(q => q.passageId as string)));
-                    if (passageIds.length > 0) {
-                        const fetchedPassages: Record<string, Passage> = {};
-                        await Promise.all(passageIds.map(async id => {
-                            const p = await firestoreService.getPassage(id);
-                            if (p) fetchedPassages[id] = p;
-                        }));
-                        setPassages(fetchedPassages);
-                    }
 
                     // 2. Recovery & Shuffling Logic
                     const savedSession = localStorage.getItem(`test_session_${testId}_${user.uid}`);
@@ -295,7 +259,31 @@ export function useTestEngine(testId: string) {
         if (!test || !user) return;
         setLoading(true);
 
-        const activeAttemptId = await firestoreService.startTestAttempt(user.uid, test.id, test.duration);
+        let activeAttemptId: string | null = null;
+        try {
+            const res = await fetch('/api/test/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.uid, testId: test.id, durationMinutes: test.duration })
+            });
+            const data = await res.json();
+            
+            if (!res.ok) {
+                if (data.code === 'INSUFFICIENT_CREDITS') {
+                    alert("Insufficient Credits. Please purchase more credits to start tests.");
+                } else {
+                    alert("Failed to start test. Please try again.");
+                }
+                setLoading(false);
+                return;
+            }
+            activeAttemptId = data.attemptId;
+        } catch (error) {
+            console.error("Error starting test API:", error);
+            alert("Network error. Please try again.");
+            setLoading(false);
+            return;
+        }
 
         if (activeAttemptId) {
             setAttemptId(activeAttemptId);
@@ -528,7 +516,6 @@ export function useTestEngine(testId: string) {
     return {
         test,
         questions,
-        passages,
         currentQIndex,
         currentQuestion: questions[currentQIndex],
         answers,

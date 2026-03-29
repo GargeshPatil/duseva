@@ -130,6 +130,13 @@ export function QuestionReview({ questions, attempt }: QuestionReviewProps) {
                   </div>
 
                   <div className="flex-1 min-w-0">
+                    {(q as any).passageText && isExpanded && (
+                      <div 
+                         className="mb-4 p-4 rounded-xl border border-white/10 bg-white/5 text-[13px] text-white/80 max-h-[200px] overflow-y-auto leading-relaxed" 
+                         style={{ whiteSpace: "pre-line" }} 
+                         dangerouslySetInnerHTML={{ __html: (q as any).passageText }} 
+                      />
+                    )}
                     <div className="flex justify-between items-start gap-4">
                       <div className="font-medium text-white/90 rich-text-content prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: q.text }} />
                       <div className="flex items-center gap-2 shrink-0 text-white/50">

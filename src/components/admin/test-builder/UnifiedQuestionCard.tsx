@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { Question, Passage } from "@/types/admin";
+import { Question } from "@/types/admin";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Trash2, GripVertical, Check, Copy, X, ChevronDown, ChevronUp, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Reorder, useDragControls } from "framer-motion";
 import { uploadImage } from "@/services/storageService";
-import { SubQuestionEditor } from "./SubQuestionEditor";
 
 interface UnifiedQuestionCardProps {
     question: Question;
@@ -15,7 +14,6 @@ interface UnifiedQuestionCardProps {
     onDuplicate?: () => void;
     isExpanded: boolean;
     onToggleExpand: () => void;
-    passages: Passage[]; // For passage selection
     isDragDisabled?: boolean; // True when rendered outside a reorder list
 }
 
@@ -27,13 +25,9 @@ export function UnifiedQuestionCard({
     onDuplicate,
     isExpanded,
     onToggleExpand,
-    passages,
     isDragDisabled
 }: UnifiedQuestionCardProps) {
     const dragControls = useDragControls();
-
-    const [isCreatingPassage, setIsCreatingPassage] = useState(false);
-    const [newPassageText, setNewPassageText] = useState("");
     const [isUploadingImage, setIsUploadingImage] = useState(false);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,10 +56,7 @@ export function UnifiedQuestionCard({
     };
 
     const handleNewPassageChange = (text: string) => {
-        setNewPassageText(text);
-        // Note: Actual passage creation needs to be handled on save by the parent
-        // For inline editing, it's easier if we store a temporary prop or rely on parent
-        handleChange('passageText' as any, text);
+        handleChange('passageText', text);
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,7 +95,6 @@ export function UnifiedQuestionCard({
                     <div className="flex items-center gap-3 truncate">
                         {index !== undefined && <span className="text-xs font-bold text-text-muted bg-surface-elevated px-2 py-1 rounded">Q{index + 1}</span>}
                         <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${question.questionType === 'match' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                            question.questionType === 'passage' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                                 'bg-surface-elevated text-text-secondary border-border'
                             }`}>
                             {question.questionType?.toUpperCase() || 'MCQ'}
@@ -157,82 +147,29 @@ export function UnifiedQuestionCard({
                                 >
                                     <option value="mcq">Standard MCQ</option>
                                     <option value="match">Match the Following</option>
-                                    <option value="passage">Passage-based</option>
                                 </select>
                             </div>
 
-                            {/* Passage Selection/Creation */}
-                            {question.questionType === "passage" && (
-                                <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg space-y-4">
-                                    <h4 className="font-medium text-blue-400 text-sm">Passage Configuration</h4>
-                                    <div className="flex gap-4">
-                                        <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                checked={!isCreatingPassage}
-                                                onChange={() => setIsCreatingPassage(false)}
-                                                className="text-cta-primary focus:ring-cta-primary h-4 w-4"
-                                            />
-                                            Select Existing
-                                        </label>
-                                        <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                checked={isCreatingPassage}
-                                                onChange={() => setIsCreatingPassage(true)}
-                                                className="text-cta-primary focus:ring-cta-primary h-4 w-4"
-                                            />
-                                            Create New
-                                        </label>
-                                    </div>
-
-                                    {!isCreatingPassage ? (
-                                        <select
-                                            className="w-full px-3 py-2 bg-surface-card border border-border rounded-lg text-sm"
-                                            value={question.passageId || ""}
-                                            onChange={(e) => handleChange('passageId', e.target.value)}
-                                        >
-                                            <option value="">-- Select a Passage --</option>
-                                            {passages.map(p => (
-                                                <option key={p.id} value={p.id}>
-                                                    {p.text.length > 80 ? p.text.substring(0, 80) + "..." : p.text}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    ) : (
-                                        <div>
-                                            <textarea
-                                                className="w-full px-3 py-2 bg-surface-card border border-border rounded-lg text-sm outline-none focus:ring-2 focus:ring-cta-primary min-h-[120px]"
-                                                value={newPassageText || (question as any).passageText || ""}
-                                                onChange={(e) => handleNewPassageChange(e.target.value)}
-                                                placeholder="Enter passage text here. It will be created when you save."
-                                            />
-                                            <p className="text-[10px] text-text-muted mt-1">Note: The passage is created when the question/test is saved.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Sub-Questions Editor for Passage type */}
-                            {question.questionType === "passage" && (
-                                <div className="p-4 bg-surface-base border border-border rounded-lg">
-                                    <SubQuestionEditor 
-                                        subQuestions={question.subQuestions || []} 
-                                        onChange={(sqs) => handleChange('subQuestions', sqs)} 
-                                    />
-                                </div>
-                            )}
-
-                            {/* Legacy Question Fields (Only shown if NOT a passage, OR a passage with 0 subquestions) */}
-                            {(!(question.questionType === "passage" && question.subQuestions && question.subQuestions.length > 0)) && (
-                                <>
-                                    {/* Question Text */}
-                                    <div>
-                                        <label className="block text-xs font-semibold text-text-secondary uppercase mb-1">
-                                    {question.questionType === "passage" ? "Question Text related to Passage" : "Question Text"}
-                                </label>
+                            {/* Optional Passage Text */}
+                            <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg space-y-4">
+                                <h4 className="font-medium text-blue-400 text-sm">Optional Passage Text</h4>
                                 <textarea
+                                    className="w-full px-3 py-2 bg-surface-card border border-border rounded-lg text-sm outline-none focus:ring-2 focus:ring-cta-primary min-h-[120px] resize-y"
+                                    style={{ whiteSpace: "pre-wrap" }}
+                                    value={question.passageText || ""}
+                                    onChange={(e) => handleChange('passageText', e.target.value)}
+                                    placeholder="Enter passage context here if this query links to a passage..."
+                                />
+                            </div>
+
+                            {/* Question Text */}
+                            <div>
+                                    <label className="block text-xs font-semibold text-text-secondary uppercase mb-1">
+                                        Question Text
+                                    </label>
+                                    <textarea
                                     className="w-full px-3 py-2 bg-surface-base border border-border rounded-lg text-sm outline-none focus:ring-2 focus:ring-cta-primary transition-all min-h-[80px] resize-y"
+                                    style={{ whiteSpace: "pre-wrap" }}
                                     value={question.text}
                                     onChange={(e) => handleChange('text', e.target.value)}
                                     placeholder="Type the question here..."
@@ -370,8 +307,6 @@ export function UnifiedQuestionCard({
                                     </div>
                                 )}
                             </div>
-                        </>
-                        )}
                         </div>
 
                         {/* Right Column: Meta */}
@@ -380,6 +315,7 @@ export function UnifiedQuestionCard({
                                 <label className="block text-xs font-semibold text-text-secondary uppercase mb-1">Explanation</label>
                                 <textarea
                                     className="w-full px-3 py-2 bg-surface-card border border-border rounded-lg text-xs outline-none focus:ring-1 focus:ring-cta-primary min-h-[100px] resize-y"
+                                    style={{ whiteSpace: "pre-wrap" }}
                                     value={question.explanation || ""}
                                     onChange={(e) => handleChange('explanation', e.target.value)}
                                     placeholder="Explain the correct answer..."

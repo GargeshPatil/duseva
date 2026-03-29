@@ -114,9 +114,9 @@ service cloud.firestore {
       // Anyone (public) can read global settings as they are needed by the frontend.
       allow read: if true;
       // Only Developers can update these critical global settings.
-      allow update: if isDeveloper() || isAdmin();
-      // This single document cannot be created or deleted manually from the client.
-      allow create, delete: if false;
+      allow update, create: if isDeveloper() || isAdmin();
+      // This single document cannot be deleted manually from the client.
+      allow delete: if false;
     }
 
     // 9. auditLogs Collection

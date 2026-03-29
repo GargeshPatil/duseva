@@ -88,7 +88,7 @@ export function FileUploader({ onFileSelect, isLoading }: FileUploaderProps) {
             <div className="mt-4 text-sm text-slate-500">
                 <p className="font-medium mb-1">Expected CSV columns:</p>
                 <code className="block bg-slate-100 p-2 rounded text-xs overflow-x-auto border border-slate-200">
-                    questionText, optionA, optionB, optionC, optionD, correctAnswer, explanation, subjectTag, topicTag, difficulty, marks, negativeMarks, streams
+                    questionType, listA, listB, passage, imageUrl, questionText, optionA, optionB, optionC, optionD, correctAnswer, explanation, subjectTag, topicTag, difficulty, marks, negativeMarks, streams
                 </code>
             </div>
         </div>
