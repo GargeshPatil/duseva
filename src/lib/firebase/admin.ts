@@ -15,10 +15,7 @@ if (!getApps().length) {
             console.error("Error parsing FIREBASE_SERVICE_ACCOUNT_KEY:", error);
         }
     } else {
-        // Fallback for local development if GOOGLE_APPLICATION_CREDENTIALS is set
-        // or if deployed to environment with default credentials (like Vercel with specific setup or GCP)
-        // However, explicitly checking for the key is safer for this setup.
-        console.warn("FIREBASE_SERVICE_ACCOUNT_KEY not found. Admin SDK might not work.");
+        // Fallback for local development or Vercel
         initializeApp();
     }
 }
