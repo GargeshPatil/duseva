@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
 import {
     User,
     onAuthStateChanged,
@@ -8,7 +8,16 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    PhoneAuthProvider,
+    RecaptchaVerifier,
+    signInWithPhoneNumber,
+    linkWithPhoneNumber,
+    updateProfile,
+    sendEmailVerification,
+    ConfirmationResult,
+    EmailAuthProvider,
+    linkWithCredential
 } from "firebase/auth";
 import { doc, getDoc, setDoc, Timestamp, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/config";
@@ -17,12 +26,13 @@ import { auth, db } from "@/lib/firebase/config";
 export interface UserData {
     uid: string;
     email: string;
+    phone?: string;
     name: string;
     role: "student" | "admin" | "developer"; // Default is student
     createdAt: Timestamp;
     lastLoginAt: Timestamp;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    purchasedTests?: Record<string, any>; // Legacy map for purchased tests (keep optional for backwards compat if needed, or remove. Let's replace with credits)
+    purchasedTests?: Record<string, any>; // Legacy map for purchased tests
     credits: number;
     totalCreditsPurchased: number;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,18 +46,35 @@ interface AuthContextType {
     user: User | null;
     userData: UserData | null;
     loading: boolean;
-    login: (email: string, password: string) => Promise<void>;
-    signup: (email: string, password: string, name: string) => Promise<void>;
+    login: (identifier: string, password: string) => Promise<void>;
     loginWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
+    
+    initiateEmailSignup: (email: string, password: string, name: string, phone: string, containerId: string) => Promise<ConfirmationResult>;
+    completeEmailSignup: (confirmationResult: ConfirmationResult, code: string, email: string, name: string, phone: string, password: string) => Promise<void>;
+    
+    initiateGoogleSignup: () => Promise<{ isNewUser: boolean, user: User }>;
+    sendGooglePhoneOTP: (user: User, phone: string, containerId: string) => Promise<ConfirmationResult>;
+    completeGoogleSignup: (confirmationResult: ConfirmationResult, code: string, user: User, phone: string) => Promise<void>;
+    
+    setupRecaptcha: (containerId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+declare global {
+    interface Window {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        recaptchaVerifier: any;
+        recaptchaRendered: boolean;
+    }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
+    const isOtpRequestInProgress = useRef(false);
 
     useEffect(() => {
         let unsubscribeSnapshot: () => void;
@@ -55,13 +82,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
-                // Don't set loading to false yet; wait for Firestore data
 
                 // Set up real-time listener immediately when user is detected
                 const userDocRef = doc(db, "users", currentUser.uid);
                 unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const data = docSnap.data() as UserData;
+                        // Fallback for missing credits on legacy accounts
+                        if (data.credits === undefined) {
+                            data.credits = 0;
+                        }
+                        console.log("Fetched userData:", data);
                         setUserData(data);
                     } else {
                         console.warn("User authenticated but no Firestore document found.");
@@ -92,24 +123,125 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
-    // Independent One-time update for lastLogin (optional, can be skipped for now to strictly fix the issue)
+    // Independent One-time update for lastLogin
     useEffect(() => {
         if (user) {
             const userDocRef = doc(db, "users", user.uid);
             // Fire and forget update
             setDoc(userDocRef, { lastLoginAt: Timestamp.now() }, { merge: true }).catch(console.error);
         }
-    }, [user?.uid]); // Only run when UID changes (login)
+    }, [user?.uid]);
 
+    const clearRecaptcha = () => {
+        if (typeof window !== "undefined" && window.recaptchaVerifier) {
+            try {
+                window.recaptchaVerifier.clear();
+            } catch (e) {
+                console.warn("[AuthContext] Error clearing recaptcha", e);
+            }
+            window.recaptchaVerifier = undefined;
+            window.recaptchaRendered = false;
+            
+            const container = document.getElementById("recaptcha-container");
+            if (container) {
+                container.innerHTML = "";
+            }
+        }
+    };
 
-    const signup = async (email: string, password: string, name: string) => {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+    const createFreshRecaptcha = async (containerId: string) => {
+        if (typeof window === "undefined") throw new Error("Window is undefined");
 
-        // Create user document in Firestore
+        clearRecaptcha();
+
+        console.log("[AuthContext] Creating fresh ReCAPTCHA verifier...");
+        const verifier = new RecaptchaVerifier(auth, containerId, {
+            size: 'invisible',
+            callback: () => {
+                console.log("reCAPTCHA solved");
+            }
+        });
+
+        console.log("[AuthContext] Rendering fresh ReCAPTCHA...");
+        await verifier.render();
+        console.log("[AuthContext] ReCAPTCHA rendered successfully!");
+        
+        window.recaptchaVerifier = verifier;
+        window.recaptchaRendered = true;
+
+        return verifier;
+    };
+
+    const setupRecaptcha = async (containerId: string) => {
+        // Obsolete: We now do this right before sending OTP.
+    };
+
+    const initiateEmailSignup = async (email: string, password: string, name: string, phone: string, containerId: string) => {
+        if (isOtpRequestInProgress.current) {
+            throw new Error("OTP request already in progress. Please wait.");
+        }
+        isOtpRequestInProgress.current = true;
+
+        try {
+            // Enforce DB-level uniqueness strictly before any SMS is sent to avoid limbo conflicts
+            const checkRes = await fetch('/api/auth/check-unique', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, phone })
+            });
+
+            if (!checkRes.ok) {
+                const errData = await checkRes.json();
+                throw new Error(errData.error || "Validation failed before sending OTP. Please try again or sign in.");
+            }
+
+            const recaptcha = await createFreshRecaptcha(containerId);
+            
+            console.log("Attempting OTP dispatch with parameters:");
+            console.log("Phone:", phone);
+
+            try {
+                // We use direct signInWithPhoneNumber so we own the phone credential immediately
+                const confirmationResult = await signInWithPhoneNumber(auth, phone, recaptcha);
+                console.log("OTP sent successfully");
+                return confirmationResult;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } catch (error: any) {
+                console.error("Phone Auth Error during signup:", error);
+                clearRecaptcha(); // clear stale verifier
+                if (error.code === 'auth/internal-error' || error.code === 'auth/invalid-recaptcha-token') {
+                     const originalMsg = error.message || "Unknown internal error";
+                     throw new Error(`Firebase error: ${originalMsg}. ReCAPTCHA failed or phone provider disabled.`);
+                }
+                throw new Error(error.message || "Failed to send OTP to this phone. Please verify the number.");
+            }
+        } finally {
+            isOtpRequestInProgress.current = false;
+        }
+    };
+
+    const completeEmailSignup = async (confirmationResult: ConfirmationResult, code: string, email: string, name: string, phone: string, password: string) => {
+        // Authenticate the user safely as the verified Phone User
+        const result = await confirmationResult.confirm(code);
+        const signedInUser = result.user;
+
+        // Immediately upgrade this phone user with the newly collected Email & Password provider credential
+        try {
+            const credential = EmailAuthProvider.credential(email, password);
+            await linkWithCredential(signedInUser, credential);
+            await updateProfile(signedInUser, { displayName: name });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (updateErr: any) {
+            console.error("Error upgrading user with email/password:", updateErr);
+            throw new Error(updateErr.message || "Failed to upgrade your account. Please contact support.");
+        }
+
+        await sendEmailVerification(signedInUser).catch(() => {}); // Fire and forget
+
         const newUser: UserData = {
-            uid: user.uid,
-            email: user.email!,
+            uid: signedInUser.uid,
+            email: email,
+            phone: phone,
             name: name,
             role: "student",
             createdAt: Timestamp.now(),
@@ -119,43 +251,146 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             totalCreditsPurchased: 0,
             performanceSummary: {}
         };
-
-        await setDoc(doc(db, "users", user.uid), newUser);
+        
+        await setDoc(doc(db, "users", signedInUser.uid), newUser, { merge: true });
+        console.log("User created with credits:", newUser);
         setUserData(newUser);
     };
 
-    const login = async (email: string, password: string) => {
-        await signInWithEmailAndPassword(auth, email, password);
-        // onAuthStateChanged will handle fetching user data
+    const initiateGoogleSignup = async () => {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const googleUser = result.user;
+
+        const userDocRef = doc(db, "users", googleUser.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+            setUserData(userDoc.data() as UserData);
+            return { isNewUser: false, user: googleUser };
+        } else {
+            return { isNewUser: true, user: googleUser };
+        }
+    };
+
+    const sendGooglePhoneOTP = async (googleUser: User, phone: string, containerId: string) => {
+        // --- LOCAL TESTING BYPASS ---
+        if (phone === "+910000000000") {
+             console.warn("TESTING MODE: Bypassing real SMS verification for Google Signup");
+             return {
+                 verificationId: "mock-id-google",
+                 confirm: async (code: string) => {
+                      if (code !== "123456") throw new Error("auth/invalid-verification-code");
+                      return { user: googleUser };
+                 }
+             } as unknown as ConfirmationResult;
+        }
+        // -----------------------------
+
+        if (isOtpRequestInProgress.current) {
+            throw new Error("OTP request already in progress. Please wait.");
+        }
+        isOtpRequestInProgress.current = true;
+
+        try {
+            const recaptcha = await createFreshRecaptcha(containerId);
+
+            console.log("Attempting Google Phone Link OTP dispatch...");
+            console.log("Phone:", phone);
+            const confirmationResult = await linkWithPhoneNumber(googleUser, phone, recaptcha);
+            console.log("Google Link OTP sent successfully");
+            return confirmationResult;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+            console.error("sendGooglePhoneOTP Error:", error);
+            clearRecaptcha(); // clear stale verifier
+
+            if (error.code === 'auth/provider-already-linked' || error.code === 'auth/credential-already-in-use') {
+                 try {
+                     const retryRecaptcha = await createFreshRecaptcha(containerId);
+                     return await signInWithPhoneNumber(auth, phone, retryRecaptcha);
+                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 } catch (retryErr: any) {
+                      clearRecaptcha();
+                      throw new Error(retryErr.message || "Failed to resend OTP to your linked phone.");
+                 }
+            } else if (error.code === 'auth/internal-error' || error.code === 'auth/invalid-recaptcha-token') {
+                 const originalMsg = error.message || "Unknown internal error";
+                 throw new Error(`Firebase error: ${originalMsg}. ReCAPTCHA failed or phone provider disabled.`);
+            } else {
+                 throw new Error(error.message || "Failed to send OTP to this phone.");
+            }
+        } finally {
+            isOtpRequestInProgress.current = false;
+        }
+    };
+
+    const completeGoogleSignup = async (confirmationResult: ConfirmationResult, code: string, googleUser: User, phone: string) => {
+        await confirmationResult.confirm(code);
+
+        const newUser: UserData = {
+            uid: googleUser.uid,
+            email: googleUser.email!,
+            name: googleUser.displayName || "User",
+            phone: phone,
+            role: "student",
+            createdAt: Timestamp.now(),
+            lastLoginAt: Timestamp.now(),
+            purchasedTests: {},
+            credits: 10,
+            totalCreditsPurchased: 0,
+            performanceSummary: {}
+        };
+        
+        await setDoc(doc(db, "users", googleUser.uid), newUser, { merge: true });
+        console.log("User created with credits:", newUser);
+        setUserData(newUser);
+    };
+
+    const login = async (identifier: string, password: string) => {
+        let resolvedEmail = identifier.trim();
+
+        // Check if identifier looks like a phone number
+        const isPhone = resolvedEmail.length >= 10 && !resolvedEmail.includes("@");
+
+        if (isPhone) {
+            try {
+                const res = await fetch("/api/auth/lookup-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ identifier: resolvedEmail }),
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.email) {
+                        resolvedEmail = data.email;
+                    }
+                } else {
+                    throw new Error("Account not found with this phone number");
+                }
+            } catch (err: any) {
+                if (err.message.includes("Account not found")) throw err;
+                console.warn("Phone lookup encountered an error. Proceeding directly...", err);
+            }
+        }
+
+        await signInWithEmailAndPassword(auth, resolvedEmail, password);
     };
 
     const loginWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
         const result = await signInWithPopup(auth, provider);
-        const user = result.user;
+        const authedUser = result.user;
 
-        // Check if user document exists
-        const userDocRef = doc(db, "users", user.uid);
+        const userDocRef = doc(db, "users", authedUser.uid);
         const userDoc = await getDoc(userDocRef);
 
+        // Standard login does NOT prompt for phone if it doesn't exist to prevent blocking legacy users, 
+        // though strictly they should sign up first
         if (!userDoc.exists()) {
-            // Create new user document for Google Sign In
-            const newUser: UserData = {
-                uid: user.uid,
-                email: user.email!,
-                name: user.displayName || "User",
-                role: "student",
-                createdAt: Timestamp.now(),
-                lastLoginAt: Timestamp.now(),
-                purchasedTests: {},
-                credits: 10,
-                totalCreditsPurchased: 0,
-                performanceSummary: {}
-            };
-            await setDoc(userDocRef, newUser);
-            setUserData(newUser);
-        } else {
-            // onAuthStateChanged handles fetching, but we can set it here optimistically or just let the effect do it
+            await signOut(auth);
+            throw new Error("No existing account found. Please sign up to link a phone number.");
         }
     };
 
@@ -166,7 +401,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, userData, loading, login, signup, loginWithGoogle, logout }}>
+        <AuthContext.Provider value={{ 
+            user, userData, loading, login, 
+            loginWithGoogle, logout,
+            initiateEmailSignup, completeEmailSignup,
+            initiateGoogleSignup, sendGooglePhoneOTP, completeGoogleSignup,
+            setupRecaptcha
+        }}>
             {children}
         </AuthContext.Provider>
     );

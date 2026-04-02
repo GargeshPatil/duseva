@@ -3,7 +3,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { Coins, Plus } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, usePathname } from "next/navigation";
 
 interface CreditWalletProps {
@@ -12,11 +12,11 @@ interface CreditWalletProps {
 }
 
 export function CreditWallet({ onAddCredits, variant = "default" }: CreditWalletProps) {
-    const { userData } = useAuth();
+    const { userData, loading } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     
-    // Default to 0, though new users get 10
+    // Default to 0 if data loaded but credits are missing
     const credits = userData?.credits ?? 0;
 
     const handleAddCredits = onAddCredits || (() => {
@@ -41,14 +41,29 @@ export function CreditWallet({ onAddCredits, variant = "default" }: CreditWallet
                 </div>
                 <div>
                     {!isNav && <h4 className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-0.5">Wallet Balance</h4>}
-                    <motion.div 
-                        initial={{ opacity: 0, y: 5 }} 
-                        animate={{ opacity: 1, y: 0 }} 
-                        key={credits}
-                        className={`text-white font-black leading-none flex items-center ${isNav ? 'text-sm gap-1' : 'text-xl gap-1.5'}`}
-                    >
-                        {credits} <span className="text-white/40 text-xs sm:text-sm font-medium">Credits</span>
-                    </motion.div>
+                    <div className={`flex items-center ${isNav ? 'text-sm gap-1' : 'text-xl gap-1.5'}`}>
+                        <AnimatePresence mode="wait">
+                            {loading ? (
+                                <motion.div
+                                    key="skeleton"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="h-4 w-6 bg-white/20 rounded animate-pulse"
+                                />
+                            ) : (
+                                <motion.div 
+                                    key={`credits-${credits}`}
+                                    initial={{ opacity: 0, y: 5 }} 
+                                    animate={{ opacity: 1, y: 0 }} 
+                                    className="text-white font-black leading-none"
+                                >
+                                    {credits}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                        <span className="text-white/40 text-xs sm:text-sm font-medium">Credits</span>
+                    </div>
                 </div>
             </div>
             

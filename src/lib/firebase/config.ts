@@ -29,6 +29,13 @@ if (typeof window !== "undefined") {
             app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
             auth = getAuth(app);
 
+            // Bypass Invisible ReCAPTCHA blocks on Localhost
+            // Allows using Fictional Phone Numbers in Firebase Console
+            if (process.env.NODE_ENV === "development") {
+                auth.settings.appVerificationDisabledForTesting = true;
+                console.info("Firebase: App Verification (ReCAPTCHA) disabled for local testing.");
+            }
+
             // Explicitly set persistence to local (keeps user logged in across tabs/restarts)
             setPersistence(auth, browserLocalPersistence).catch(error => {
                 console.error("Firebase persistence error:", error);

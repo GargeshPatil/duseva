@@ -7,73 +7,62 @@ import { Input } from "@/components/ui/Input";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-
-import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
-
-// ... imports
 
 export default function LoginPage() {
     const router = useRouter();
     const { login, loginWithGoogle, user, userData } = useAuth();
+    
+    const [identifier, setIdentifier] = useState("");
+    const [password, setPassword] = useState("");
+    
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
-    // Redirect based on role
+
     useEffect(() => {
         if (user && userData) {
-            if (userData.role === 'admin' || userData.role === 'developer') {
-                router.push("/admin");
-            } else {
-                router.push("/dashboard");
-            }
+            router.push("/dashboard");
         }
     }, [user, userData, router]);
 
-    // Show loading screen if user is already logged in to prevent form flash
-    if (user && userData) {
-        return <LoadingScreen />;
-    }
-
-    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsLoading(true);
         setError("");
 
-        const formData = new FormData(e.currentTarget);
-        const email = formData.get("email") as string;
-        const password = formData.get("password") as string;
-
         try {
-            await login(email, password);
-            // Redirect handled by useEffect
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await login(identifier, password);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-            console.error(err);
-            setError("Invalid email or password");
+            console.error("Login Error:", err);
+            setError(err.message || "Invalid credentials");
             setIsLoading(false);
         }
-    }
+    };
 
     async function handleGoogleSignIn() {
         setIsLoading(true);
         setError("");
         try {
             await loginWithGoogle();
-            // Redirect handled by useEffect
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-            console.error(err);
+            console.error("Google Auth Error:", err);
             setError(err.message || "Failed to sign in with Google");
             setIsLoading(false);
         }
     }
 
     return (
-        <div className="w-full max-w-md bg-surface-card p-8 rounded-xl shadow-lg border border-border">
+        <div className="w-full max-w-md bg-surface-card p-8 rounded-xl shadow-lg border border-border relative">
             <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-text-primary">Welcome Back</h1>
-                <p className="text-text-secondary mt-2">Sign in to continue your preparation</p>
+                <h1 className="text-2xl font-bold text-text-primary">
+                    Welcome Back
+                </h1>
+                <p className="text-text-secondary mt-2">
+                    Sign in to pick up where you left off
+                </p>
             </div>
 
             {error && (
@@ -82,58 +71,47 @@ export default function LoginPage() {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
                 <Input
-                    label="Email Address"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
+                    label="Email or Phone Number"
+                    type="text"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="you@example.com or 9876543210"
                     required
                 />
-                <div>
-                    <Input
-                        label="Password"
-                        name="password"
-                        type="password"
-                        placeholder="••••••••"
-                        required
-                    />
-                    <div className="flex justify-end mt-1">
-                        <Link
-                            href="/auth/forgot-password"
-                            className="text-xs font-medium text-cta-primary hover:underline"
-                        >
-                            Forgot password?
+                <div className="space-y-1">
+                    <div className="flex justify-between items-center px-1">
+                        <label className="text-sm font-medium leading-none text-text-secondary">Password</label>
+                        <Link href="/auth/forgot-password" className="text-xs font-semibold text-cta-primary hover:underline">
+                            Forgot Password?
                         </Link>
                     </div>
+                    <Input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        required
+                    />
                 </div>
 
-                <Button
-                    type="submit"
-                    className="w-full mt-6"
-                    disabled={isLoading}
-                >
-                    {isLoading ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Signing in...
-                        </>
-                    ) : (
-                        <>
-                            Sign In <ArrowRight className="ml-2 h-4 w-4" />
-                        </>
-                    )}
+                <Button type="submit" className="w-full mt-6" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Sign In <ArrowRight className="ml-2 h-4 w-4" /></>}
                 </Button>
             </form>
 
             <div className="mt-4">
-                <GoogleSignInButton onClick={handleGoogleSignIn} disabled={isLoading} />
+                <GoogleSignInButton
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading}
+                />
             </div>
 
             <div className="mt-6 text-center text-sm text-text-secondary">
-                Don&apos;t have an account?{" "}
+                Don't have an account?{" "}
                 <Link href="/auth/signup" className="font-semibold text-cta-primary hover:underline">
-                    Create account
+                    Sign up
                 </Link>
             </div>
         </div>
