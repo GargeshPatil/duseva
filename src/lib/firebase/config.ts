@@ -29,14 +29,6 @@ if (typeof window !== "undefined") {
             app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
             auth = getAuth(app);
 
-            // Disable reCAPTCHA app verification — the invisible reCAPTCHA script injection
-            // causes auth/internal-error (el.onerror) even without ad blockers in some environments.
-            // Firebase's own bypass flag. Trade-off: no reCAPTCHA spam gate, but Firebase's
-            // built-in per-number SMS rate limiting is still active, as is check-unique API.
-            auth.settings.appVerificationDisabledForTesting = true;
-            if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true") {
-                console.info("Firebase: Running with emulator mode.");
-            }
 
             // Explicitly set persistence to local (keeps user logged in across tabs/restarts)
             setPersistence(auth, browserLocalPersistence).catch(error => {
