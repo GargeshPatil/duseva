@@ -209,11 +209,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return confirmationResult;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (error: any) {
-                console.error("Phone Auth Error during signup:", error);
                 clearRecaptcha(); // clear stale verifier
-                if (error.code === 'auth/internal-error' || error.code === 'auth/invalid-recaptcha-token') {
-                     const originalMsg = error.message || "Unknown internal error";
-                     throw new Error(`Firebase error: ${originalMsg}. ReCAPTCHA failed or phone provider disabled.`);
+                // Log the full raw Firebase error to diagnose billing/plan/SMS issues
+                console.error("[PhoneAuth] signInWithPhoneNumber failed:");
+                console.error("  code:", error.code);
+                console.error("  message:", error.message);
+                console.error("  customData:", JSON.stringify(error.customData ?? {}));
+                console.error("  serverResponse:", JSON.stringify(error.customData?._tokenResponse ?? error.customData?.serverResponse ?? {}));
+                console.error("  full error:", error);
+
+                if (error.code === 'auth/internal-error') {
+                    // Extract the actual server reason if Firebase embeds it
+                    const serverMsg = error.customData?._tokenResponse?.error?.message
+                        || error.customData?.serverResponse?.error?.message
+                        || null;
+                    // If serverResponse is empty, this is a client-side script block (ad blocker etc.)
+                    const isClientSideBlock = !serverMsg;
+                    if (isClientSideBlock) {
+                        throw new Error("reCAPTCHA couldn't load. Please disable your ad blocker, try an incognito window, or use a different browser.");
+                    }
+                    throw new Error(`Phone auth failed: ${serverMsg}`);
+                }
+                if (error.code === 'auth/invalid-recaptcha-token' || error.code === 'auth/missing-recaptcha-token') {
+                    throw new Error(`reCAPTCHA validation failed [${error.code}]. Ensure duseva.in is in Firebase Authorized Domains.`);
                 }
                 throw new Error(error.message || "Failed to send OTP to this phone. Please verify the number.");
             }
@@ -304,8 +322,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return confirmationResult;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error("sendGooglePhoneOTP Error:", error);
             clearRecaptcha(); // clear stale verifier
+            // Log the full raw Firebase error to diagnose billing/plan/SMS issues
+            console.error("[GooglePhoneOTP] linkWithPhoneNumber failed:");
+            console.error("  code:", error.code);
+            console.error("  message:", error.message);
+            console.error("  serverResponse:", JSON.stringify(error.customData?._tokenResponse ?? error.customData?.serverResponse ?? {}));
+            console.error("  full error:", error);
 
             if (error.code === 'auth/provider-already-linked' || error.code === 'auth/credential-already-in-use') {
                  try {
@@ -316,9 +339,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       clearRecaptcha();
                       throw new Error(retryErr.message || "Failed to resend OTP to your linked phone.");
                  }
-            } else if (error.code === 'auth/internal-error' || error.code === 'auth/invalid-recaptcha-token') {
-                 const originalMsg = error.message || "Unknown internal error";
-                 throw new Error(`Firebase error: ${originalMsg}. ReCAPTCHA failed or phone provider disabled.`);
+            } else if (error.code === 'auth/internal-error') {
+                 const serverMsg = error.customData?._tokenResponse?.error?.message
+                     || error.customData?.serverResponse?.error?.message
+                     || null;
+                 const isClientSideBlock = !serverMsg;
+                 if (isClientSideBlock) {
+                     throw new Error("reCAPTCHA couldn't load. Please disable your ad blocker, try an incognito window, or use a different browser.");
+                 }
+                 throw new Error(`Phone auth failed: ${serverMsg}`);
+            } else if (error.code === 'auth/invalid-recaptcha-token' || error.code === 'auth/missing-recaptcha-token') {
+                 throw new Error(`reCAPTCHA validation failed [${error.code}]. Ensure duseva.in is in Firebase Authorized Domains.`);
             } else {
                  throw new Error(error.message || "Failed to send OTP to this phone.");
             }

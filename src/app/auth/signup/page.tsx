@@ -329,16 +329,6 @@ export default function SignupPage() {
                 </>
             )}
 
-            <div id="recaptcha-container"></div>
-            
-            <style dangerouslySetInnerHTML={{__html: `
-                .grecaptcha-badge { visibility: hidden !important; }
-            `}} />
-            <div className="mt-8 text-[11px] text-text-muted text-center max-w-xs mx-auto leading-relaxed">
-                 This site is protected by reCAPTCHA and the Google <br/>
-                 <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-secondary">Privacy Policy</a> and{' '}
-                 <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-secondary">Terms of Service</a> apply.
-            </div>
         </div>
     );
 }
