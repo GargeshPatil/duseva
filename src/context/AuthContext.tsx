@@ -19,7 +19,7 @@ import {
     EmailAuthProvider,
     linkWithCredential
 } from "firebase/auth";
-import { doc, getDoc, setDoc, Timestamp, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, Timestamp, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/config";
 
 // Define the shape of the user data stored in Firestore
@@ -127,8 +127,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (user) {
             const userDocRef = doc(db, "users", user.uid);
-            // Fire and forget update
-            setDoc(userDocRef, { lastLoginAt: Timestamp.now() }, { merge: true }).catch(console.error);
+            // Fire and forget update - use updateDoc to avoid creating an empty doc before signup finishes
+            updateDoc(userDocRef, { lastLoginAt: Timestamp.now() }).catch(() => {
+                // Ignore errors silently (new users won't be found, which is intended)
+            });
         }
     }, [user?.uid]);
 

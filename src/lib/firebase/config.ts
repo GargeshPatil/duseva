@@ -31,7 +31,8 @@ if (typeof window !== "undefined") {
 
             // Bypass Invisible ReCAPTCHA blocks on Localhost
             // Allows using Fictional Phone Numbers in Firebase Console
-            if (process.env.NODE_ENV === "development") {
+            console.log("Phone Auth Mode:", process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR);
+            if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true") {
                 auth.settings.appVerificationDisabledForTesting = true;
                 console.info("Firebase: App Verification (ReCAPTCHA) disabled for local testing.");
             }
