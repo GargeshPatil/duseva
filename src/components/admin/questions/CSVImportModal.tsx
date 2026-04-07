@@ -107,13 +107,22 @@ export function CSVImportModal({ isOpen, onClose, onSuccess, onPrepopulateFromCS
             "A", "The passage implies sunny days are nice.", "English", "Reading Comprehension",
             "Medium", "5", "1", "General"
         ];
+        // Rich Text multi-line example demonstrating seamless editor integration
+        const dummyRow5 = [
+            "mcq", "", "", "", "",
+            "This question contains multiple paragraphs.\n\nIt will seamlessly load into the Rich Text editor as separate paragraph blocks.", 
+            "Option A\nMulti-line", "Option B", "Option C", "Option D",
+            "A", "Explanation with \n multiple lines.", "English", "Grammar",
+            "Easy", "5", "1", "General"
+        ];
 
         const csvContent = "data:text/csv;charset=utf-8,\uFEFF"
             + headers.join(",") + "\n"
             + dummyRow1.map(val => `"${val.replace(/"/g, '""')}"`).join(",") + "\n"
             + dummyRow2.map(val => `"${val.replace(/"/g, '""')}"`).join(",") + "\n"
             + dummyRow3.map(val => `"${val.replace(/"/g, '""')}"`).join(",") + "\n"
-            + dummyRow4.map(val => `"${val.replace(/"/g, '""')}"`).join(",");
+            + dummyRow4.map(val => `"${val.replace(/"/g, '""')}"`).join(",") + "\n"
+            + dummyRow5.map(val => `"${val.replace(/"/g, '""')}"`).join(",");
 
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");

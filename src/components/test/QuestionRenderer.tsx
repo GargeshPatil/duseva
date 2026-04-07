@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { MatchQuestion } from './MatchQuestion';
 import { sanitizeText } from '@/utils/sanitizeText';
+import { RenderContent } from './RenderContent';
 
 interface QuestionRendererProps {
     question: any;
@@ -18,18 +19,18 @@ export function QuestionRenderer({ question, engine, selectedOption, onOptionSel
 
     const passageText = question.passageText || question.parentPassage;
     const questionText = question.text || question.questionText;
+    const hasPassage = !!question.passageContent || !!passageText;
+    const hasQuestion = !!question.questionContent || !!questionText;
 
     return (
         <div className="question-container flex flex-col gap-4 mb-4">
             {/* PASSAGE BLOCK */}
-            {passageText && (
+            {hasPassage && (
                 <div
                     className="passage-block"
                     style={{
                         maxHeight: "220px",
                         overflowY: "auto",
-                        whiteSpace: "pre-line",
-                        lineHeight: "1.6",
                         padding: "12px",
                         border: "1px solid #ccc",
                         borderRadius: "6px",
@@ -38,8 +39,12 @@ export function QuestionRenderer({ question, engine, selectedOption, onOptionSel
                         color: "black",
                         fontSize: "14px"
                     }}
-                    dangerouslySetInnerHTML={{ __html: sanitizeText(passageText) }}
-                />
+                >
+                    <RenderContent 
+                        content={question.passageContent} 
+                        fallback={sanitizeText(passageText || "")} 
+                    />
+                </div>
             )}
 
             {/* IMAGE */}
@@ -60,12 +65,13 @@ export function QuestionRenderer({ question, engine, selectedOption, onOptionSel
             )}
 
             {/* QUESTION */}
-            {questionText && (
-                <div 
-                    className="question-text text-[16px] leading-relaxed text-black rich-text-content"
-                    style={{ whiteSpace: "pre-line" }}
-                    dangerouslySetInnerHTML={{ __html: sanitizeText(questionText) }}
-                />
+            {hasQuestion && (
+                <div className="question-text text-[16px] leading-relaxed text-black rich-text-content">
+                    <RenderContent 
+                        content={question.questionContent} 
+                        fallback={sanitizeText(questionText || "")}
+                    />
+                </div>
             )}
 
             {/* OPTIONS */}
@@ -88,8 +94,13 @@ export function QuestionRenderer({ question, engine, selectedOption, onOptionSel
                                 />
                                 <span className="text-[12px] font-bold text-black mt-1">({optIdx + 1})</span>
                             </div>
-                            <div className="flex-1 flex flex-col" style={{ whiteSpace: "pre-line" }}>
-                                <span className="text-[15px] text-black mt-0.5" dangerouslySetInnerHTML={{ __html: sanitizeText(optText) }} />
+                            <div className="flex-1 flex flex-col">
+                                <div className="text-[15px] text-black mt-0.5">
+                                    <RenderContent 
+                                        content={question.optionsContent && question.optionsContent[optIdx]} 
+                                        fallback={sanitizeText(optText || "")}
+                                    />
+                                </div>
                             </div>
                         </label>
                     ))}

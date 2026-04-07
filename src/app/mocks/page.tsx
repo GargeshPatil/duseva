@@ -97,6 +97,7 @@ export default function MocksPage() {
                             loading={loading}
                             filteredTests={filteredTests}
                             onClearPreference={handleClearPreference}
+                            userCredits={userData?.credits ?? 0}
                         />
                     )}
                 </AnimatePresence>

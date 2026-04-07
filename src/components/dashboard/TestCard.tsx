@@ -7,10 +7,11 @@ interface TestCardProps {
     test: Test;
     isAttempted?: boolean;
     isInProgress?: boolean;
+    userCredits?: number;
     onStart?: (test: Test) => void;
 }
 
-export function TestCard({ test, isAttempted, isInProgress, onStart }: TestCardProps) {
+export function TestCard({ test, isAttempted, isInProgress, userCredits = 0, onStart }: TestCardProps) {
 
     // Status color mapping
     const getStatusConfig = () => {
@@ -20,6 +21,27 @@ export function TestCard({ test, isAttempted, isInProgress, onStart }: TestCardP
     };
 
     const status = getStatusConfig();
+    
+    const requiresCredits = !test.isFree && userCredits === 0;
+
+    const handleStartClick = (e: React.MouseEvent) => {
+        if (requiresCredits) {
+            e.preventDefault();
+            // Scroll to credits strip or redirect
+            const strip = document.getElementById('credit-purchase-strip');
+            if (strip) {
+                strip.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                window.location.hash = 'credit-purchase-strip';
+            }
+            return;
+        }
+
+        if (onStart) {
+            e.preventDefault();
+            isAttempted ? onStart({ ...test, isReattempt: true } as any) : onStart(test);
+        }
+    };
 
     return (
         <div className={`relative h-full flex flex-col rounded-[2rem] border ${status.border} ${status.bg} backdrop-blur-xl overflow-hidden transition-all duration-500 group ${status.glow}`}>
@@ -28,19 +50,16 @@ export function TestCard({ test, isAttempted, isInProgress, onStart }: TestCardP
             <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.02] rounded-full blur-[40px] group-hover:bg-white/[0.04] transition-colors duration-500" />
 
-            {/* Completed Badge */}
-            {isAttempted && !isInProgress && (
-                <div className="absolute top-4 right-4 z-10">
-                    <div className="bg-semantic-success/20 backdrop-blur-md p-1.5 rounded-full border border-semantic-success/30 shadow-lg pr-3 flex items-center gap-1.5">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400 ml-1" />
-                        <span className="text-xs font-semibold text-emerald-300">Completed</span>
-                    </div>
-                </div>
-            )}
-
             <div className="p-6 flex-1 flex flex-col relative z-10">
                 {/* Header Tags */}
                 <div className="flex flex-wrap items-center gap-2 mb-4">
+                    {/* Completed Badge moved into normal flow to prevent overlap */}
+                    {isAttempted && !isInProgress && (
+                        <span className="bg-semantic-success/20 text-emerald-300 border border-semantic-success/30 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> Completed
+                        </span>
+                    )}
+
                     <span className={`
                         px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase
                         ${test.difficulty === 'Hard' ? 'bg-semantic-error/10 text-red-400 border border-semantic-error/20' :
@@ -50,9 +69,15 @@ export function TestCard({ test, isAttempted, isInProgress, onStart }: TestCardP
                         {test.difficulty || 'Medium'}
                     </span>
 
-                    <span className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/20 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase flex items-center gap-1">
-                        <Sparkles className="h-3 w-3" /> 1 Credit
-                    </span>
+                    {test.isFree ? (
+                        <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase flex items-center gap-1">
+                            <Sparkles className="h-3 w-3" /> Free Test
+                        </span>
+                    ) : (
+                        <span className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/20 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase flex items-center gap-1">
+                            <Sparkles className="h-3 w-3" /> 1 Credit
+                        </span>
+                    )}
 
                     {((test.category as string) === 'PYQ' || test.title.toLowerCase().includes('pyq')) && (
                         <span className="bg-purple-500/20 text-purple-300 border border-purple-500/20 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase">
@@ -88,48 +113,36 @@ export function TestCard({ test, isAttempted, isInProgress, onStart }: TestCardP
                         <FileText className="h-3.5 w-3.5" /> {test.questions?.length ?? 0} Qs
                     </div>
 
-                    {onStart ? (
+                    <Link 
+                        href={`/test/${test.id}/start${isAttempted ? '?reattempt=true' : ''}`} 
+                        className="flex-1"
+                        onClick={handleStartClick}
+                    >
                         <Button
                             size="sm"
                             fullWidth
-                            className={`flex-1 font-bold tracking-wide border-none shadow-lg ${isInProgress
-                                ? "bg-cta-primary hover:bg-cta-hover text-white shadow-cta-primary/30"
-                                : isAttempted
-                                    ? "bg-white/10 hover:bg-white/20 text-white"
-                                    : "bg-white text-slate-900 hover:bg-white/90 shadow-white/10"
+                            disabled={requiresCredits}
+                            className={`w-full font-bold tracking-wide border-none shadow-lg transition-all active:scale-95 ${
+                                requiresCredits 
+                                    ? "bg-surface-elevated text-text-muted opacity-80 cursor-not-allowed"
+                                    : isInProgress
+                                        ? "bg-cta-primary hover:bg-cta-hover text-white shadow-cta-primary/30"
+                                        : isAttempted
+                                            ? "bg-white/10 hover:bg-white/20 text-white"
+                                            : "bg-white text-slate-900 hover:bg-white/90 shadow-white/10"
                                 }`}
-                            onClick={() => isAttempted ? onStart({ ...test, isReattempt: true } as any) : onStart(test)}
                         >
-                            {isInProgress ? (
-                                <>Resume <Play className="h-3.5 w-3.5 ml-1.5 fill-current" /></>
+                            {requiresCredits ? (
+                                <span className="flex items-center justify-center">Get Credits <Lock className="h-3.5 w-3.5 ml-1.5" /></span>
+                            ) : isInProgress ? (
+                                <span className="flex items-center justify-center">Resume <Play className="h-3.5 w-3.5 ml-1.5 fill-current" /></span>
                             ) : isAttempted ? (
-                                <>Reattempt <Play className="h-3.5 w-3.5 ml-1.5" /></>
+                                <span className="flex items-center justify-center">Reattempt <Play className="h-3.5 w-3.5 ml-1.5" /></span>
                             ) : (
-                                <>Start Test <Play className="h-3.5 w-3.5 ml-1.5 fill-current" /></>
+                                <span className="flex items-center justify-center">Start Test <Play className="h-3.5 w-3.5 ml-1.5 fill-current" /></span>
                             )}
                         </Button>
-                    ) : (
-                        <Link href={`/test/${test.id}/start${isAttempted ? '?reattempt=true' : ''}`} className="flex-1">
-                            <Button
-                                size="sm"
-                                fullWidth
-                                className={`w-full font-bold tracking-wide border-none shadow-lg transition-all active:scale-95 ${isInProgress
-                                    ? "bg-cta-primary hover:bg-cta-hover text-white shadow-cta-primary/30"
-                                    : isAttempted
-                                        ? "bg-white/10 hover:bg-white/20 text-white"
-                                        : "bg-white text-slate-900 hover:bg-white/90 shadow-white/10"
-                                    }`}
-                            >
-                                {isInProgress ? (
-                                    <span className="flex items-center justify-center">Resume <Play className="h-3.5 w-3.5 ml-1.5 fill-current" /></span>
-                                ) : isAttempted ? (
-                                    <span className="flex items-center justify-center">Reattempt <Play className="h-3.5 w-3.5 ml-1.5" /></span>
-                                ) : (
-                                    <span className="flex items-center justify-center">Start Test <Play className="h-3.5 w-3.5 ml-1.5 fill-current" /></span>
-                                )}
-                            </Button>
-                        </Link>
-                    )}
+                    </Link>
                 </div>
             </div>
         </div>

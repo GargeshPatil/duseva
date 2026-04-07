@@ -1,3 +1,5 @@
+import { JSONContent } from '@tiptap/react';
+
 export interface User {
     id: string;
     name: string;
@@ -25,6 +27,11 @@ export interface Question {
     options: string[];
     correctOption: number; // Index 0-3
     explanation?: string;
+    questionContent?: JSONContent;
+    optionsContent?: JSONContent[];
+    explanationContent?: JSONContent;
+    passageContent?: JSONContent;
+    contentVersion?: number;
     testId?: string;
     stream?: 'Science' | 'Commerce' | 'Humanities' | 'General';
     tags?: string[];
@@ -43,6 +50,7 @@ export interface Test {
     totalMarks: number;
     difficulty: 'Easy' | 'Medium' | 'Hard';
     category: 'Subject' | 'General' | 'Full Mock';
+    isFree?: boolean;
     streams: string[]; // Updated: Array to support multiple streams (Science, Commerce, Humanities, General, English)
     questions?: Question[]; // Legacy: embedded questions
     questionIds?: string[]; // New: references to QuestionBank

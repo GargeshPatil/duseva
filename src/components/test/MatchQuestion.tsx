@@ -1,4 +1,5 @@
 import { sanitizeText } from '@/utils/sanitizeText';
+import { RenderContent } from './RenderContent';
 
 interface MatchQuestionProps {
     question: any;
@@ -12,12 +13,10 @@ export function MatchQuestion({ question: q, selectedOption, onOptionSelect }: M
     return (
         <div className="flex flex-col gap-4">
             {/* Question Text */}
-            {q.text && (
-                <div 
-                    className="text-[16px] leading-relaxed text-black rich-text-content"
-                    style={{ whiteSpace: "pre-line" }}
-                    dangerouslySetInnerHTML={{ __html: sanitizeText(q.text) }}
-                />
+            {(q.text || q.questionContent) && (
+                <div className="text-[16px] leading-relaxed text-black rich-text-content">
+                    <RenderContent content={q.questionContent} fallback={q.text} />
+                </div>
             )}
 
             {/* Render Image if exists */}
@@ -80,7 +79,12 @@ export function MatchQuestion({ question: q, selectedOption, onOptionSelect }: M
                             <span className="text-[12px] font-bold text-black mt-1">({optIdx + 1})</span>
                         </div>
                         <div className="flex-1 flex flex-col" style={{ whiteSpace: "pre-line" }}>
-                            <span className="text-[15px] text-black mt-0.5" dangerouslySetInnerHTML={{ __html: sanitizeText(optText) }} />
+                            <div className="text-[15px] text-black mt-0.5 rich-text-content prose prose-sm max-w-none">
+                                <RenderContent 
+                                    content={q.optionsContent && q.optionsContent[optIdx]} 
+                                    fallback={optText} 
+                                />
+                            </div>
                         </div>
                     </label>
                 ))}

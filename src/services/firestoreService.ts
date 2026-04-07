@@ -242,7 +242,8 @@ export const firestoreService = {
                     status: data.isPublished ? 'published' : 'draft',
                     streams: Array.isArray(data.streams) ? data.streams : (data.streams ? [data.streams] : (data.stream ? [data.stream] : [])),
                     questionIds: data.questionIds || [],
-                    sections: data.sections || []
+                    sections: data.sections || [],
+                    isFree: data.isFree || false
                 } as Test;
             });
         } catch (error) {
@@ -274,7 +275,8 @@ export const firestoreService = {
                     status: data.isPublished ? 'published' : 'draft',
                     streams: Array.isArray(data.streams) ? data.streams : (data.streams ? [data.streams] : (data.stream ? [data.stream] : [])),
                     questionIds: data.questionIds || [],
-                    sections: data.sections || []
+                    sections: data.sections || [],
+                    isFree: data.isFree || false
                 } as Test;
             }
             return null;
@@ -303,7 +305,8 @@ export const firestoreService = {
                 updatedAt: Timestamp.now(),
                 sections: [],
                 attemptsCount: 0,
-                questionIds: testData.questionIds || []
+                questionIds: testData.questionIds || [],
+                isFree: testData.isFree || false
             };
 
             const docRef = await addDoc(testsRef, cleanData(newTest));
@@ -332,6 +335,7 @@ export const firestoreService = {
             if (updates.status) firestoreUpdates.isPublished = updates.status === 'published';
             if (updates.streams) firestoreUpdates.streams = updates.streams;
             if (updates.questionIds) firestoreUpdates.questionIds = updates.questionIds;
+            if (updates.isFree !== undefined) firestoreUpdates.isFree = updates.isFree;
 
             await updateDoc(testRef, cleanData(firestoreUpdates));
             return true;
@@ -392,6 +396,11 @@ export const firestoreService = {
                         passageText: data.passageText,
                         subQuestions: data.subQuestions || [],
                         imageUrl: data.imageUrl,
+                        contentVersion: data.contentVersion,
+                        questionContent: data.questionContent,
+                        optionsContent: data.optionsContent,
+                        explanationContent: data.explanationContent,
+                        passageContent: data.passageContent,
                     } as Question;
                 });
 
@@ -441,6 +450,11 @@ export const firestoreService = {
                     passageText: data.passageText,
                     subQuestions: data.subQuestions || [],
                     imageUrl: data.imageUrl,
+                    contentVersion: data.contentVersion,
+                    questionContent: data.questionContent,
+                    optionsContent: data.optionsContent,
+                    explanationContent: data.explanationContent,
+                    passageContent: data.passageContent,
                     createdAt: data.createdAt // extract for sorting
                 } as Question & { createdAt?: any };
             });

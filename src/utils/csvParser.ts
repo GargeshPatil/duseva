@@ -64,6 +64,20 @@ function validateQuestion(q: Partial<Question>): boolean {
     return true;
 }
 
+function parseStringToJson(text?: string | null): any {
+    if (!text) return null;
+    const paragraphs = text.split('\n').filter(p => p.trim() !== '');
+    if (paragraphs.length === 0) return null;
+    
+    return {
+        type: 'doc',
+        content: paragraphs.map(p => ({
+            type: 'paragraph',
+            content: [{ type: 'text', text: p }]
+        }))
+    };
+}
+
 /**
  * Validates a single CSV row and maps it to a Question object.
  * Always returns data (best effort) even if invalid.
@@ -144,17 +158,37 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
 
     const streams = row.streams ? row.streams.split('|').map(s => s.trim()).filter(Boolean) : [];
 
+    const parsedQuestionContent = parseStringToJson(questionText);
+
+    if (parsedQuestionContent && row.imageUrl && row.imageUrl.startsWith("http")) {
+        parsedQuestionContent.content.push({
+            type: 'image',
+            attrs: {
+                src: row.imageUrl,
+                alt: 'Question Image'
+            }
+        });
+    }
+
     const question: Partial<Question> = {
         questionType: qType,
         text: questionText,
+        questionContent: parsedQuestionContent,
         options: [
             normalizeNewlines(row.optionA),
             normalizeNewlines(row.optionB),
             normalizeNewlines(row.optionC),
             normalizeNewlines(row.optionD)
         ],
+        optionsContent: [
+            parseStringToJson(normalizeNewlines(row.optionA)),
+            parseStringToJson(normalizeNewlines(row.optionB)),
+            parseStringToJson(normalizeNewlines(row.optionC)),
+            parseStringToJson(normalizeNewlines(row.optionD))
+        ],
         correctOption: correctOption,
         explanation: normalizeNewlines(row.explanation),
+        explanationContent: parseStringToJson(normalizeNewlines(row.explanation)),
         subject: normalizeTag(row.subjectTag || ""),
         tags: row.topicTag ? [normalizeTag(row.topicTag || "")] : [],
         difficulty: (difficulty as 'Easy' | 'Medium' | 'Hard') || 'Medium',
@@ -162,7 +196,8 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
         negativeMarks: negativeMarks,
         stream: streams.length > 0 ? (normalizeTag(streams[0]) as Question['stream']) : undefined,
         imageUrl: row.imageUrl,
-        streams: streams.map(s => normalizeTag(s))
+        streams: streams.map(s => normalizeTag(s)),
+        contentVersion: 2
     };
 
     if (qType === 'match' && matchPairs) {
@@ -171,6 +206,7 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
 
     if (passageKey) {
         question.passageText = passageKey;
+        question.passageContent = parseStringToJson(passageKey);
         // Simple base64 encode for id generation (with fallback for unicode)
         try {
             question.passageId = "passage_" + btoa(encodeURIComponent(passageKey)).slice(0, 12);

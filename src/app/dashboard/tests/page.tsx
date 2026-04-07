@@ -172,6 +172,7 @@ export default function MockTestsPage() {
                                         test={test}
                                         isInProgress={state === 'in_progress'}
                                         isAttempted={state === 'completed'}
+                                        userCredits={userData?.credits ?? 0}
                                     />
                                 </motion.div>
                             );

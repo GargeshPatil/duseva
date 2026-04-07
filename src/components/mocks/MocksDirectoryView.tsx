@@ -8,13 +8,15 @@ interface MocksDirectoryViewProps {
     loading: boolean;
     filteredTests: Test[];
     onClearPreference: () => void;
+    userCredits?: number;
 }
 
 export function MocksDirectoryView({
     selectedStream,
     loading,
     filteredTests,
-    onClearPreference
+    onClearPreference,
+    userCredits
 }: MocksDirectoryViewProps) {
     return (
         <motion.div
@@ -51,6 +53,7 @@ export function MocksDirectoryView({
                                 <TestCard
                                     key={test.id}
                                     test={{ ...test, attempts: 0 }}
+                                    userCredits={userCredits ?? 0}
                                     onStart={() => window.location.href = `/test/${test.id}`}
                                 />
                             ))}

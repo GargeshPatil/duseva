@@ -30,22 +30,33 @@ export async function POST(req: NextRequest) {
         // Run transaction to ensure atomicity of credit deduction and attempt creation
         const attemptId = await adminDb.runTransaction(async (transaction) => {
             const userDoc = await transaction.get(userRef);
-
             if (!userDoc.exists) {
                 throw new Error("User not found");
             }
 
-            const userData = userDoc.data();
-            const currentCredits = userData?.credits || 0;
+            // Fetch test to check if it's explicitly free
+            const testRef = adminDb.collection("tests").doc(testId);
+            const testDoc = await transaction.get(testRef);
 
-            if (currentCredits < 1) {
-                throw new Error("Insufficient credits");
+            if (!testDoc.exists) {
+                throw new Error("Test not found");
             }
 
-            // Decrement credit
-            transaction.update(userRef, {
-                credits: FieldValue.increment(-1)
-            });
+            const isFree = testDoc.data()?.isFree === true;
+
+            if (!isFree) {
+                const userData = userDoc.data();
+                const currentCredits = userData?.credits || 0;
+
+                if (currentCredits < 1) {
+                    throw new Error("Insufficient credits");
+                }
+
+                // Decrement credit
+                transaction.update(userRef, {
+                    credits: FieldValue.increment(-1)
+                });
+            }
 
             // Create new attempt document
             const newAttemptRef = attemptsRef.doc();

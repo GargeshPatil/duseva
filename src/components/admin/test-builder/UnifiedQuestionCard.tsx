@@ -5,6 +5,24 @@ import { Button } from "@/components/ui/Button";
 import { Trash2, GripVertical, Check, Copy, X, ChevronDown, ChevronUp, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Reorder, useDragControls } from "framer-motion";
 import { uploadImage } from "@/services/storageService";
+import dynamic from 'next/dynamic';
+import { JSONContent } from '@tiptap/react';
+
+const RichTextEditor = dynamic(() => import('./editor/RichTextEditor').then(mod => mod.RichTextEditor), {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-surface-card rounded-lg h-32 w-full border border-border" />
+});
+
+const parseStringToJson = (str: string): JSONContent => {
+    if (!str) return { type: 'doc', content: [] };
+    return {
+        type: 'doc',
+        content: [{
+            type: 'paragraph',
+            content: [{ type: 'text', text: str }]
+        }]
+    };
+};
 
 interface UnifiedQuestionCardProps {
     question: Question;
@@ -41,6 +59,12 @@ export function UnifiedQuestionCard({
         handleChange('options', newOptions);
     };
 
+    const handleOptionContentChange = (optIndex: number, val: JSONContent) => {
+        const newOptionsContent = [...(question.optionsContent || (question.options || []).map(o => parseStringToJson(o)))];
+        newOptionsContent[optIndex] = val;
+        handleChange('optionsContent', newOptionsContent);
+    };
+
     const addOption = () => {
         handleChange('options', [...(question.options || []), ""]);
     };
@@ -48,6 +72,12 @@ export function UnifiedQuestionCard({
     const removeOption = (optIndex: number) => {
         const newOptions = (question.options || []).filter((_, i) => i !== optIndex);
         handleChange('options', newOptions);
+        
+        if (question.optionsContent) {
+            const newOptionsContent = question.optionsContent.filter((_, i) => i !== optIndex);
+            handleChange('optionsContent', newOptionsContent);
+        }
+
         if (question.correctOption === optIndex) {
             handleChange('correctOption', 0);
         } else if (question.correctOption > optIndex) {
@@ -75,6 +105,13 @@ export function UnifiedQuestionCard({
         } finally {
             setIsUploadingImage(false);
         }
+    };
+
+    const handleRichTextImageUpload = async (file: File) => {
+        const timestamp = Date.now();
+        const cleanName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+        const path = `test-assets/questions/${question.id || "temp"}/${timestamp}-${cleanName}`;
+        return await uploadImage(file, path);
     };
 
     const cardContent = (
@@ -153,12 +190,11 @@ export function UnifiedQuestionCard({
                             {/* Optional Passage Text */}
                             <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg space-y-4">
                                 <h4 className="font-medium text-blue-400 text-sm">Optional Passage Text</h4>
-                                <textarea
-                                    className="w-full px-3 py-2 bg-surface-card border border-border rounded-lg text-sm outline-none focus:ring-2 focus:ring-cta-primary min-h-[120px] resize-y"
-                                    style={{ whiteSpace: "pre-wrap" }}
-                                    value={question.passageText || ""}
-                                    onChange={(e) => handleChange('passageText', e.target.value)}
+                                <RichTextEditor
+                                    value={question.passageContent || (question.passageText ? parseStringToJson(question.passageText) : null)}
+                                    onChange={(val) => handleChange('passageContent', val)}
                                     placeholder="Enter passage context here if this query links to a passage..."
+                                    onImageUpload={handleRichTextImageUpload}
                                 />
                             </div>
 
@@ -167,13 +203,12 @@ export function UnifiedQuestionCard({
                                     <label className="block text-xs font-semibold text-text-secondary uppercase mb-1">
                                         Question Text
                                     </label>
-                                    <textarea
-                                    className="w-full px-3 py-2 bg-surface-base border border-border rounded-lg text-sm outline-none focus:ring-2 focus:ring-cta-primary transition-all min-h-[80px] resize-y"
-                                    style={{ whiteSpace: "pre-wrap" }}
-                                    value={question.text}
-                                    onChange={(e) => handleChange('text', e.target.value)}
-                                    placeholder="Type the question here..."
-                                />
+                                    <RichTextEditor
+                                        value={question.questionContent || (question.text ? parseStringToJson(question.text) : null)}
+                                        onChange={(val) => handleChange('questionContent', val)}
+                                        placeholder="Type the question here..."
+                                        onImageUpload={handleRichTextImageUpload}
+                                    />
                             </div>
 
                             {/* Image Upload */}
@@ -280,12 +315,15 @@ export function UnifiedQuestionCard({
                                         >
                                             {question.correctOption === i && <Check className="h-3 w-3" />}
                                         </div>
-                                        <Input
-                                            value={opt}
-                                            onChange={(e) => handleOptionChange(i, e.target.value)}
-                                            placeholder={`Option ${i + 1}`}
-                                            className={`flex-1 h-9 ${question.correctOption === i ? 'bg-semantic-success/10 border-semantic-success/30' : ''}`}
-                                        />
+                                        <div className="flex-1">
+                                            <RichTextEditor
+                                                compact
+                                                value={(question.optionsContent && question.optionsContent[i]) || parseStringToJson(opt)}
+                                                onChange={(val) => handleOptionContentChange(i, val)}
+                                                placeholder={`Option ${i + 1}`}
+                                                onImageUpload={handleRichTextImageUpload}
+                                            />
+                                        </div>
                                         {(question.options || []).length > 2 && (
                                             <button
                                                 onClick={() => removeOption(i)}
@@ -313,12 +351,11 @@ export function UnifiedQuestionCard({
                         <div className="bg-surface-base p-4 rounded-lg border border-border h-fit space-y-4">
                             <div>
                                 <label className="block text-xs font-semibold text-text-secondary uppercase mb-1">Explanation</label>
-                                <textarea
-                                    className="w-full px-3 py-2 bg-surface-card border border-border rounded-lg text-xs outline-none focus:ring-1 focus:ring-cta-primary min-h-[100px] resize-y"
-                                    style={{ whiteSpace: "pre-wrap" }}
-                                    value={question.explanation || ""}
-                                    onChange={(e) => handleChange('explanation', e.target.value)}
+                                <RichTextEditor
+                                    value={question.explanationContent || (question.explanation ? parseStringToJson(question.explanation) : null)}
+                                    onChange={(val) => handleChange('explanationContent', val)}
                                     placeholder="Explain the correct answer..."
+                                    onImageUpload={handleRichTextImageUpload}
                                 />
                             </div>
 

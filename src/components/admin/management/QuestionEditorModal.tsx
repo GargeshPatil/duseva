@@ -66,7 +66,8 @@ export function QuestionEditorModal({ isOpen, onClose, questionId, onSuccess }: 
         if (!question) return;
 
         // Validation
-        if (!question.text || (question.options?.length && question.options.some(o => !o))) {
+        const hasQuestionText = question.text || question.questionContent;
+        if (!hasQuestionText || (question.options?.length && question.options.some((o, i) => !o && !(question.optionsContent && question.optionsContent[i])))) {
             alert("Please fill in question text and all options.");
             return;
         }
@@ -90,6 +91,7 @@ export function QuestionEditorModal({ isOpen, onClose, questionId, onSuccess }: 
         try {
             const payload: any = {
                 ...question,
+                contentVersion: question.contentVersion || 1,
                 matchPairs: question.questionType === "match" ? question.matchPairs : null,
                 passageText: question.passageText?.trim() || null,
                 passageId: generatedPassageId

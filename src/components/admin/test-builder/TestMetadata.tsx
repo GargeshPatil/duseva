@@ -32,15 +32,26 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
 
             <div className="flex flex-col sm:flex-row justify-between border-b border-border/50 pb-4 items-start sm:items-center gap-4">
                 <h2 className="text-xl font-semibold text-text-primary">Test Configuration</h2>
-                <label className="flex items-center gap-2 cursor-pointer bg-surface p-2 rounded-lg border border-border">
-                    <input
-                        type="checkbox"
-                        checked={test.shuffleQuestions || false}
-                        onChange={(e) => handleChange('shuffleQuestions', e.target.checked)}
-                        className="rounded border-input text-cta-primary focus:ring-cta-primary"
-                    />
-                    <span className="text-sm font-medium text-text-secondary">Shuffle Questions</span>
-                </label>
+                <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer bg-surface p-2 rounded-lg border border-border transition-colors hover:border-text-muted">
+                        <input
+                            type="checkbox"
+                            checked={test.isFree || false}
+                            onChange={(e) => handleChange('isFree', e.target.checked)}
+                            className="rounded border-input text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-sm font-medium text-text-secondary">Free Test</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer bg-surface p-2 rounded-lg border border-border hover:border-text-muted transition-colors">
+                        <input
+                            type="checkbox"
+                            checked={test.shuffleQuestions || false}
+                            onChange={(e) => handleChange('shuffleQuestions', e.target.checked)}
+                            className="rounded border-input text-cta-primary focus:ring-cta-primary"
+                        />
+                        <span className="text-sm font-medium text-text-secondary">Shuffle Questions</span>
+                    </label>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { Question, TestAttempt } from "@/types/admin";
 import { CheckCircle2, XCircle, AlertCircle, ChevronDown, ChevronUp, Clock, Bookmark, Filter } from "lucide-react";
+import { RenderContent } from '../test/RenderContent';
 
 interface QuestionReviewProps {
   questions: Question[];
@@ -130,15 +131,21 @@ export function QuestionReview({ questions, attempt }: QuestionReviewProps) {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    {(q as any).passageText && isExpanded && (
-                      <div 
-                         className="mb-4 p-4 rounded-xl border border-white/10 bg-white/5 text-[13px] text-white/80 max-h-[200px] overflow-y-auto leading-relaxed" 
-                         style={{ whiteSpace: "pre-line" }} 
-                         dangerouslySetInnerHTML={{ __html: (q as any).passageText }} 
-                      />
+                    {((q as any).passageText || q.passageContent) && isExpanded && (
+                      <div className="mb-4 p-4 rounded-xl border border-white/10 bg-white/5 text-[13px] text-white/80 max-h-[200px] overflow-y-auto leading-relaxed">
+                        <RenderContent 
+                          content={q.passageContent} 
+                          fallback={(q as any).passageText || ""} 
+                        />
+                      </div>
                     )}
                     <div className="flex justify-between items-start gap-4">
-                      <div className="font-medium text-white/90 rich-text-content prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: q.text }} />
+                      <div className="font-medium text-white/90 rich-text-content prose prose-invert prose-sm max-w-none">
+                        <RenderContent 
+                          content={q.questionContent} 
+                          fallback={q.text || ""} 
+                        />
+                      </div>
                       <div className="flex items-center gap-2 shrink-0 text-white/50">
                         <div className="flex items-center gap-1.5 text-xs font-bold bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10">
                             <Clock className="w-3.5 h-3.5" /> {displayTime}
@@ -177,7 +184,12 @@ export function QuestionReview({ questions, attempt }: QuestionReviewProps) {
                             `}>
                               {String.fromCharCode(65 + i)}
                             </div>
-                            <div className="flex-1 rich-text-content prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: opt }} />
+                            <div className="flex-1 rich-text-content prose prose-invert prose-sm max-w-none">
+                                <RenderContent 
+                                  content={q.optionsContent && q.optionsContent[i]} 
+                                  fallback={opt || ""} 
+                                />
+                            </div>
                             {isCorrectOpt && <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />}
                             {isSelected && !isCorrectOpt && <XCircle className="h-5 w-5 text-red-400 shrink-0" />}
                           </div>
@@ -185,12 +197,17 @@ export function QuestionReview({ questions, attempt }: QuestionReviewProps) {
                       })}
                     </div>
 
-                    {q.explanation && (
+                    {(q.explanation || q.explanationContent) && (
                       <div className="mt-8 bg-cta-primary/10 p-5 rounded-xl border border-cta-primary/20">
                         <h4 className="font-semibold text-cta-primary flex items-center gap-2 mb-3">
                             <Bookmark className="w-4 h-4" /> Explanation
                         </h4>
-                        <div className="text-sm text-blue-100 leading-relaxed rich-text-content prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: q.explanation }} />
+                        <div className="text-sm text-blue-100 leading-relaxed rich-text-content prose prose-invert prose-sm max-w-none">
+                          <RenderContent 
+                            content={q.explanationContent} 
+                            fallback={q.explanation || ""} 
+                          />
+                        </div>
                       </div>
                     )}
                     
