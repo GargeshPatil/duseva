@@ -74,20 +74,20 @@ export function CSVImportModal({ isOpen, onClose, onSuccess, onPrepopulateFromCS
 
     const handleDownloadTemplate = () => {
         const headers = [
-            "questionType", "listA", "listB", "passage", "imageUrl",
+            "questionType", "listA", "listB", "passage",
             "questionText", "optionA", "optionB", "optionC", "optionD",
             "correctAnswer", "explanation", "subjectTag", "topicTag",
             "difficulty", "marks", "negativeMarks", "streams"
         ];
         const dummyRow1 = [
-            "mcq", "", "", "", "",
+            "mcq", "", "", "",
             "What is the capital of France?", "London", "Berlin", "Paris", "Madrid",
             "C", "Paris is the capital of France.", "Geography", "World Capitals",
             "Easy", "5", "1", "Humanities|General"
         ];
         // Match example requires fully formed options where the option is the mapped relationship
         const dummyRow2 = [
-            "match", "A:Apple|B:Banana|C:Cherry", "1:Red|2:Yellow|3:Green", "", "",
+            "match", "A:Apple|B:Banana|C:Cherry", "1:Red|2:Yellow|3:Green", "",
             "Match the fruits with their colors.", 
             "A-1, B-2, C-3", "A-2, B-3, C-1", "A-3, B-1, C-2", "A-1, B-3, C-2",
             "A", "Apples are red, bananas are yellow, cherries are green.", "Science", "Botany",
@@ -95,13 +95,13 @@ export function CSVImportModal({ isOpen, onClose, onSuccess, onPrepopulateFromCS
         ];
         // Passage example adds passage context directly to an mcq question
         const dummyRow3 = [
-            "mcq", "", "", "The quick brown fox jumps over the lazy dog. It was a sunny day.", "",
+            "mcq", "", "", "The quick brown fox jumps over the lazy dog. It was a sunny day.",
             "What color is the fox?", "Brown", "Red", "White", "Black",
             "A", "The passage states the fox is brown.", "English", "Reading Comprehension",
             "Easy", "5", "1", "General"
         ];
         const dummyRow4 = [
-            "match", "A:Sunny|B:Rainy", "1:Nice Day|2:Bad Day", "The quick brown fox jumps over the lazy dog. It was a sunny day.", "",
+            "match", "A:Sunny|B:Rainy", "1:Nice Day|2:Bad Day", "The quick brown fox jumps over the lazy dog. It was a sunny day.",
             "Match the weather to the day type according to the passage.", 
             "A-1, B-2", "A-2, B-1", "A-1, B-1", "A-2, B-2",
             "A", "The passage implies sunny days are nice.", "English", "Reading Comprehension",
@@ -109,7 +109,7 @@ export function CSVImportModal({ isOpen, onClose, onSuccess, onPrepopulateFromCS
         ];
         // Rich Text multi-line example demonstrating seamless editor integration
         const dummyRow5 = [
-            "mcq", "", "", "", "",
+            "mcq", "", "", "",
             "This question contains multiple paragraphs.\n\nIt will seamlessly load into the Rich Text editor as separate paragraph blocks.", 
             "Option A\nMulti-line", "Option B", "Option C", "Option D",
             "A", "Explanation with \n multiple lines.", "English", "Grammar",

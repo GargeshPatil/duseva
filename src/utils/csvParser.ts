@@ -22,7 +22,6 @@ export interface CSVRow {
     listB?: string; // For match questions
     passage?: string; // For linking new passage
     subQuestionType?: string; // mcq, match (for passage subquestions)
-    imageUrl?: string;
 }
 
 export interface ParsedRow {
@@ -93,10 +92,6 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
     const questionText = normalizeNewlines(row.questionText);
     const passageKey = normalizeNewlines(row.passage?.trim());
 
-    if (row.imageUrl && !row.imageUrl.startsWith("http")) {
-        console.warn("Invalid image URL:", row.imageUrl);
-    }
-
     // Normalization & Initial Types
     let qType = row.questionType?.trim().toLowerCase() as 'mcq' | 'match' | 'passage';
     
@@ -160,16 +155,6 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
 
     const parsedQuestionContent = parseStringToJson(questionText);
 
-    if (parsedQuestionContent && row.imageUrl && row.imageUrl.startsWith("http")) {
-        parsedQuestionContent.content.push({
-            type: 'image',
-            attrs: {
-                src: row.imageUrl,
-                alt: 'Question Image'
-            }
-        });
-    }
-
     const question: Partial<Question> = {
         questionType: qType,
         text: questionText,
@@ -195,9 +180,8 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
         marks: marks,
         negativeMarks: negativeMarks,
         stream: streams.length > 0 ? (normalizeTag(streams[0]) as Question['stream']) : undefined,
-        imageUrl: row.imageUrl,
         streams: streams.map(s => normalizeTag(s)),
-        contentVersion: 2
+        contentVersion: 3
     };
 
     if (qType === 'match' && matchPairs) {
