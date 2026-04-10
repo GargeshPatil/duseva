@@ -8,27 +8,37 @@ interface MathModalProps {
     isOpen: boolean;
     onClose: () => void;
     onInsert: (latex: string, isBlock: boolean) => void;
+    initialLatex?: string;
+    initialIsBlock?: boolean;
 }
 
-export function MathModal({ isOpen, onClose, onInsert }: MathModalProps) {
+export function MathModal({ isOpen, onClose, onInsert, initialLatex, initialIsBlock }: MathModalProps) {
     const [latex, setLatex] = useState('');
     const [previewHtml, setPreviewHtml] = useState('');
     const [isBlock, setIsBlock] = useState(false);
 
     useEffect(() => {
-        if (!isOpen) {
+        if (isOpen) {
+            setLatex(initialLatex || '');
+            setIsBlock(initialIsBlock || false);
+        } else {
             setLatex('');
         }
-    }, [isOpen]);
+    }, [isOpen, initialLatex, initialIsBlock]);
+
+    const getCleanLatex = (raw: string) => {
+        return raw.trim().replace(/^\$+|\$+$/g, '').trim();
+    };
 
     useEffect(() => {
-        if (!latex.trim()) {
+        const cleanLatex = getCleanLatex(latex);
+        if (!cleanLatex) {
             setPreviewHtml('<span class="text-text-muted italic">Preview will appear here...</span>');
             return;
         }
 
         try {
-            const html = katex.renderToString(latex, {
+            const html = katex.renderToString(cleanLatex, {
                 throwOnError: false,
                 displayMode: isBlock,
             });
@@ -39,8 +49,9 @@ export function MathModal({ isOpen, onClose, onInsert }: MathModalProps) {
     }, [latex, isBlock]);
 
     const handleInsert = () => {
-        if (!latex.trim()) return;
-        onInsert(latex.trim(), isBlock);
+        const cleanLatex = getCleanLatex(latex);
+        if (!cleanLatex) return;
+        onInsert(cleanLatex, isBlock);
         onClose();
     };
 

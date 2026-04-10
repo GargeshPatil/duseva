@@ -158,6 +158,7 @@ const MenuBar = ({ editor, compact, onOpenMathModal, onImageUpload }: { editor: 
 
 export function RichTextEditor({ value, onChange, compact = false, placeholder, onImageUpload }: RichTextEditorProps) {
     const [isMathModalOpen, setIsMathModalOpen] = useState(false);
+    const [editingMath, setEditingMath] = useState<{ latex: string, isBlock: boolean } | null>(null);
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -198,6 +199,16 @@ export function RichTextEditor({ value, onChange, compact = false, placeholder, 
         }
     }, [editor, value]);
 
+    // Attach openMathModal to the editor instance so Math Extensions can trigger the modal
+    useEffect(() => {
+        if (editor) {
+            (editor as any).openMathModal = (latex: string, isBlock: boolean) => {
+                setEditingMath({ latex, isBlock });
+                setIsMathModalOpen(true);
+            };
+        }
+    }, [editor]);
+
     const handleInsertMath = (latex: string, isBlock: boolean) => {
         if (!editor) return;
         
@@ -220,7 +231,15 @@ export function RichTextEditor({ value, onChange, compact = false, placeholder, 
 
     return (
         <div className="bg-surface-card border border-border rounded-lg flex flex-col focus-within:ring-2 focus-within:ring-cta-primary/50 transition-shadow transition-colors">
-            <MenuBar editor={editor} compact={compact} onOpenMathModal={() => setIsMathModalOpen(true)} onImageUpload={onImageUpload} />
+            <MenuBar 
+                editor={editor} 
+                compact={compact} 
+                onOpenMathModal={() => {
+                    setEditingMath(null);
+                    setIsMathModalOpen(true);
+                }} 
+                onImageUpload={onImageUpload} 
+            />
             <div className="relative flex-1 bg-surface-base rounded-b-lg">
                 {placeholder && editor.isEmpty && (
                     <div className="absolute top-3 left-3 text-text-muted pointer-events-none text-sm">
@@ -234,6 +253,8 @@ export function RichTextEditor({ value, onChange, compact = false, placeholder, 
                 isOpen={isMathModalOpen} 
                 onClose={() => setIsMathModalOpen(false)} 
                 onInsert={handleInsertMath} 
+                initialLatex={editingMath?.latex}
+                initialIsBlock={editingMath?.isBlock}
             />
         </div>
     );

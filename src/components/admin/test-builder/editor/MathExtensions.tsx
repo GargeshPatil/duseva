@@ -17,7 +17,16 @@ const MathInlineView = (props: any) => {
     }
 
     return (
-        <NodeViewWrapper as="span" className="katex-inline cursor-pointer hover:bg-black/5 rounded p-0.5" style={{ display: 'inline-block', verticalAlign: 'middle', userSelect: 'none' }}>
+        <NodeViewWrapper 
+            as="span" 
+            className="katex-inline cursor-pointer hover:bg-black/5 rounded p-0.5" 
+            style={{ display: 'inline-block', verticalAlign: 'middle', userSelect: 'none' }}
+            onClick={() => {
+                if (typeof (props.editor as any).openMathModal === 'function') {
+                    (props.editor as any).openMathModal(latex, false);
+                }
+            }}
+        >
             <span dangerouslySetInnerHTML={{ __html: html }} />
         </NodeViewWrapper>
     );
@@ -63,7 +72,15 @@ const MathBlockView = (props: any) => {
     }
 
     return (
-        <NodeViewWrapper className="katex-block cursor-pointer hover:bg-black/5 rounded p-2 my-2 w-full text-center" style={{ userSelect: 'none' }}>
+        <NodeViewWrapper 
+            className="katex-block cursor-pointer hover:bg-black/5 rounded p-2 my-2 w-full text-center" 
+            style={{ userSelect: 'none' }}
+            onClick={() => {
+                if (typeof (props.editor as any).openMathModal === 'function') {
+                    (props.editor as any).openMathModal(latex, true);
+                }
+            }}
+        >
             <div dangerouslySetInnerHTML={{ __html: html }} />
         </NodeViewWrapper>
     );
