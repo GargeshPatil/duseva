@@ -50,11 +50,15 @@ export function MatchQuestion({ question: q, selectedOption, onOptionSelect }: M
                                 <td className="px-2 py-1 text-center font-bold border-r border-[#ccc]">
                                     {String.fromCharCode(65 + idx)}.
                                 </td>
-                                <td className="px-2 py-1 border-r border-[#ccc]">{sanitizeText(pair.left)}</td>
+                                <td className="px-2 py-1 border-r border-[#ccc] rich-text-content prose prose-sm max-w-none">
+                                    <RenderContent content={pair.leftContent} fallback={pair.left} />
+                                </td>
                                 <td className="px-2 py-1 text-center font-bold border-r border-[#ccc]">
                                     I{idx === 0 ? '' : idx === 1 ? 'I' : idx === 2 ? 'II' : idx === 3 ? 'V' : ''}.
                                 </td>
-                                <td className="px-2 py-1">{sanitizeText(pair.right)}</td>
+                                <td className="px-2 py-1 rich-text-content prose prose-sm max-w-none">
+                                    <RenderContent content={pair.rightContent} fallback={pair.right} />
+                                </td>
                             </tr>
                         ))}
                     </tbody>

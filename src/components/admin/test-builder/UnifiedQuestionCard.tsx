@@ -13,16 +13,7 @@ const RichTextEditor = dynamic(() => import('./editor/RichTextEditor').then(mod 
     loading: () => <div className="animate-pulse bg-surface-card rounded-lg h-32 w-full border border-border" />
 });
 
-const parseStringToJson = (str: string): JSONContent => {
-    if (!str) return { type: 'doc', content: [] };
-    return {
-        type: 'doc',
-        content: [{
-            type: 'paragraph',
-            content: [{ type: 'text', text: str }]
-        }]
-    };
-};
+import { parseStringToJson } from "@/utils/csvParser";
 
 interface UnifiedQuestionCardProps {
     question: Question;
@@ -267,6 +258,7 @@ export function UnifiedQuestionCard({
                                                     onChange={(e) => {
                                                         const newPairs = [...(question.matchPairs || [])];
                                                         newPairs[idx].left = e.target.value;
+                                                        newPairs[idx].leftContent = parseStringToJson(e.target.value);
                                                         handleChange('matchPairs', newPairs);
                                                     }}
                                                     placeholder="List I Item"
@@ -278,6 +270,7 @@ export function UnifiedQuestionCard({
                                                     onChange={(e) => {
                                                         const newPairs = [...(question.matchPairs || [])];
                                                         newPairs[idx].right = e.target.value;
+                                                        newPairs[idx].rightContent = parseStringToJson(e.target.value);
                                                         handleChange('matchPairs', newPairs);
                                                     }}
                                                     placeholder="List II Item"

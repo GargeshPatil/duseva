@@ -18,7 +18,7 @@ export interface User {
 
 export interface Question {
     questionType?: 'mcq' | 'match';
-    matchPairs?: { left: string; right: string }[];
+    matchPairs?: { left: string; right: string; leftContent?: JSONContent; rightContent?: JSONContent }[];
     passageId?: string; // identity tracking for analysis grouping
     passageText?: string; // standalone context property
     id: string;

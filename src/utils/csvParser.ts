@@ -63,17 +63,155 @@ function validateQuestion(q: Partial<Question>): boolean {
     return true;
 }
 
-function parseStringToJson(text?: string | null): any {
-    if (!text) return null;
-    const paragraphs = text.split('\n').filter(p => p.trim() !== '');
-    if (paragraphs.length === 0) return null;
+function smartSplit(text: string, delimiter: string = '|'): string[] {
+    const result: string[] = [];
+    let current = '';
+
+    const lexerRegex = /(\$\$[\s\S]*?\$\$|\$[^$]+?\$)/g;
+    const parts = text.split(lexerRegex);
+
+    parts.forEach(part => {
+        if (!part) return;
+        
+        if (part.startsWith('$$') && part.endsWith('$$')) {
+            current += part;
+        } else if (part.startsWith('$') && part.endsWith('$')) {
+            current += part;
+        } else {
+            // Normal text, safe to split
+            const splitParts = part.split(delimiter);
+            if (splitParts.length === 1) {
+                current += part;
+            } else {
+                current += splitParts[0];
+                result.push(current);
+                
+                for (let i = 1; i < splitParts.length - 1; i++) {
+                    result.push(splitParts[i]);
+                }
+                
+                current = splitParts[splitParts.length - 1];
+            }
+        }
+    });
+
+    if (current || text.endsWith(delimiter)) {
+        result.push(current);
+    }
     
+    return result;
+}
+
+export function parseInlineTokens(text: string): any[] {
+    const lexerRegex = /(\$\$[\s\S]*?\$\$|\$[^$]+?\$|\*\*([^*]+?)\*\*|\*([^*]+?)\*|__([^_]+?)__|~([^~]+?)~|\^([^\^]+?)\^)/g;
+    const parts = text.split(lexerRegex);
+    const pContent: any[] = [];
+
+    parts.forEach(part => {
+        if (!part) return;
+        if (part.startsWith('$$') && part.endsWith('$$')) {
+            const latexStr = part.slice(2, -2).trim();
+            if (latexStr) pContent.push({ type: 'math_block', attrs: { latex: latexStr } });
+        } else if (part.startsWith('$') && part.endsWith('$')) {
+            const latexStr = part.slice(1, -1).trim();
+            if (latexStr) pContent.push({ type: 'math_inline', attrs: { latex: latexStr } });
+        } else if (part.startsWith('**') && part.endsWith('**')) {
+            pContent.push({ type: 'text', text: part.slice(2, -2), marks: [{ type: 'bold' }] });
+        } else if (part.startsWith('*') && part.endsWith('*')) {
+            pContent.push({ type: 'text', text: part.slice(1, -1), marks: [{ type: 'italic' }] });
+        } else if (part.startsWith('__') && part.endsWith('__')) {
+            pContent.push({ type: 'text', text: part.slice(2, -2), marks: [{ type: 'underline' }] });
+        } else if (part.startsWith('~') && part.endsWith('~')) {
+            pContent.push({ type: 'text', text: part.slice(1, -1), marks: [{ type: 'subscript' }] });
+        } else if (part.startsWith('^') && part.endsWith('^')) {
+            pContent.push({ type: 'text', text: part.slice(1, -1), marks: [{ type: 'superscript' }] });
+        } else {
+            pContent.push({ type: 'text', text: part });
+        }
+    });
+    return pContent;
+}
+
+export function parseStringToJson(text?: string | null): any {
+    if (!text) return null;
+
+    // First, split by block math to preserve multi-line math blocks
+    const blockRegex = /(\$\$[\s\S]*?\$\$)/g;
+    const blockParts = text.split(blockRegex);
+    
+    const docContent: any[] = [];
+
+    blockParts.forEach(blockPart => {
+        if (!blockPart.trim()) return;
+        
+        if (blockPart.startsWith('$$') && blockPart.endsWith('$$')) {
+            docContent.push({
+                type: 'math_block',
+                attrs: { latex: blockPart.slice(2, -2).trim() }
+            });
+        } else {
+            // Text chunk: can contain paragraphs and lists
+            const lines = blockPart.split('\\n');
+            let currentList: any = null; // Either { type: 'bulletList', content: [] } or 'orderedList'
+
+            lines.forEach((line) => {
+                if (line.trim() === '') {
+                    // Empty line breaks a list if we are in one, or just ignore
+                    if (currentList) {
+                        docContent.push(currentList);
+                        currentList = null;
+                    }
+                    return;
+                }
+
+                // Check for lists
+                const bulletMatch = line.match(/^[-*]\\s+(.*)/);
+                const orderedMatch = line.match(/^(\\d+)\\.\\s+(.*)/);
+
+                if (bulletMatch) {
+                    if (currentList?.type !== 'bulletList') {
+                        if (currentList) docContent.push(currentList);
+                        currentList = { type: 'bulletList', content: [] };
+                    }
+                    const lineContent = bulletMatch[1];
+                    currentList.content.push({
+                        type: 'listItem',
+                        content: [{ type: 'paragraph', content: parseInlineTokens(lineContent) }]
+                    });
+                } else if (orderedMatch) {
+                    if (currentList?.type !== 'orderedList') {
+                        if (currentList) docContent.push(currentList);
+                        currentList = { type: 'orderedList', attrs: { start: Number(orderedMatch[1]) }, content: [] };
+                    }
+                    const lineContent = orderedMatch[2];
+                    currentList.content.push({
+                        type: 'listItem',
+                        content: [{ type: 'paragraph', content: parseInlineTokens(lineContent) }]
+                    });
+                } else {
+                    // Normal paragraph
+                    if (currentList) {
+                        docContent.push(currentList);
+                        currentList = null;
+                    }
+                    const pContent = parseInlineTokens(line);
+                    if (pContent.length > 0) {
+                        docContent.push({ type: 'paragraph', content: pContent });
+                    }
+                }
+            });
+
+            if (currentList) {
+                docContent.push(currentList);
+            }
+        }
+    });
+
+    if (docContent.length === 0) return null;
+
     return {
         type: 'doc',
-        content: paragraphs.map(p => ({
-            type: 'paragraph',
-            content: [{ type: 'text', text: p }]
-        }))
+        content: docContent
     };
 }
 
@@ -111,20 +249,25 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
         errors.push("Missing one or more Options (A-D)");
     }
 
-    let matchPairs: { left: string, right: string }[] | undefined = undefined;
+    let matchPairs: { left: string, right: string, leftContent?: any, rightContent?: any }[] | undefined = undefined;
     if (qType === 'match') {
         if (!row.listA?.trim() || !row.listB?.trim()) {
             errors.push("Match questions require 'List A' and 'List B' columns.");
         } else {
-            const listAItems = row.listA.split('|').map(s => s.trim()).filter(Boolean);
-            const listBItems = row.listB.split('|').map(s => s.trim()).filter(Boolean);
+            const listAItems = smartSplit(row.listA).map(s => s.trim()).filter(Boolean);
+            const listBItems = smartSplit(row.listB).map(s => s.trim()).filter(Boolean);
             if (listAItems.length !== listBItems.length || listAItems.length === 0) {
                 errors.push("Match 'List A' and 'List B' must have the same number of pipe-separated (|) items.");
             } else {
                 matchPairs = listAItems.map((left, index) => {
                     const cleanLeft = left.replace(/^[A-Z]:/, '').trim();
                     const cleanRight = listBItems[index].replace(/^[0-9]+:/, '').trim();
-                    return { left: cleanLeft, right: cleanRight };
+                    return { 
+                        left: cleanLeft, 
+                        right: cleanRight,
+                        leftContent: parseStringToJson(cleanLeft),
+                        rightContent: parseStringToJson(cleanRight)
+                    };
                 });
             }
         }
