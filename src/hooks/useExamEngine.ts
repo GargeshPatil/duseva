@@ -272,8 +272,10 @@ export function useExamEngine(testId: string) {
             if (!res.ok) {
                 if (data.code === 'INSUFFICIENT_CREDITS') {
                     alert("Insufficient Credits. Please purchase more credits to start tests.");
+                    setError("Insufficient Credits. Please purchase more credits to start tests.");
                 } else {
                     alert("Failed to start test. Please try again.");
+                    setError("Failed to start test. Please try again.");
                 }
                 setLoading(false);
                 return;
@@ -282,6 +284,7 @@ export function useExamEngine(testId: string) {
         } catch (error) {
             console.error("Error starting test API:", error);
             alert("Network error. Please try again.");
+            setError("Network error. Please try again.");
             setLoading(false);
             return;
         }

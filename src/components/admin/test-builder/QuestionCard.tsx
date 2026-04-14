@@ -163,6 +163,15 @@ export function QuestionCard({ question, index, onChange, onDelete, onDuplicate 
                                     placeholder="e.g. Physics"
                                 />
                             </div>
+                            <div>
+                                <label className="block text-xs font-medium text-text-muted mb-1">Tier 1 Category</label>
+                                <Input
+                                    className="h-8 text-xs"
+                                    value={question.tier1Category || ""}
+                                    onChange={(e) => handleChange('tier1Category', e.target.value)}
+                                    placeholder="e.g. Kinematics"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Craft rules based on data in your Firestore database
+// allow write: if firestore.get(
+//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      // Allow public read access to all uploaded assets (like question images)
+      allow read: if true;
+      
+      // Allow authenticated users to upload new assets.
+      // (For production, you may want to restrict this to admins via Firestore lookup or custom claims)
+      allow write: if request.auth != null;
+    }
+  }
+}

@@ -18,7 +18,7 @@ export function PremiumAdminNav() {
                     {/* Logo Area */}
                     <Link href="/admin" className="hover:opacity-80 transition-opacity flex items-center">
                         <div className="h-[60px] w-[210px] relative flex items-center justify-start">
-                            <Image src="/du-logo-white.png" alt="DU Seva Admin Logo" fill className="object-contain" priority />
+                            <Image src="/du-logo-white.png" alt="DU Seva Admin Logo" fill sizes="210px" className="object-contain" priority />
                             <span className="absolute right-0 bottom-3 text-[10px] font-mono text-cta-primary bg-cta-primary/10 px-1.5 py-0.5 rounded-full border border-cta-primary/20">Admin</span>
                         </div>
                     </Link>

@@ -236,6 +236,9 @@ export const firestoreService = {
                     totalMarks: data.totalMarks,
                     difficulty: (data.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard',
                     category: (data.category || 'Subject') as 'Subject' | 'General' | 'Full Mock',
+                    subject: data.subject,
+                    tier2Category: data.tier2Category || 'Mock',
+                    tier3Category: data.tier3Category || 'Full Mock',
                     questions: [],
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
@@ -269,6 +272,9 @@ export const firestoreService = {
                     totalMarks: data.totalMarks,
                     difficulty: (data.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard',
                     category: (data.category || 'Subject') as 'Subject' | 'General' | 'Full Mock',
+                    subject: data.subject,
+                    tier2Category: data.tier2Category || 'Mock',
+                    tier3Category: data.tier3Category || 'Full Mock',
                     questions: [],
                     attempts: data.attemptsCount || 0,
                     createdDate: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A',
@@ -281,7 +287,7 @@ export const firestoreService = {
             }
             return null;
         } catch (error) {
-            console.error("Error fetching test:", error);
+            console.warn("Notice: Error fetching test (could be unpublished/unauthorized):", error);
             return null;
         }
     },
@@ -298,6 +304,9 @@ export const firestoreService = {
                 totalMarks: testData.totalMarks,
                 difficulty: testData.difficulty,
                 category: testData.category,
+                subject: testData.subject || null,
+                tier2Category: testData.tier2Category || 'Mock',
+                tier3Category: testData.tier3Category || 'Full Mock',
                 streams: Array.isArray(testData.streams) ? testData.streams : (testData.streams ? [testData.streams] : ['General']), // Default to General
                 isVisible: true,
                 isPublished: testData.status === 'published',
@@ -336,6 +345,10 @@ export const firestoreService = {
             if (updates.streams) firestoreUpdates.streams = updates.streams;
             if (updates.questionIds) firestoreUpdates.questionIds = updates.questionIds;
             if (updates.isFree !== undefined) firestoreUpdates.isFree = updates.isFree;
+            
+            if (updates.subject !== undefined) firestoreUpdates.subject = updates.subject;
+            if (updates.tier2Category !== undefined) firestoreUpdates.tier2Category = updates.tier2Category;
+            if (updates.tier3Category !== undefined) firestoreUpdates.tier3Category = updates.tier3Category;
 
             await updateDoc(testRef, cleanData(firestoreUpdates));
             return true;

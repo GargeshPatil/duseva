@@ -22,6 +22,7 @@ export interface CSVRow {
     listB?: string; // For match questions
     passage?: string; // For linking new passage
     subQuestionType?: string; // mcq, match (for passage subquestions)
+    teir1category?: string; // Support importing teir1category natively
 }
 
 export interface ParsedRow {
@@ -318,6 +319,7 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
         explanation: normalizeNewlines(row.explanation),
         explanationContent: parseStringToJson(normalizeNewlines(row.explanation)),
         subject: normalizeTag(row.subjectTag || ""),
+        tier1Category: row.teir1category?.trim() || row.topicTag?.trim() || "General", 
         tags: row.topicTag ? [normalizeTag(row.topicTag || "")] : [],
         difficulty: (difficulty as 'Easy' | 'Medium' | 'Hard') || 'Medium',
         marks: marks,
@@ -326,6 +328,12 @@ export function validateAndMapRow(rawRow: Partial<CSVRow>): { valid: boolean; da
         streams: streams.map(s => normalizeTag(s)),
         contentVersion: 3
     };
+
+    // If tier1Category is empty after the above, assign randomly based on subject
+    if (question.tier1Category === "General") {
+        const fallbackChapters = ["Introduction", "Fundamentals", "Core Concepts", "Advanced Topics", "Miscellaneous Validation"];
+        question.tier1Category = fallbackChapters[Math.floor(Math.random() * fallbackChapters.length)];
+    }
 
     if (qType === 'match' && matchPairs) {
         question.matchPairs = matchPairs;

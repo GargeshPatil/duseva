@@ -20,7 +20,7 @@ export function PremiumDashboardNav() {
                     {/* Logo Area */}
                     <Link href="/" className="hover:opacity-80 transition-opacity flex items-center">
                         <div className="h-[60px] w-[210px] relative flex items-center justify-start">
-                            <Image src="/du-logo-white.png" alt="DU Seva Logo" fill className="object-contain" priority />
+                            <Image src="/du-logo-white.png" alt="DU Seva Logo" fill sizes="210px" className="object-contain" priority />
                         </div>
                     </Link>
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/Input";
 import { Test } from "@/types/admin";
 
@@ -11,6 +11,24 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChange = (field: keyof Test, value: any) => {
         onChange({ ...test, [field]: value });
+    };
+
+    const commonSubjects = [
+        'Physics', 'Chemistry', 'Mathematics', 'Biology', 
+        'Accountancy', 'Business Studies', 'Economics', 
+        'History', 'Political Science', 'Geography', 
+        'English', 'General Test'
+    ];
+
+    const [isAddingSubject, setIsAddingSubject] = useState(false);
+    const [newSubject, setNewSubject] = useState("");
+
+    const handleAddNewSubject = () => {
+        if (newSubject.trim()) {
+            handleChange('subject', newSubject.trim());
+            setIsAddingSubject(false);
+            setNewSubject("");
+        }
     };
 
     const handleStreamToggle = (stream: string) => {
@@ -97,17 +115,87 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
                     />
                 </div>
 
-                {/* Category & Difficulty */}
+                {/* Tier 1: Subject */}
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Subject (Tier 1)</label>
+                    {isAddingSubject ? (
+                        <div className="flex gap-2">
+                            <Input
+                                value={newSubject}
+                                onChange={(e) => setNewSubject(e.target.value)}
+                                placeholder="Enter new subject name..."
+                                className="flex-1"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleAddNewSubject();
+                                    }
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={handleAddNewSubject}
+                                className="px-4 py-2 bg-cta-primary text-white text-sm font-medium rounded-lg hover:bg-cta-hover transition-colors"
+                            >
+                                Add
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsAddingSubject(false)}
+                                className="px-4 py-2 bg-surface-base text-text-secondary border border-border text-sm font-medium rounded-lg hover:text-text-primary transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    ) : (
+                        <select
+                            className="w-full px-3 py-2 bg-background border border-input rounded-lg text-sm outline-none focus:ring-2 focus:ring-ring"
+                            value={test.subject || ""}
+                            onChange={(e) => {
+                                if (e.target.value === 'ADD_NEW') {
+                                    setIsAddingSubject(true);
+                                } else {
+                                    handleChange('subject', e.target.value);
+                                }
+                            }}
+                        >
+                            <option value="">Select a Subject...</option>
+                            <option value="ADD_NEW">+ Add New Subject</option>
+                            <optgroup label="Subjects">
+                                {/* Include selected subject if it's not in the common list */}
+                                {test.subject && !commonSubjects.includes(test.subject) && (
+                                    <option value={test.subject}>{test.subject}</option>
+                                )}
+                                {commonSubjects.map(sub => (
+                                    <option key={sub} value={sub}>{sub}</option>
+                                ))}
+                            </optgroup>
+                        </select>
+                    )}
+                </div>
+
+                {/* Tier 2 & Tier 3 Categories */}
                 <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Type (Tier 2)</label>
                     <select
                         className="w-full px-3 py-2 bg-background border border-input rounded-lg text-sm outline-none focus:ring-2 focus:ring-ring"
-                        value={test.category || "Subject"}
-                        onChange={(e) => handleChange('category', e.target.value)}
+                        value={test.tier2Category || "Mock"}
+                        onChange={(e) => handleChange('tier2Category', e.target.value)}
                     >
-                        <option value="Subject">Subject Test</option>
-                        <option value="General">General Test</option>
+                        <option value="Mock">Mock Test</option>
+                        <option value="PYQ">Previous Year Paper (PYQ)</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Format (Tier 3)</label>
+                    <select
+                        className="w-full px-3 py-2 bg-background border border-input rounded-lg text-sm outline-none focus:ring-2 focus:ring-ring"
+                        value={test.tier3Category || "Full Mock"}
+                        onChange={(e) => handleChange('tier3Category', e.target.value)}
+                    >
                         <option value="Full Mock">Full Mock</option>
+                        <option value="Chapterwise">Chapterwise</option>
                     </select>
                 </div>
                 <div>

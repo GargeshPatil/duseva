@@ -8,7 +8,7 @@ service cloud.firestore {
     }
 
     function getUserRole(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.role;
+      return exists(/databases/$(database)/documents/users/$(userId)) ? get(/databases/$(database)/documents/users/$(userId)).data.role : null;
     }
 
     function isStudent() {
@@ -55,7 +55,7 @@ service cloud.firestore {
     // 2. tests Collection
     match /tests/{testId} {
       // Public can read all tests (e.g., test catalog).
-      allow read: if isAdmin() || isDeveloper() || resource.data.isPublished == true;
+      allow read: if resource.data.isPublished == true || isAdmin() || isDeveloper();
       // Only Admins and Developers can create, update, or delete tests.
       allow create, update, delete: if isAdmin() || isDeveloper();
     }

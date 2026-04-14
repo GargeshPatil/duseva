@@ -8,14 +8,16 @@ import { TestCard } from "@/components/dashboard/TestCard";
 import { Search, Sparkles, BookOpen, Clock } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
-type FilterType = 'All' | 'Full Mock' | 'Subject' | 'General' | 'PYQ';
+// removed type FilterType
 
 export default function MockTestsPage() {
     const { user, userData } = useAuth();
     const [tests, setTests] = useState<Test[]>([]);
     const [userAttempts, setUserAttempts] = useState<TestAttempt[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeFilter, setActiveFilter] = useState<FilterType>('All');
+    const [selectedSubject, setSelectedSubject] = useState<string>("All");
+    const [selectedTier2, setSelectedTier2] = useState<string>("All");
+    const [selectedTier3, setSelectedTier3] = useState<string>("All");
     const [searchQuery, setSearchQuery] = useState("");
 
 
@@ -36,25 +38,35 @@ export default function MockTestsPage() {
             }
         }
         loadData();
-    }, [user]);
+    }, [user?.uid]);
 
     // Derived state for filtering
     const filteredTests = tests.filter(test => {
-        // Search filter
-        if (searchQuery && !test.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+        if (searchQuery && (!test.title || !test.title.toLowerCase().includes(searchQuery.toLowerCase()))) {
             return false;
         }
 
-        // Category filter
-        if (activeFilter === 'All') return true;
+        if (selectedSubject !== 'All' && test.subject !== selectedSubject) return false;
+        if (selectedSubject !== 'All' && selectedTier2 !== 'All' && test.tier2Category !== selectedTier2) return false;
+        if (selectedSubject !== 'All' && selectedTier2 !== 'All' && selectedTier3 !== 'All' && test.tier3Category !== selectedTier3) return false;
 
-        // PYQ specialized filter
-        if (activeFilter === 'PYQ') {
-            return (test.category as string) === 'PYQ' || test.title.toLowerCase().includes('pyq') || test.title.toLowerCase().includes('previous year');
-        }
-
-        return test.category === activeFilter as string;
+        return true;
     });
+
+    const distinctSubjects = Array.from(new Set(tests.map(t => t.subject).filter(Boolean))) as string[];
+    const distinctTier2 = selectedSubject === 'All' ? [] : Array.from(new Set(tests.filter(t => t.subject === selectedSubject).map(t => t.tier2Category).filter(Boolean))) as string[];
+    const distinctTier3 = selectedTier2 === 'All' ? [] : Array.from(new Set(tests.filter(t => t.subject === selectedSubject && t.tier2Category === selectedTier2).map(t => t.tier3Category).filter(Boolean))) as string[];
+
+    const handleSubjectSelect = (sub: string) => {
+        setSelectedSubject(sub);
+        setSelectedTier2("All");
+        setSelectedTier3("All");
+    };
+
+    const handleTier2Select = (t2: string) => {
+        setSelectedTier2(t2);
+        setSelectedTier3("All");
+    };
 
     // Helper to check attempts
     const getAttemptState = (testId: string) => {
@@ -133,68 +145,118 @@ export default function MockTestsPage() {
                 </div>
             </motion.div>
 
-            {/* Filters */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none px-2">
-                {(['All', 'PYQ', 'Full Mock', 'Subject', 'General'] as FilterType[]).map((filter) => (
+            {/* Filters Drill-down */}
+            <div className="flex flex-col gap-4 px-2">
+                {/* Subject Tier */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                    <span className="text-white/40 text-sm font-semibold tracking-wider uppercase mr-2 shrink-0">Subject:</span>
                     <button
-                        key={filter}
-                        onClick={() => setActiveFilter(filter)}
-                        className={`
-                            px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 relative
-                            ${activeFilter === filter
-                                ? 'bg-white text-slate-900 shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105'
-                                : 'bg-surface-card border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}
-                        `}
+                        onClick={() => handleSubjectSelect('All')}
+                        className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 relative ${selectedSubject === 'All' ? 'bg-cta-primary text-white shadow-lg' : 'bg-surface-card border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
                     >
-                        {filter === 'PYQ' && activeFilter === filter && <Clock className="inline-block w-4 h-4 mr-1.5 -mt-0.5" />}
-                        {filter}
+                        All
                     </button>
-                ))}
+                    {distinctSubjects.map(sub => (
+                        <button
+                            key={sub}
+                            onClick={() => handleSubjectSelect(sub)}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 relative ${selectedSubject === sub ? 'bg-cta-primary text-white shadow-lg' : 'bg-surface-card border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                        >
+                            {sub}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Tier 2 Category (Mock / PYQ) */}
+                {selectedSubject !== 'All' && distinctTier2.length > 0 && (
+                    <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                        <span className="text-white/40 text-sm font-semibold tracking-wider uppercase mr-2 shrink-0">Type:</span>
+                        <button
+                            onClick={() => handleTier2Select('All')}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 relative ${selectedTier2 === 'All' ? 'bg-indigo-500 text-white shadow-lg' : 'bg-surface-card border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                        >
+                            All
+                        </button>
+                        {distinctTier2.map(t2 => (
+                            <button
+                                key={t2}
+                                onClick={() => handleTier2Select(t2)}
+                                className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 relative ${selectedTier2 === t2 ? 'bg-indigo-500 text-white shadow-lg' : 'bg-surface-card border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                            >
+                                {t2}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+
+                {/* Tier 3 Category (Chapterwise/Full Mock) */}
+                {selectedSubject !== 'All' && selectedTier2 !== 'All' && distinctTier3.length > 0 && (
+                    <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                        <span className="text-white/40 text-sm font-semibold tracking-wider uppercase mr-2 shrink-0">Format:</span>
+                        <button
+                            onClick={() => setSelectedTier3('All')}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 relative ${selectedTier3 === 'All' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-surface-card border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                        >
+                            All
+                        </button>
+                        {distinctTier3.map(t3 => (
+                            <button
+                                key={t3}
+                                onClick={() => setSelectedTier3(t3)}
+                                className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 relative ${selectedTier3 === t3 ? 'bg-emerald-500 text-white shadow-lg' : 'bg-surface-card border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                            >
+                                {t3}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
             </div>
 
             {/* Grid */}
-            <AnimatePresence mode="wait">
-                {filteredTests.length > 0 ? (
-                    <motion.div
-                        key="grid"
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit={{ opacity: 0, y: 20 }}
-                        className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                    >
+            {filteredTests.length > 0 ? (
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                >
+                    <AnimatePresence mode="popLayout">
                         {filteredTests.map(test => {
-                            const state = getAttemptState(test.id);
+                        const state = getAttemptState(test.id);
 
-                            return (
-                                <motion.div key={test.id} variants={itemVariants} layout>
-                                    <TestCard
-                                        test={test}
-                                        isInProgress={state === 'in_progress'}
-                                        isAttempted={state === 'completed'}
-                                        userCredits={userData?.credits ?? 0}
-                                    />
-                                </motion.div>
+                        return (
+                            <motion.div 
+                                key={test.id} 
+                                variants={itemVariants}
+                                layout
+                                initial="hidden"
+                                animate="visible"
+                                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                            >
+                                <TestCard
+                                    test={test}
+                                    isInProgress={state === 'in_progress'}
+                                    isAttempted={state === 'completed'}
+                                    userCredits={userData?.credits ?? 0}
+                                />
+                            </motion.div>
                             );
                         })}
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key="empty"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="text-center py-20 bg-surface-card/30 rounded-3xl border border-white/5 backdrop-blur-sm"
-                    >
-                        <div className="w-16 h-16 bg-white/5 rounded-full border border-white/10 flex items-center justify-center mx-auto mb-4">
-                            <Search className="h-6 w-6 text-white/30" />
-                        </div>
-                        <h3 className="text-white font-semibold text-lg mb-2">No tests found</h3>
-                        <p className="text-white/40 text-sm max-w-md mx-auto">Try adjusting your filters or search query to find what you're looking for.</p>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
+                    </AnimatePresence>
+                </motion.div>
+            ) : (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-20 bg-surface-card/30 rounded-3xl border border-white/5 backdrop-blur-sm"
+                >
+                    <div className="w-16 h-16 bg-white/5 rounded-full border border-white/10 flex items-center justify-center mx-auto mb-4">
+                        <Search className="h-6 w-6 text-white/30" />
+                    </div>
+                    <h3 className="text-white font-semibold text-lg mb-2">No tests found</h3>
+                    <p className="text-white/40 text-sm max-w-md mx-auto">Try adjusting your filters or search query to find what you're looking for.</p>
+                </motion.div>
+            )}
 
         </div>
     );

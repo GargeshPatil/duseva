@@ -75,7 +75,7 @@ export function MobileNav() {
                 <SheetContent onClose={() => setIsMenuOpen(false)}>
                     <SheetHeader>
                         <div className="relative h-[72px] w-[210px]">
-                            <Image src="/du-logo-white.png" alt="DU Seva" fill className="object-contain object-left" />
+                            <Image src="/du-logo-white.png" alt="DU Seva" fill sizes="210px" className="object-contain object-left" />
                         </div>
                         <div className="mt-4">
                             <p className="font-bold text-text-primary">{userData?.name || 'Student'}</p>

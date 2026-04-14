@@ -389,6 +389,15 @@ export function UnifiedQuestionCard({
                                     placeholder="e.g. Physics"
                                 />
                             </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-text-secondary uppercase mb-1">Tier 1 Category</label>
+                                <Input
+                                    className="h-8 text-sm bg-surface-card focus:bg-background"
+                                    value={question.tier1Category || ""}
+                                    onChange={(e) => handleChange('tier1Category', e.target.value)}
+                                    placeholder="e.g. Kinematics"
+                                />
+                            </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <label className="block text-[10px] font-semibold text-text-secondary uppercase mb-1">Marks (+)</label>

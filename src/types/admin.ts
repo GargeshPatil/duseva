@@ -37,6 +37,7 @@ export interface Question {
     tags?: string[];
     difficulty?: 'Easy' | 'Medium' | 'Hard';
     subject?: string;
+    tier1Category?: string; // New: Tier 1 Category marker (formerly chapter)
     streams?: string[];
     marks?: number;
     negativeMarks?: number;
@@ -49,7 +50,10 @@ export interface Test {
     duration: number; // in minutes
     totalMarks: number;
     difficulty: 'Easy' | 'Medium' | 'Hard';
-    category: 'Subject' | 'General' | 'Full Mock';
+    category: 'Subject' | 'General' | 'Full Mock'; // Legacy category
+    tier2Category?: 'Mock' | 'PYQ' | string; // New: Tier 2 Filter
+    tier3Category?: 'Chapterwise' | 'Full Mock' | string; // New: Tier 3 Filter
+    subject?: string; // New: Tier 1 Filter
     isFree?: boolean;
     streams: string[]; // Updated: Array to support multiple streams (Science, Commerce, Humanities, General, English)
     questions?: Question[]; // Legacy: embedded questions
@@ -60,6 +64,7 @@ export interface Test {
     shuffleQuestions?: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sections?: any[]; // Keep existing structure if any
+    isLegacyOrRandomlyAssigned?: boolean; // Metadata to indicate this needs review
 }
 
 

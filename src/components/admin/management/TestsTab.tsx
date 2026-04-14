@@ -24,7 +24,9 @@ export function TestsTab() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [streamFilter, setStreamFilter] = useState("");
-    const [categoryFilter, setCategoryFilter] = useState("");
+    const [subjectFilter, setSubjectFilter] = useState("");
+    const [tier2Filter, setTier2Filter] = useState("");
+    const [tier3Filter, setTier3Filter] = useState("");
 
     const { user, userData } = useAuth(); // Get auth context
 
@@ -98,9 +100,14 @@ export function TestsTab() {
     const filteredTests = tests.filter(t => {
         const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStream = streamFilter ? (Array.isArray(t.streams) ? t.streams.includes(streamFilter) : t.streams === streamFilter) : true;
-        const matchesCategory = categoryFilter ? t.category === categoryFilter : true;
-        return matchesSearch && matchesStream && matchesCategory;
+        const matchesSubject = subjectFilter ? t.subject === subjectFilter : true;
+        const matchesTier2 = tier2Filter ? t.tier2Category === tier2Filter : true;
+        const matchesTier3 = tier3Filter ? t.tier3Category === tier3Filter : true;
+        
+        return matchesSearch && matchesStream && matchesSubject && matchesTier2 && matchesTier3;
     });
+
+    const distinctSubjects = Array.from(new Set(tests.map(t => t.subject).filter(Boolean))) as string[];
 
     const containerVariants: Variants = {
         hidden: { opacity: 0 },
@@ -166,13 +173,31 @@ export function TestsTab() {
                     </select>
                     <select
                         className="h-12 px-4 bg-black/20 border border-white/10 rounded-xl text-white outline-none w-full sm:w-48 appearance-none focus:ring-2 focus:ring-cta-primary/50 transition-all cursor-pointer hover:bg-white/5"
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        value={subjectFilter}
+                        onChange={(e) => setSubjectFilter(e.target.value)}
                     >
-                        <option value="" className="bg-surface-card text-white">All Categories</option>
+                        <option value="" className="bg-surface-card text-white">All Subjects</option>
+                        {distinctSubjects.map(sub => (
+                            <option key={sub} value={sub} className="bg-surface-card text-white">{sub}</option>
+                        ))}
+                    </select>
+                    <select
+                        className="h-12 px-4 bg-black/20 border border-white/10 rounded-xl text-white outline-none w-full sm:w-32 appearance-none focus:ring-2 focus:ring-cta-primary/50 transition-all cursor-pointer hover:bg-white/5"
+                        value={tier2Filter}
+                        onChange={(e) => setTier2Filter(e.target.value)}
+                    >
+                        <option value="" className="bg-surface-card text-white">All Types</option>
+                        <option value="Mock" className="bg-surface-card text-white">Mock Test</option>
+                        <option value="PYQ" className="bg-surface-card text-white">PYQ</option>
+                    </select>
+                    <select
+                        className="h-12 px-4 bg-black/20 border border-white/10 rounded-xl text-white outline-none w-full sm:w-32 appearance-none focus:ring-2 focus:ring-cta-primary/50 transition-all cursor-pointer hover:bg-white/5"
+                        value={tier3Filter}
+                        onChange={(e) => setTier3Filter(e.target.value)}
+                    >
+                        <option value="" className="bg-surface-card text-white">All Formats</option>
                         <option value="Full Mock" className="bg-surface-card text-white">Full Mock</option>
-                        <option value="Subject" className="bg-surface-card text-white">Subject Test</option>
-                        <option value="General" className="bg-surface-card text-white">General Test</option>
+                        <option value="Chapterwise" className="bg-surface-card text-white">Chapterwise</option>
                     </select>
                 </div>
 
@@ -233,8 +258,7 @@ export function TestsTab() {
                                     />
                                 </th>
                                 <th className="px-6 py-5 uppercase tracking-wider text-[11px] w-[35%]">Title</th>
-                                <th className="px-6 py-5 uppercase tracking-wider text-[11px]">Streams</th>
-                                <th className="px-6 py-5 uppercase tracking-wider text-[11px]">Category</th>
+                                <th className="px-6 py-5 uppercase tracking-wider text-[11px]">Subject / Tiers</th>
                                 <th className="px-6 py-5 uppercase tracking-wider text-[11px]">Questions</th>
                                 <th className="px-6 py-5 uppercase tracking-wider text-[11px]">Status</th>
                                 <th className="px-6 py-5 uppercase tracking-wider text-[11px] text-right">Actions</th>
@@ -280,22 +304,15 @@ export function TestsTab() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {Array.isArray(test.streams) ? test.streams.map(s => (
-                                                    <span key={s} className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded-md text-white/70 uppercase tracking-wider font-bold">
-                                                        {s}
-                                                    </span>
-                                                )) : (typeof test.streams === 'string' ? (
-                                                    <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded-md text-white/70 uppercase tracking-wider font-bold">
-                                                        {test.streams}
-                                                    </span>
-                                                ) : <span className="text-white/40 italic">General</span>)}
+                                            <div className="flex flex-col gap-1.5">
+                                                <span className="text-sm font-semibold text-white/90">
+                                                    {test.subject || <span className="text-rose-400 text-xs italic">Needs Subject</span>}
+                                                </span>
+                                                <div className="flex gap-1">
+                                                    <span className="text-[10px] bg-black/40 border border-white/10 px-2 py-0.5 rounded text-white/50">{test.tier2Category || 'N/A'}</span>
+                                                    <span className="text-[10px] bg-black/40 border border-white/10 px-2 py-0.5 rounded text-white/50">{test.tier3Category || 'N/A'}</span>
+                                                </div>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-xs bg-black/40 border border-white/10 px-2 py-1 rounded-md text-white/60 font-medium">
-                                                {test.category}
-                                            </span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="text-sm font-bold text-white/80">
@@ -394,12 +411,11 @@ export function TestsTab() {
                                             </div>
                                         </div>
                                         <div className="flex gap-2 text-[10px] uppercase tracking-wider font-bold text-white/60 overflow-x-auto pb-1">
-                                            {Array.isArray(test.streams) ? test.streams.map(s => (
-                                                <span key={s} className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">{s}</span>
-                                            )) : (typeof test.streams === 'string' ? (
-                                                <span className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">{test.streams}</span>
-                                            ) : <span className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">General</span>)}
-                                            <span className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">{test.category}</span>
+                                            <span className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">
+                                                {test.subject || <span className="text-rose-400">Needs Subject</span>}
+                                            </span>
+                                            <span className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">{test.tier2Category || 'N/A'}</span>
+                                            <span className="bg-white/5 border border-white/10 px-2 py-1 rounded-md shrink-0">{test.tier3Category || 'N/A'}</span>
                                             <span className="bg-black/40 border border-white/10 px-2 py-1 rounded-md shrink-0">{test.questions?.length || test.questionIds?.length || 0} Qs</span>
                                         </div>
                                     </div>

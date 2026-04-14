@@ -84,7 +84,7 @@ export default function MocksPage() {
                     <div className="absolute top-[20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-purple-500/20 blur-[120px] mix-blend-screen animate-blob animation-delay-2000" />
                     <div className="absolute bottom-[-20%] left-[20%] w-[60%] h-[50%] rounded-full bg-blue-500/20 blur-[120px] mix-blend-screen animate-blob animation-delay-4000" />
                 </motion.div>
-                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
+
             </div>
 
             <main className="flex-1 container px-4 md:px-6 py-24 relative z-10 w-full max-w-7xl mx-auto">

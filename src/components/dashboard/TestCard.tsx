@@ -79,7 +79,7 @@ export function TestCard({ test, isAttempted, isInProgress, userCredits = 0, onS
                         </span>
                     )}
 
-                    {((test.category as string) === 'PYQ' || test.title.toLowerCase().includes('pyq')) && (
+                    {((test.category as string) === 'PYQ' || (test.title && test.title.toLowerCase().includes('pyq'))) && (
                         <span className="bg-purple-500/20 text-purple-300 border border-purple-500/20 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase">
                             PYQ
                         </span>

@@ -65,6 +65,8 @@ export function Navbar() {
                             src="/du-logo-white.png"
                             alt="DU Seva Logo"
                             fill
+                            sizes="270px"
+                            priority
                             className="object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] dark:drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]"
                         />
                     </div>

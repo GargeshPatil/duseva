@@ -11,11 +11,11 @@ export default function ExamPage({ params }: { params: Promise<{ testId: string 
 
     // Prompt user to start test if they land here without starting
     useEffect(() => {
-        if (!engine.loading && !engine.isTestStarted && engine.test) {
+        if (!engine.loading && !engine.isTestStarted && !engine.error && engine.test) {
             engine.actions.startTest();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [engine.loading, engine.isTestStarted, engine.test]);
+    }, [engine.loading, engine.isTestStarted, engine.test, engine.error]);
 
     if (engine.error) {
         return (

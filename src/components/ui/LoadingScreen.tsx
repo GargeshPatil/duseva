@@ -17,6 +17,7 @@ export function LoadingScreen() {
                     src="/du-logo-white.png"
                     alt="DU Seva Logo"
                     fill
+                    sizes="288px"
                     className="object-contain"
                     priority
                 />
