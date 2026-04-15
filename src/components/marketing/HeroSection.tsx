@@ -32,20 +32,25 @@ export function HeroSection({ heroContent, fadeUpVariants }: HeroSectionProps) {
                     {heroContent.subheadline}
                 </motion.p>
 
-                <motion.div variants={fadeUpVariants} className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto">
-                    <Link
-                        href="/auth/signup"
-                        className="group relative inline-flex items-center justify-center gap-3 bg-white text-slate-900 px-8 py-4 rounded-[2rem] font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] active:scale-95 overflow-hidden"
-                    >
-                        <span className="relative z-10">Get a Free PYQ</span>
-                        <BookOpen className="h-5 w-5 relative z-10 transition-transform group-hover:scale-110" />
-                    </Link>
-                    <Link
-                        href="#who-we-are"
-                        className="inline-flex items-center justify-center gap-3 bg-white/5 border border-white/10 text-white px-8 py-4 rounded-[2rem] font-medium text-lg transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 active:scale-95 backdrop-blur-md"
-                    >
-                        Take the Tour
-                    </Link>
+                <motion.div variants={fadeUpVariants} className="flex flex-col items-center gap-4 w-full sm:w-auto">
+                    <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto">
+                        <Link
+                            href="/auth/signup"
+                            className="group relative inline-flex items-center justify-center gap-3 bg-white text-slate-900 px-8 py-4 rounded-[2rem] font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] active:scale-95 overflow-hidden"
+                        >
+                            <span className="relative z-10">Start Your CUET Prep</span>
+                            <BookOpen className="h-5 w-5 relative z-10 transition-transform group-hover:scale-110" />
+                        </Link>
+                        <Link
+                            href="#who-we-are"
+                            className="inline-flex items-center justify-center gap-3 bg-white/5 border border-white/10 text-white px-8 py-4 rounded-[2rem] font-medium text-lg transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 active:scale-95 backdrop-blur-md"
+                        >
+                            Explore our Platform
+                        </Link>
+                    </div>
+                    <p className="text-sm text-white/40 font-medium">
+                        Free to start &nbsp;·&nbsp; No credit card needed &nbsp;·&nbsp; NTA-pattern tests
+                    </p>
                 </motion.div>
             </motion.div>
 
