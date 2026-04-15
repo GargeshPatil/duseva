@@ -49,7 +49,7 @@ export function HeroSection({ heroContent, fadeUpVariants }: HeroSectionProps) {
                         </Link>
                     </div>
                     <p className="text-sm text-white/40 font-medium">
-                        Free to start &nbsp;·&nbsp; No credit card needed &nbsp;·&nbsp; NTA-pattern tests
+                        Free to start &nbsp;·&nbsp; One-on-one Mentorship &nbsp;·&nbsp; NTA-pattern tests
                     </p>
                 </motion.div>
             </motion.div>
