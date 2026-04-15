@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -11,7 +11,7 @@ import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 export default function LoginPage() {
     const router = useRouter();
-    const { login, loginWithGoogle, user, userData } = useAuth();
+    const { login, loginWithGoogle } = useAuth();
     
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
@@ -19,12 +19,6 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
-
-    useEffect(() => {
-        if (user && userData) {
-            router.push("/dashboard");
-        }
-    }, [user, userData, router]);
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
