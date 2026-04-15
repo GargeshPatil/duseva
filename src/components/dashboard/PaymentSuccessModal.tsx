@@ -54,7 +54,7 @@ export function PaymentSuccessModal({ isOpen, onClose, creditsAdded }: PaymentSu
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm z-0"
                     />
 
                     {/* Modal Content */}
@@ -74,6 +74,7 @@ export function PaymentSuccessModal({ isOpen, onClose, creditsAdded }: PaymentSu
                         >
                             <X className="w-5 h-5" />
                         </button>
+
 
                         <div className="p-8 pb-6 flex flex-col items-center text-center">
                             {/* Success Icon */}

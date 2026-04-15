@@ -51,10 +51,10 @@ export function Sheet({ open, onOpenChange, children, side = "right", className 
 
 export function SheetContent({ children, className, onClose }: { children: React.ReactNode, className?: string, onClose?: () => void }) {
     return (
-        <div className={cn("flex flex-col h-full", className)}>
+        <div className={cn("flex flex-col h-full relative", className)}>
             <button
                 onClick={onClose}
-                className="absolute right-4 top-4 p-2 rounded-full hover:bg-surface-elevated transition-colors z-10"
+                className="absolute right-4 top-4 z-10 p-2 rounded-full hover:bg-surface-elevated transition-colors"
             >
                 <X className="h-5 w-5 text-text-muted" />
             </button>

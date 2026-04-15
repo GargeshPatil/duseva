@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Sparkles, Heart, Star, Coffee } from "lucide-react";
+import { Sparkles, BookOpen, Star, Coffee } from "lucide-react";
 
 interface HeroSectionProps {
     heroContent: { headline: string; subheadline: string };
@@ -37,8 +37,8 @@ export function HeroSection({ heroContent, fadeUpVariants }: HeroSectionProps) {
                         href="/auth/signup"
                         className="group relative inline-flex items-center justify-center gap-3 bg-white text-slate-900 px-8 py-4 rounded-[2rem] font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] active:scale-95 overflow-hidden"
                     >
-                        <span className="relative z-10">Claim 10 Free Credits</span>
-                        <Heart className="h-5 w-5 relative z-10 fill-red-500 text-red-500 transition-transform group-hover:scale-110" />
+                        <span className="relative z-10">Get a Free PYQ</span>
+                        <BookOpen className="h-5 w-5 relative z-10 transition-transform group-hover:scale-110" />
                     </Link>
                     <Link
                         href="#who-we-are"

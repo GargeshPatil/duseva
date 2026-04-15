@@ -3,11 +3,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Settings, LogOut } from "lucide-react";
+import { ChevronDown, Settings, LogOut, ShieldAlert } from "lucide-react";
 
 export function DashboardNavProfile() {
     const router = useRouter();
-    const { logout, userData } = useAuth();
+    const { logout, userData, user } = useAuth();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
 
@@ -49,9 +49,16 @@ export function DashboardNavProfile() {
                     {initials}
                 </div>
                 <div className="hidden lg:flex flex-col items-start text-left">
-                    <span className="text-sm font-semibold text-white leading-tight">
-                        {userData?.name || 'Student'}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-white leading-tight">
+                            {userData?.name || 'Student'}
+                        </span>
+                        {user && !user.emailVerified && (
+                            <span title="Email not verified">
+                                <ShieldAlert className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                            </span>
+                        )}
+                    </div>
                     <span className="text-[10px] text-text-muted font-medium truncate max-w-[120px]">
                         {userData?.email || 'Student Account'}
                     </span>
@@ -71,6 +78,12 @@ export function DashboardNavProfile() {
                         <div className="p-4 border-b border-white/5 bg-white/5">
                             <p className="text-sm font-bold text-white truncate">{userData?.name || 'Student'}</p>
                             <p className="text-xs text-text-muted truncate mt-0.5">{userData?.email}</p>
+                            {user && !user.emailVerified && (
+                                <div className="mt-2 flex items-center gap-1.5 text-amber-400/90 text-xs font-semibold">
+                                    <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                                    <span>Email not verified</span>
+                                </div>
+                            )}
                         </div>
                         <div className="p-2 space-y-1">
                             <Link

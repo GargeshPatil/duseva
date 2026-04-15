@@ -19,13 +19,13 @@ export function FinalCtaSection() {
                         Take a deep breath.<br />Let's get started.
                     </h2>
                     <p className="text-xl text-white/60 mb-10 mx-auto relative z-10">
-                        Sign up today and get 10 free credits to unlock any mock test or PYQ. No credit card required.
+                        Sign up today and get a free PYQ to practise on our NTA-replica test engine. No credit card required.
                     </p>
                     <Link
                         href="/auth/signup"
                         className="relative z-10 inline-flex items-center justify-center gap-3 bg-white text-slate-900 px-10 py-5 rounded-[2rem] font-bold text-xl transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.2)] active:scale-95 group"
                     >
-                        Claim 10 Free Credits
+                        Get a Free PYQ
                         <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-2" />
                     </Link>
                 </motion.div>

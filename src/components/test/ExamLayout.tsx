@@ -20,7 +20,7 @@ export function ExamLayout({ engine }: ExamLayoutProps) {
         <div className="flex flex-col h-screen max-h-[100dvh] overflow-hidden bg-white select-none font-sans" {...engine.integrity.handlers}>
             
             {/* EXAM HEADER STRIP */}
-            <header className="bg-[#f5f5f5] text-black shrink-0 flex items-start justify-between px-5 py-2.5 shadow-sm border-b border-[#ccc] relative z-20" style={{ fontSize: '14px', lineHeight: '1.6' }}>
+            <header className="bg-[#f5f5f5] text-black shrink-0 flex items-start justify-between px-4 md:px-6 py-2.5 shadow-sm border-b border-[#ccc] sticky top-0 z-40" style={{ fontSize: '14px', lineHeight: '1.6' }}>
                 <div className="flex items-start gap-4">
                     {/* Placeholder for Candidate Profile Box */}
                     <div className="w-[80px] h-[90px] bg-[#e0e0e0] border border-[#ccc] flex items-center justify-center shrink-0">
@@ -59,7 +59,7 @@ export function ExamLayout({ engine }: ExamLayoutProps) {
                     </select>
 
                     <button 
-                        className="sm:hidden mt-2 text-xs underline text-blue-600"
+                        className="lg:hidden mt-2 text-xs font-semibold underline text-blue-600"
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                     >
                         {isSidebarOpen ? 'Close Palette' : 'Show Palette'}
@@ -90,14 +90,28 @@ export function ExamLayout({ engine }: ExamLayoutProps) {
                     </div>
                 </main>
 
-                {/* RIGHT: Candidate Info & Palette (Sidebar) */}
-                {/* Removed candidate info from here, purely palette and legend now */}
+                {/* BACKDROP FOR MOBILE/TABLET */}
+                {isSidebarOpen && (
+                    <div 
+                        className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
+
+                {/* RIGHT: Question Palette (Sidebar) */}
                 <aside className={`
-                    w-full sm:w-[320px] bg-white flex flex-col shrink-0 z-20
-                    absolute sm:relative right-0 h-full transform transition-transform duration-300
-                    ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full sm:translate-x-0'}
-                    border-l border-[#ccc]
+                    fixed lg:static top-0 right-0 h-full z-50 lg:z-auto
+                    w-[85vw] md:w-[320px] lg:w-[320px] bg-white flex flex-col shrink-0
+                    transform transition-transform duration-300
+                    ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+                    border-l border-[#ccc] shadow-xl lg:shadow-none
                 `}>
+                    {/* Header for Mobile/Tablet */}
+                    <div className="flex lg:hidden justify-between items-center px-4 py-3 border-b border-[#ccc] bg-[#f5f5f5] shrink-0">
+                        <span className="font-bold text-[#333] text-sm">Question Palette</span>
+                        <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500 hover:text-black font-bold text-lg leading-none cursor-pointer">×</button>
+                    </div>
+
                     {/* Question Palette container flexes to fill available height */}
                     <div className="flex-1 flex flex-col overflow-hidden">
                         <QuestionPalette engine={engine} />

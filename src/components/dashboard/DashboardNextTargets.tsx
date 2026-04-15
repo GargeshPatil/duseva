@@ -20,11 +20,11 @@ export function DashboardNextTargets({ recommendedTests, userData }: DashboardNe
             </div>
 
             {recommendedTests.length > 0 ? (
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
                     {recommendedTests.map((test) => {
                         return (
                             <Link key={test.id} href={`/test/${test.id}`} className="block group">
-                                <div className="relative h-full bg-surface-card/60 backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] hover:border-white/20 transition-all duration-300 overflow-hidden flex flex-col shadow-lg">
+                                <div className="relative h-full bg-surface-card/60 backdrop-blur-xl border border-white/10 p-4 md:p-6 lg:p-8 rounded-[2rem] hover:border-white/20 transition-all duration-300 overflow-hidden flex flex-col shadow-lg">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-110" />
 
                                     <div className="flex justify-between items-start mb-6 relative z-10">

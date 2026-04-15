@@ -78,11 +78,11 @@ export function QuestionRenderer({ question, engine, selectedOption, onOptionSel
             {isMatch && question.matchPairs && question.matchPairs.length > 0 ? (
                 <MatchQuestion question={question} selectedOption={selectedOption} onOptionSelect={onOptionSelect} />
             ) : (
-                <div className="flex flex-col gap-2 mb-10">
+                <div className="flex flex-col gap-3 md:gap-4 mb-10">
                     {question.options?.map((optText: string, optIdx: number) => (
                         <label 
                             key={optIdx} 
-                            className="flex items-start gap-2 p-2 cursor-pointer bg-white select-none hover:bg-[#f5f5f5]"
+                            className="flex items-start gap-3 p-3 min-h-[44px] md:min-h-[48px] cursor-pointer bg-white border border-[#eaeaea] rounded hover:bg-[#f5f5f5] select-none"
                         >
                             <div className="flex flex-col items-center mt-0.5">
                                 <input

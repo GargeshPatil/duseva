@@ -9,9 +9,9 @@ export function DashboardPrepResources() {
                     <Sparkles className="h-6 w-6 text-indigo-400" /> Prep Resources
                 </h2>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 lg:gap-6">
                 <Link href="/dashboard/cuet-2026" className="group">
-                    <div className="h-full bg-surface-card/60 backdrop-blur-xl border border-indigo-500/20 p-6 rounded-[2rem] hover:bg-indigo-500/10 hover:border-indigo-500/40 transition-all duration-300 relative overflow-hidden flex flex-col">
+                    <div className="h-full bg-surface-card/60 backdrop-blur-xl border border-indigo-500/20 p-4 md:p-6 rounded-[2rem] hover:bg-indigo-500/10 hover:border-indigo-500/40 transition-all duration-300 relative overflow-hidden flex flex-col">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-bl-full -mr-10 -mt-10 pointer-events-none group-hover:scale-110 transition-transform" />
                         <div className="p-3 bg-indigo-500/20 text-indigo-300 w-fit rounded-xl mb-4">
                             <BookOpen className="h-6 w-6" />
@@ -23,7 +23,7 @@ export function DashboardPrepResources() {
                 </Link>
 
                 <Link href="/dashboard/syllabus" className="group">
-                    <div className="h-full bg-surface-card/60 backdrop-blur-xl border border-purple-500/20 p-6 rounded-[2rem] hover:bg-purple-500/10 hover:border-purple-500/40 transition-all duration-300 relative overflow-hidden flex flex-col">
+                    <div className="h-full bg-surface-card/60 backdrop-blur-xl border border-purple-500/20 p-4 md:p-6 rounded-[2rem] hover:bg-purple-500/10 hover:border-purple-500/40 transition-all duration-300 relative overflow-hidden flex flex-col">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-bl-full -mr-10 -mt-10 pointer-events-none group-hover:scale-110 transition-transform" />
                         <div className="p-3 bg-purple-500/20 text-purple-300 w-fit rounded-xl mb-4">
                             <Target className="h-6 w-6" />

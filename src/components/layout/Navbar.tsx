@@ -103,32 +103,25 @@ export function Navbar() {
                     >
                         Contact
                     </Link>
+                    {!loading && !user && (
+                        <Link
+                            href="/auth/signup"
+                            className="text-sm font-bold px-6 py-2.5 rounded-xl border border-border/80 bg-surface-glass hover:bg-surface-elevated text-text-primary transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 backdrop-blur-md"
+                        >
+                            {authText}
+                        </Link>
+                    )}
                     {!loading ? (
-                        user ? (
-                            <Link
-                                href={userData?.role === 'admin' || userData?.role === 'developer' ? '/admin' : '/dashboard'}
-                                className="text-sm font-bold px-6 py-2.5 rounded-xl border border-border/80 bg-surface-glass hover:bg-surface-elevated text-text-primary transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 backdrop-blur-md"
-                            >
-                                Dashboard
-                            </Link>
-                        ) : (
-                            <Link
-                                href="/auth/login"
-                                className="text-sm font-bold px-6 py-2.5 rounded-xl border border-border/80 bg-surface-glass hover:bg-surface-elevated text-text-primary transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 backdrop-blur-md"
-                            >
-                                {authText}
-                            </Link>
-                        )
+                        <Link
+                            href={user ? (userData?.role === 'admin' || userData?.role === 'developer' ? '/admin' : '/dashboard') : '/test/showcase'}
+                            className="relative group text-sm font-bold px-7 py-2.5 rounded-xl bg-gradient-to-r from-cta-primary to-cta-hover text-white transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] hover:-translate-y-1 active:scale-95 overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                            <span className="relative z-10">{user ? 'Dashboard' : 'Give a Mock'}</span>
+                        </Link>
                     ) : (
                         <div className="w-[124px] h-[42px] rounded-xl bg-surface-elevated animate-pulse border border-border/80 blur-sm"></div>
                     )}
-                    <Link
-                        href={user ? '/dashboard' : '/test/showcase'}
-                        className="relative group text-sm font-bold px-7 py-2.5 rounded-xl bg-gradient-to-r from-cta-primary to-cta-hover text-white transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] hover:-translate-y-1 active:scale-95 overflow-hidden"
-                    >
-                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                        <span className="relative z-10">{user ? "Dashboard" : "Give a Mock"}</span>
-                    </Link>
                 </div>
 
                 {/* Mobile Menu Toggle */}
@@ -202,34 +195,26 @@ export function Navbar() {
                                 >
                                     Contact Us
                                 </Link>
+                                {!loading && !user && (
+                                    <Link
+                                        href="/auth/signup"
+                                        onClick={() => setIsOpen(false)}
+                                        className="w-full text-center py-3.5 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold transition-all"
+                                    >
+                                        {authText}
+                                    </Link>
+                                )}
                                 {!loading ? (
-                                    user ? (
-                                        <Link
-                                            href={userData?.role === 'admin' || userData?.role === 'developer' ? '/admin' : '/dashboard'}
-                                            onClick={() => setIsOpen(false)}
-                                            className="w-full text-center py-3.5 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold transition-all"
-                                        >
-                                            Dashboard
-                                        </Link>
-                                    ) : (
-                                        <Link
-                                            href="/auth/login"
-                                            onClick={() => setIsOpen(false)}
-                                            className="w-full text-center py-3.5 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold transition-all"
-                                        >
-                                            {authText}
-                                        </Link>
-                                    )
+                                    <Link
+                                        href={user ? (userData?.role === 'admin' || userData?.role === 'developer' ? '/admin' : '/dashboard') : '/test/showcase'}
+                                        onClick={() => setIsOpen(false)}
+                                        className="w-full text-center py-3.5 rounded-xl bg-gradient-to-r from-cta-primary to-cta-hover text-white font-black hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all uppercase tracking-wide"
+                                    >
+                                        {user ? 'Dashboard' : 'Give a Mock'}
+                                    </Link>
                                 ) : (
                                     <div className="w-full h-[52px] rounded-xl bg-white/5 animate-pulse border border-white/10"></div>
                                 )}
-                                <Link
-                                    href={user ? '/dashboard' : '/test/showcase'}
-                                    onClick={() => setIsOpen(false)}
-                                    className="w-full text-center py-3.5 rounded-xl bg-gradient-to-r from-cta-primary to-cta-hover text-white font-black hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all uppercase tracking-wide"
-                                >
-                                    {user ? "Dashboard" : "Give a Mock"}
-                                </Link>
                             </div>
                         </motion.div>
                     </>

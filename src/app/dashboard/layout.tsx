@@ -7,10 +7,11 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { sendEmailVerification } from "firebase/auth";
+import { X } from "lucide-react";
 
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 
-// ... imports
+const VERIFICATION_BANNER_DISMISSED_KEY = "email_verification_banner_dismissed";
 
 export default function DashboardLayout({
     children,
@@ -20,6 +21,13 @@ export default function DashboardLayout({
     const { user, userData, loading } = useAuth();
     const router = useRouter();
     const [sendingLink, setSendingLink] = useState(false);
+    const [bannerDismissed, setBannerDismissed] = useState(true); // default true to avoid flash
+
+    useEffect(() => {
+        // Load banner dismissed state from localStorage
+        const dismissed = localStorage.getItem(VERIFICATION_BANNER_DISMISSED_KEY) === 'true';
+        setBannerDismissed(dismissed);
+    }, []);
 
     useEffect(() => {
         if (!loading && user && userData) {
@@ -28,6 +36,11 @@ export default function DashboardLayout({
             }
         }
     }, [user, userData, loading, router]);
+
+    const handleDismissBanner = () => {
+        localStorage.setItem(VERIFICATION_BANNER_DISMISSED_KEY, 'true');
+        setBannerDismissed(true);
+    };
 
     if (loading) return null; // Global loader handles initial auth check
 
@@ -57,18 +70,27 @@ export default function DashboardLayout({
 
     return (
         <div className="flex-1 flex flex-col h-screen overflow-hidden text-text-primary">
-            {user && !user.emailVerified && (
-                <div className="w-full bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 py-3 px-4 flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 z-50 relative shrink-0">
-                    <p className="text-sm font-medium text-red-800 dark:text-red-300 text-center">
-                        Please verify your email address ({user.email}) to fully secure your account.
+            {user && !user.emailVerified && !bannerDismissed && (
+                <div className="w-full bg-red-900/30 border-b border-red-700/40 py-2.5 px-4 flex flex-row justify-center items-center gap-3 z-50 relative shrink-0">
+                    <p className="text-sm font-medium text-red-300 text-center flex-1 text-center">
+                        ⚠️ Please verify your email address ({user.email}) to fully secure your account.
                     </p>
-                    <button 
-                        onClick={handleResend}
-                        disabled={sendingLink}
-                        className="text-sm font-bold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline disabled:opacity-50 whitespace-nowrap"
-                    >
-                        {sendingLink ? "Sending..." : "Resend Link"}
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <button
+                            onClick={handleResend}
+                            disabled={sendingLink}
+                            className="text-xs font-bold text-red-400 hover:text-red-300 hover:underline disabled:opacity-50 whitespace-nowrap"
+                        >
+                            {sendingLink ? "Sending..." : "Resend Link"}
+                        </button>
+                        <button
+                            onClick={handleDismissBanner}
+                            title="Dismiss (won't show again)"
+                            className="p-1 rounded-full text-red-400/70 hover:text-red-300 hover:bg-red-900/40 transition-colors"
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
                 </div>
             )}
             <PremiumDashboardNav />

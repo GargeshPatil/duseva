@@ -77,25 +77,25 @@ export function QuestionPanel({ engine }: { engine: ReturnType<typeof useExamEng
                 <div className="flex flex-wrap items-center gap-2">
                     <button 
                         onClick={actions.saveAndNext}
-                        className="bg-[#4caf50] hover:bg-[#388e3c] text-white px-4 py-2 text-[14px] font-medium border border-[#2e7d32]"
+                        className="bg-[#4caf50] hover:bg-[#388e3c] text-white px-4 py-2 min-h-[40px] md:min-h-[44px] text-[14px] font-medium border border-[#2e7d32]"
                     >
                         SAVE & NEXT
                     </button>
                     <button 
                         onClick={actions.clearResponse}
-                        className="bg-[#e0e0e0] hover:bg-[#bdbdbd] text-black px-4 py-2 text-[14px] font-medium border border-[#9e9e9e]"
+                        className="bg-[#e0e0e0] hover:bg-[#bdbdbd] text-black px-4 py-2 min-h-[40px] md:min-h-[44px] text-[14px] font-medium border border-[#9e9e9e]"
                     >
                         CLEAR
                     </button>
                     <button 
                         onClick={actions.saveAndMarkForReview}
-                        className="bg-[#ff9800] hover:bg-[#f57c00] text-white px-4 py-2 text-[14px] font-medium border border-[#ef6c00]"
+                        className="bg-[#ff9800] hover:bg-[#f57c00] text-white px-4 py-2 min-h-[40px] md:min-h-[44px] text-[14px] font-medium border border-[#ef6c00]"
                     >
                         SAVE & MARK FOR REVIEW
                     </button>
                     <button 
                         onClick={actions.markForReviewAndNext}
-                        className="bg-[#1976d2] hover:bg-[#1565c0] text-white px-4 py-2 text-[14px] font-medium border border-[#0d47a1]"
+                        className="bg-[#1976d2] hover:bg-[#1565c0] text-white px-4 py-2 min-h-[40px] md:min-h-[44px] text-[14px] font-medium border border-[#0d47a1]"
                     >
                         MARK FOR REVIEW & NEXT
                     </button>
@@ -107,14 +107,14 @@ export function QuestionPanel({ engine }: { engine: ReturnType<typeof useExamEng
                         <button 
                             onClick={() => actions.handleJump(currentQIndex - 1)}
                             disabled={currentQIndex === 0}
-                            className="bg-[#eeeeee] hover:bg-[#e0e0e0] text-black px-4 py-1.5 text-[14px] font-medium border border-[#999] disabled:opacity-50"
+                            className="bg-[#eeeeee] hover:bg-[#e0e0e0] text-black px-4 py-2 min-h-[40px] md:min-h-[44px] text-[14px] font-medium border border-[#999] disabled:opacity-50"
                         >
                             &lt;&lt; BACK
                         </button>
                         <button 
                             onClick={() => actions.handleJump(currentQIndex + 1)}
                             disabled={currentQIndex === questions.length - 1}
-                            className="bg-[#eeeeee] hover:bg-[#e0e0e0] text-black px-4 py-1.5 text-[14px] font-medium border border-[#999] disabled:opacity-50"
+                            className="bg-[#eeeeee] hover:bg-[#e0e0e0] text-black px-4 py-2 min-h-[40px] md:min-h-[44px] text-[14px] font-medium border border-[#999] disabled:opacity-50"
                         >
                             NEXT &gt;&gt;
                         </button>
@@ -126,7 +126,7 @@ export function QuestionPanel({ engine }: { engine: ReturnType<typeof useExamEng
                                 actions.submitTest();
                             }
                         }}
-                        className="bg-[#4caf50] hover:bg-[#388e3c] text-white px-5 py-2 text-[14px] font-semibold border-none"
+                        className="bg-[#4caf50] hover:bg-[#388e3c] text-white px-5 py-2 min-h-[40px] md:min-h-[44px] text-[14px] font-semibold border-none"
                     >
                         SUBMIT
                     </button>
