@@ -8,8 +8,9 @@ import { Footer } from "@/components/layout/Footer";
 import { Heart } from "lucide-react";
 import { StudentStories } from "@/components/marketing/StudentStories";
 import { HeroSection } from "@/components/marketing/HeroSection";
+import { ExamPreviewSection } from "@/components/marketing/ExamPreviewSection";
+import { AnalyticsPreviewSection } from "@/components/marketing/AnalyticsPreviewSection";
 import { WhoWeAreSection } from "@/components/marketing/WhoWeAreSection";
-import { FeaturesSection } from "@/components/marketing/FeaturesSection";
 import { SuccessStatsSection } from "@/components/marketing/SuccessStatsSection";
 import { FinalCtaSection } from "@/components/marketing/FinalCtaSection";
 import { useAuth } from "@/context/AuthContext";
@@ -66,7 +67,8 @@ export default function Home() {
       <main className="flex-1 relative z-10">
         <HeroSection heroContent={heroContent} fadeUpVariants={fadeUpVariants} />
         <WhoWeAreSection fadeUpVariants={fadeUpVariants} />
-        <FeaturesSection fadeUpVariants={fadeUpVariants} />
+        <ExamPreviewSection />
+        <AnalyticsPreviewSection />
         <SuccessStatsSection />
         <StudentStories />
         <FinalCtaSection />

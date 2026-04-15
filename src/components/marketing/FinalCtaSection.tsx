@@ -48,7 +48,7 @@ export function FinalCtaSection() {
                             Join Community
                         </a>
                     </div>
-                    <p className="mt-6 text-sm text-white/30 font-medium relative z-10">
+                    <p className="mt-6 text-sm text-white/50 font-medium relative z-10">
                         Free to start &nbsp;·&nbsp; One-on-one Mentorship &nbsp;·&nbsp; NTA-pattern tests
                     </p>
                 </motion.div>

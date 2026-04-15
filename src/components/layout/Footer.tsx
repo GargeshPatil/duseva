@@ -23,13 +23,13 @@ export function Footer() {
                             India's most trusted CUET preparation platform. Built by students from SRCC, Hindu, and St. Stephen's. We provide real exam-level mocks, detailed analytics, and mentorship.
                         </p>
                         <div className="flex items-center gap-4 pt-2">
-                            <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="group bg-white/5 border border-white/10 p-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,0,0,0.2)]" aria-label="WhatsApp">
+                            <a href="https://chat.whatsapp.com/Gxa8GQH8bPcAC9Wd2IW3Ui" target="_blank" rel="noopener noreferrer" className="group bg-white/5 border border-white/10 p-3.5 rounded-2xl text-white/60 hover:text-[#25D366] hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-all duration-300 hover:-translate-y-1" aria-label="WhatsApp Community">
                                 <MessageCircle className="h-5 w-5 transition-transform group-hover:scale-110" />
                             </a>
-                            <a href="https://instagram.com/duseva" target="_blank" rel="noopener noreferrer" className="group bg-white/5 border border-white/10 p-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,0,0,0.2)]" aria-label="Instagram">
+                            <a href="https://www.instagram.com/du.seva/" target="_blank" rel="noopener noreferrer" className="group bg-white/5 border border-white/10 p-3.5 rounded-2xl text-white/60 hover:text-pink-400 hover:bg-pink-500/10 hover:border-pink-500/30 transition-all duration-300 hover:-translate-y-1" aria-label="Instagram">
                                 <Instagram className="h-5 w-5 transition-transform group-hover:scale-110" />
                             </a>
-                            <a href="mailto:support@duseva.com" className="group bg-white/5 border border-white/10 p-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,0,0,0.2)]" aria-label="Email">
+                            <a href="mailto:support@duseva.com" className="group bg-white/5 border border-white/10 p-3.5 rounded-2xl text-white/60 hover:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1" aria-label="Email">
                                 <Mail className="h-5 w-5 transition-transform group-hover:scale-110" />
                             </a>
                         </div>
@@ -57,7 +57,7 @@ export function Footer() {
                         <ul className="space-y-4 text-white/60 font-medium">
                             <li><Link href="/privacy-policy" className="hover:text-white transition-all duration-300 flex items-center gap-3 group"><span className="w-1.5 h-1.5 bg-white/20 group-hover:bg-cta-primary rounded-full transition-colors"></span><span className="group-hover:translate-x-1 transition-transform">Privacy Policy</span></Link></li>
                             <li><Link href="/terms" className="hover:text-white transition-all duration-300 flex items-center gap-3 group"><span className="w-1.5 h-1.5 bg-white/20 group-hover:bg-cta-primary rounded-full transition-colors"></span><span className="group-hover:translate-x-1 transition-transform">Terms of Service</span></Link></li>
-                            <li><Link href="#" className="hover:text-white transition-all duration-300 flex items-center gap-3 group"><span className="w-1.5 h-1.5 bg-white/20 group-hover:bg-cta-primary rounded-full transition-colors"></span><span className="group-hover:translate-x-1 transition-transform">Refund Policy</span></Link></li>
+                            <li><span className="flex items-center gap-3 text-white/30 cursor-not-allowed"><span className="w-1.5 h-1.5 bg-white/10 rounded-full"></span>Refund Policy <span className="text-xs">(coming soon)</span></span></li>
                         </ul>
                     </div>
 
@@ -68,8 +68,6 @@ export function Footer() {
                     <div>© 2026 DU Seva. All rights reserved.</div>
                     <div className="flex gap-8 items-center">
                         <span className="flex items-center gap-2"><MapPin className="h-4 w-4" /> New Delhi, India</span>
-                        <span className="w-1 h-1 bg-white/20 rounded-full hidden md:block"></span>
-                        <Link href="/admin" className="hover:text-white transition-colors">Admin Access</Link>
                     </div>
                 </div>
             </div>
