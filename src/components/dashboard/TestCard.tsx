@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { Test } from "@/types/admin";
 import { Button } from "@/components/ui/Button";
 import {
@@ -11,8 +13,33 @@ import {
     CheckCircle2,
     RotateCcw,
     Coins,
-    Hash,
 } from "lucide-react";
+
+// ── Expandable description ────────────────────────────────────────────────
+const CLAMP_THRESHOLD = 120; // chars before showing "Read more"
+
+function ExpandableDescription({ text }: { text: string }) {
+    const [expanded, setExpanded] = useState(false);
+    const isLong = text.length > CLAMP_THRESHOLD;
+
+    return (
+        <div className="-mt-1">
+            <p className={`text-white/45 text-[13px] leading-relaxed transition-all duration-300 ${
+                !expanded && isLong ? "line-clamp-2" : ""
+            }`}>
+                {text}
+            </p>
+            {isLong && (
+                <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded(p => !p); }}
+                    className="mt-0.5 text-[12px] font-semibold text-white/35 hover:text-white/70 transition-colors"
+                >
+                    {expanded ? "Show less ↑" : "Read more ↓"}
+                </button>
+            )}
+        </div>
+    );
+}
 import Link from "next/link";
 import { useCreditModal } from "@/context/CreditModalContext";
 
@@ -108,10 +135,8 @@ export function TestCard({
 
                 {/* ── 2. DESCRIPTION ───────────────────────────────────── */}
                 {test.description && (
-                    <p className="text-white/45 text-[13px] leading-relaxed line-clamp-2 -mt-1">
-                        {test.description}
-                    </p>
-                )}
+                    <ExpandableDescription text={test.description} />)
+                }
 
                 {/* ── 3. METADATA ──────────────────────────────────────── */}
                 <div className="flex items-center gap-3 flex-wrap mt-auto">
