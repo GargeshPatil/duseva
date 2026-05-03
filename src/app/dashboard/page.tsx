@@ -11,16 +11,19 @@ import { DashboardStatsGrid } from "@/components/dashboard/DashboardStatsGrid";
 import { DashboardPrepResources } from "@/components/dashboard/DashboardPrepResources";
 import { DashboardNextTargets } from "@/components/dashboard/DashboardNextTargets";
 import { DashboardInsightsHistory } from "@/components/dashboard/DashboardInsightsHistory";
-import { CreditPurchaseStrip } from "@/components/dashboard/CreditPurchaseStrip";
 import { PaymentSuccessModal } from "@/components/dashboard/PaymentSuccessModal";
 import { Target, Clock, Trophy, FileText, BrainCircuit } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useCreditModal } from "@/context/CreditModalContext";
+
 export default function DashboardPage() {
     const { user, userData, loading: authLoading } = useAuth();
     const router = useRouter();
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [addedCredits, setAddedCredits] = useState(0);
+
+    const { registerBuyHandler } = useCreditModal();
 
     const {
         stats,
@@ -29,7 +32,9 @@ export default function DashboardPage() {
         activeAttempt,
         activeAttemptTest,
         loading,
-        insights
+        insights,
+        heroConfig,
+        daysSinceLastTest
     } = useDashboardData(user, authLoading);
 
     useEffect(() => {
@@ -66,7 +71,6 @@ export default function DashboardPage() {
                 order_id: order.id,
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 handler: async function (response: any) {
-                    console.log("Payment Successful", response);
                     const verifyResponse = await fetch('/api/razorpay/verify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -113,6 +117,13 @@ export default function DashboardPage() {
             setIsProcessing(false);
         }
     };
+
+    // Register the Razorpay handler with the global credit modal context
+    // so it works even when the modal is opened from TestCard or any other component
+    useEffect(() => {
+        registerBuyHandler(handleBuyPackage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, userData]);
 
     const statCards = [
         { title: "Tests Taken", value: stats.testsAttempted.toString(), icon: FileText, color: "from-blue-500/20 to-cyan-500/5", iconColor: "text-blue-400" },
@@ -166,12 +177,11 @@ export default function DashboardPage() {
                 activeAttempt={activeAttempt}
                 activeAttemptTest={activeAttemptTest}
                 itemVariants={itemVariants}
+                stats={stats}
+                insight={insights[0] ?? null}
+                heroConfig={heroConfig}
+                daysSinceLastTest={daysSinceLastTest}
             />
-
-            {/* Credit Purchasing section */}
-            <motion.div variants={itemVariants}>
-                <CreditPurchaseStrip onBuyPackage={handleBuyPackage} />
-            </motion.div>
 
             {/* Stats Grid */}
             <DashboardStatsGrid statCards={statCards} itemVariants={itemVariants} />
@@ -189,10 +199,10 @@ export default function DashboardPage() {
                 </motion.div>
             </div>
 
-            <PaymentSuccessModal 
-                isOpen={showSuccessModal} 
-                onClose={() => setShowSuccessModal(false)} 
-                creditsAdded={addedCredits} 
+            <PaymentSuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+                creditsAdded={addedCredits}
             />
         </motion.div>
     );

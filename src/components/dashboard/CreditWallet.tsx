@@ -4,7 +4,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { Coins, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter, usePathname } from "next/navigation";
+import { useCreditModal } from "@/context/CreditModalContext";
 
 interface CreditWalletProps {
     onAddCredits?: () => void;
@@ -13,19 +13,12 @@ interface CreditWalletProps {
 
 export function CreditWallet({ onAddCredits, variant = "default" }: CreditWalletProps) {
     const { userData, loading } = useAuth();
-    const router = useRouter();
-    const pathname = usePathname();
+    const { openModal } = useCreditModal();
     
     // Default to 0 if data loaded but credits are missing
     const credits = userData?.credits ?? 0;
 
-    const handleAddCredits = onAddCredits || (() => {
-        if (pathname === '/dashboard') {
-            document.getElementById('credit-purchase-strip')?.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            router.push('/dashboard#credit-purchase-strip');
-        }
-    });
+    const handleAddCredits = onAddCredits || openModal;
 
     const isNav = variant === "nav";
 

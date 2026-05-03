@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { BookOpen, Calendar, Award, Target, ArrowRight, Sparkles } from "lucide-react";
+import { BookOpen, Calendar, Award, Target, ArrowRight, Sparkles, ScrollText } from "lucide-react";
 import { useState } from "react";
 import { GuideWrapper } from "@/app/cuet-2026/guides/GuideWrapper";
+import { useRouter } from "next/navigation";
 
 const guidanceSections = [
     {
@@ -28,16 +29,18 @@ const guidanceSections = [
         cmsKey: "important_dates_content"
     },
     {
-        title: "College Preferences",
-        icon: <Award className="h-6 w-6 text-orange-400" />,
-        content: "How to fill your CSAS portal preferences correctly. Priority lists for top colleges.",
-        color: "from-orange-500/20",
-        cmsKey: "college_preferences_content"
+        title: "Practice PYQs",
+        icon: <ScrollText className="h-6 w-6 text-amber-400" />,
+        content: "Jump straight into real CUET Previous Year Questions. Filter by subject and format to target your weak spots.",
+        color: "from-amber-500/20",
+        cmsKey: null, // Direct navigation, no CMS modal
+        href: "/dashboard/tests?type=PYQ",
     }
 ];
 
 export default function DashboardCuet2026Page() {
     const [activeModal, setActiveModal] = useState<typeof guidanceSections[0] | null>(null);
+    const router = useRouter();
 
     return (
         <div className="space-y-12 pb-24 max-w-[1600px] mx-auto min-h-[80vh]">
@@ -66,7 +69,13 @@ export default function DashboardCuet2026Page() {
                         className="h-full"
                     >
                         <button
-                            onClick={() => setActiveModal(section)}
+                            onClick={() => {
+                                if ((section as any).href) {
+                                    router.push((section as any).href);
+                                } else {
+                                    setActiveModal(section);
+                                }
+                            }}
                             className="w-full text-left group relative bg-surface-card/60 backdrop-blur-xl border border-white/10 p-8 sm:p-10 rounded-[2.5rem] hover:bg-surface-card/80 hover:border-white/20 transition-all duration-300 overflow-hidden h-full flex flex-col shadow-lg hover:shadow-2xl hover:-translate-y-1"
                         >
                             <div className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${section.color} to-transparent blur-3xl rounded-full opacity-30 group-hover:opacity-60 transition-opacity`} />
@@ -91,7 +100,7 @@ export default function DashboardCuet2026Page() {
             </div>
 
             {/* The Unified Guide Modal */}
-            {activeModal && (
+            {activeModal && activeModal.cmsKey && (
                 <GuideWrapper
                     isOpen={!!activeModal}
                     onClose={() => setActiveModal(null)}

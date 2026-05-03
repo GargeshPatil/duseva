@@ -8,8 +8,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { sendEmailVerification } from "firebase/auth";
 import { X } from "lucide-react";
-
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { CreditModalProvider } from "@/context/CreditModalContext";
+import { CreditModal } from "@/components/dashboard/CreditModal";
 
 const VERIFICATION_BANNER_DISMISSED_KEY = "email_verification_banner_dismissed";
 
@@ -69,41 +70,45 @@ export default function DashboardLayout({
     };
 
     return (
-        <div className="flex-1 flex flex-col h-screen overflow-hidden text-text-primary">
-            {user && !user.emailVerified && !bannerDismissed && (
-                <div className="w-full bg-red-900/30 border-b border-red-700/40 py-2.5 px-4 flex flex-row justify-center items-center gap-3 z-50 relative shrink-0">
-                    <p className="text-sm font-medium text-red-300 text-center flex-1 text-center">
-                        ⚠️ Please verify your email address ({user.email}) to fully secure your account.
-                    </p>
-                    <div className="flex items-center gap-2 shrink-0">
-                        <button
-                            onClick={handleResend}
-                            disabled={sendingLink}
-                            className="text-xs font-bold text-red-400 hover:text-red-300 hover:underline disabled:opacity-50 whitespace-nowrap"
-                        >
-                            {sendingLink ? "Sending..." : "Resend Link"}
-                        </button>
-                        <button
-                            onClick={handleDismissBanner}
-                            title="Dismiss (won't show again)"
-                            className="p-1 rounded-full text-red-400/70 hover:text-red-300 hover:bg-red-900/40 transition-colors"
-                        >
-                            <X className="h-3.5 w-3.5" />
-                        </button>
+        <CreditModalProvider>
+            <div className="flex-1 flex flex-col h-screen overflow-hidden text-text-primary">
+                {user && !user.emailVerified && !bannerDismissed && (
+                    <div className="w-full bg-red-900/30 border-b border-red-700/40 py-2.5 px-4 flex flex-row justify-center items-center gap-3 z-50 relative shrink-0">
+                        <p className="text-sm font-medium text-red-300 text-center flex-1 text-center">
+                            ⚠️ Please verify your email address ({user.email}) to fully secure your account.
+                        </p>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                onClick={handleResend}
+                                disabled={sendingLink}
+                                className="text-xs font-bold text-red-400 hover:text-red-300 hover:underline disabled:opacity-50 whitespace-nowrap"
+                            >
+                                {sendingLink ? "Sending..." : "Resend Link"}
+                            </button>
+                            <button
+                                onClick={handleDismissBanner}
+                                title="Dismiss (won't show again)"
+                                className="p-1 rounded-full text-red-400/70 hover:text-red-300 hover:bg-red-900/40 transition-colors"
+                            >
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+                <PremiumDashboardNav />
+                <div className="flex-1 overflow-y-auto w-full relative">
+                    <div className="flex flex-col w-full max-w-7xl mx-auto px-4 sm:px-6 min-h-full pb-16 md:pb-0 relative z-10">
+                        <Header />
+                        <main className="flex-1 py-8 text-text-primary">
+                            {children}
+                        </main>
                     </div>
                 </div>
-            )}
-            <PremiumDashboardNav />
-            <div className="flex-1 overflow-y-auto w-full relative">
-                <div className="flex flex-col w-full max-w-7xl mx-auto px-4 sm:px-6 min-h-full pb-16 md:pb-0 relative z-10">
-                    <Header />
-                    <main className="flex-1 py-8 text-text-primary">
-                        {children}
-                    </main>
-                </div>
+                <MobileNav />
+                {/* Global credit purchase modal — accessible from any dashboard route */}
+                <CreditModal />
             </div>
-            <MobileNav />
-        </div>
+        </CreditModalProvider>
     );
 }
 

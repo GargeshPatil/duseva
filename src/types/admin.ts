@@ -54,6 +54,7 @@ export interface Test {
     tier2Category?: 'Mock' | 'PYQ' | string; // New: Tier 2 Filter
     tier3Category?: 'Chapterwise' | 'Full Mock' | string; // New: Tier 3 Filter
     subject?: string; // New: Tier 1 Filter
+    stream?: string; // Primary stream: Science | Commerce | Humanities | Language | General Test
     isFree?: boolean;
     streams: string[]; // Updated: Array to support multiple streams (Science, Commerce, Humanities, General, English)
     questions?: Question[]; // Legacy: embedded questions
@@ -122,12 +123,21 @@ export interface CreditPackage {
     description?: string;
 }
 
+export interface DashboardHeroConfig {
+    headline?: string;        // e.g. "Ready to crack CUET?"
+    subtext?: string;         // e.g. "Your journey to top colleges starts here"
+    ctaLabel?: string;        // e.g. "Start Test"
+    trustBadges?: string[];   // e.g. ["10K+ students", "500+ PYQs"]
+    overrideMessage?: string; // Prominent admin broadcast message
+}
+
 export interface SiteSettings {
     siteName: string;
     supportEmail: string;
     currency: string;
     maintenanceMode: boolean;
     creditPackages?: CreditPackage[];
+    dashboardHero?: DashboardHeroConfig;
 }
 
 export interface AuditLog {
@@ -180,3 +190,40 @@ export interface TestResult {
         timeDiff: number; // seconds
     };
 }
+
+// ─── Mentorship System ────────────────────────────────────────────────────────
+
+export interface MentorSlotConfig {
+    /** How students contact/book — configured later (e.g. Calendly URL, WhatsApp, email) */
+    bookingType?: 'calendly' | 'whatsapp' | 'email' | 'custom';
+    bookingUrl?: string;   // Calendly link / WhatsApp number / mailto
+    bookingNote?: string;  // Display text, e.g. "Book within 24h of purchase"
+}
+
+export interface Mentor {
+    id: string;
+    name: string;
+    bio: string;              // Short tagline
+    college: string;
+    course: string;
+    tags: string[];
+    headline: string;         // Quote-style display text
+    description?: any;        // TipTap JSONContent for rich description
+    media?: string[];         // Extra image/video URLs
+    photoUrl?: string;
+    price: number;            // Credits required
+    isActive: boolean;
+    slotConfig?: MentorSlotConfig; // Future booking config — null-safe
+    createdAt: string;        // ISO string
+}
+
+export interface MentorPurchase {
+    id: string;
+    userId: string;
+    mentorId: string;
+    mentorName: string;
+    creditsUsed: number;
+    timestamp: string;        // ISO string
+    status: 'pending' | 'confirmed'; // Confirmed after admin/mentor acknowledges
+}
+

@@ -12,11 +12,14 @@ import { CMSHeroSection } from "@/components/admin/cms/CMSHeroSection";
 import { CMSLandingSection } from "@/components/admin/cms/CMSLandingSection";
 import { CMSCUET2026Section } from "@/components/admin/cms/CMSCUET2026Section";
 import { CMSPricingSection } from "@/components/admin/cms/CMSPricingSection";
+import { CMSDashboardHeroSection } from "@/components/admin/cms/CMSDashboardHeroSection";
+import { DashboardHeroConfig } from "@/types/admin";
 export default function CMSPage() {
     const { userData } = useAuth();
     const [content, setContent] = useState<CMSContent[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [dashboardHeroConfig, setDashboardHeroConfig] = useState<DashboardHeroConfig>({});
 
     const isDeveloper = userData?.role === 'developer';
 
@@ -24,8 +27,12 @@ export default function CMSPage() {
         async function loadContent() {
             setLoading(true);
             try {
-                const data = await firestoreService.getCMSContent();
+                const [data, heroConfig] = await Promise.all([
+                    firestoreService.getCMSContent(),
+                    firestoreService.getDashboardHeroConfig()
+                ]);
                 setContent(data);
+                setDashboardHeroConfig(heroConfig);
             } catch (error) {
                 console.error("Failed to load CMS content:", error);
             } finally {
@@ -121,6 +128,7 @@ export default function CMSPage() {
             </motion.div>
 
             <CMSHeroSection heroSection={heroSection} itemVariants={itemVariants} handleUpdate={handleUpdate} canEdit={canEdit} />
+            <CMSDashboardHeroSection initialConfig={dashboardHeroConfig} itemVariants={itemVariants} isAdmin={!!userData?.role && ['admin', 'developer'].includes(userData.role)} />
             <CMSLandingSection landingSection={landingSection} itemVariants={itemVariants} handleUpdate={handleUpdate} canEdit={canEdit} handlePrefillLanding={handlePrefillLanding} saving={saving} />
             <CMSCUET2026Section cuet2026Section={cuet2026Section} itemVariants={itemVariants} handleUpdate={handleUpdate} canEdit={canEdit} handlePrefillCUET2026={handlePrefillCUET2026} saving={saving} />
             <CMSPricingSection pricingSection={pricingSection} itemVariants={itemVariants} handleUpdate={handleUpdate} canEdit={canEdit} />

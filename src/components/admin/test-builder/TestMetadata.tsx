@@ -175,6 +175,23 @@ export function TestMetadata({ test, onChange }: TestMetadataProps) {
                     )}
                 </div>
 
+                {/* Primary Stream */}
+                <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Primary Stream</label>
+                    <select
+                        className="w-full px-3 py-2 bg-background border border-input rounded-lg text-sm outline-none focus:ring-2 focus:ring-ring"
+                        value={test.stream || ""}
+                        onChange={(e) => handleChange('stream', e.target.value)}
+                    >
+                        <option value="">Select Stream...</option>
+                        <option value="Science">Science</option>
+                        <option value="Commerce">Commerce</option>
+                        <option value="Humanities">Humanities</option>
+                        <option value="Language">Language</option>
+                        <option value="General Test">General Test</option>
+                    </select>
+                </div>
+
                 {/* Tier 2 & Tier 3 Categories */}
                 <div>
                     <label className="block text-sm font-medium text-text-secondary mb-1">Type (Tier 2)</label>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { firestoreService } from "@/services/firestoreService";
-import { Test, TestAttempt } from "@/types/admin";
+import { Test, TestAttempt, DashboardHeroConfig } from "@/types/admin";
 import { User } from 'firebase/auth';
 
 export interface DashboardStats {
@@ -28,6 +28,8 @@ export function useDashboardData(user: User | null, authLoading: boolean) {
     const [activeAttemptTest, setActiveAttemptTest] = useState<Test | null>(null);
     const [loading, setLoading] = useState(true);
     const [insights, setInsights] = useState<PerformanceInsight[]>([]);
+    const [heroConfig, setHeroConfig] = useState<DashboardHeroConfig>({});
+    const [daysSinceLastTest, setDaysSinceLastTest] = useState<number | null>(null);
 
     useEffect(() => {
         async function loadDashboardData() {
@@ -37,11 +39,14 @@ export function useDashboardData(user: User | null, authLoading: boolean) {
                 setLoading(true);
 
                 // Parallel fetching
-                const [tests, attempts, active] = await Promise.all([
+                const [tests, attempts, active, heroConfigData] = await Promise.all([
                     firestoreService.getTests(true),
                     firestoreService.getUserAttempts(user.uid, 'completed'),
-                    firestoreService.getActiveAttempt(user.uid)
+                    firestoreService.getActiveAttempt(user.uid),
+                    firestoreService.getDashboardHeroConfig()
                 ]);
+
+                setHeroConfig(heroConfigData);
 
                 // 1. Process Recommended Tests (Logic: Top 3 for now)
                 setRecommendedTests(tests.slice(0, 3));
@@ -103,6 +108,17 @@ export function useDashboardData(user: User | null, authLoading: boolean) {
 
                     setInsights(newInsights);
 
+                    // Compute days since last test attempt
+                    const lastAttempt = attempts[0];
+                    if (lastAttempt?.startTime) {
+                        const startMs = typeof lastAttempt.startTime === 'number'
+                            ? lastAttempt.startTime
+                            : (lastAttempt.startTime as { toMillis?: () => number }).toMillis?.()
+                                ?? new Date(lastAttempt.startTime as string).getTime();
+                        const days = Math.floor((Date.now() - startMs) / 86_400_000);
+                        setDaysSinceLastTest(days);
+                    }
+
                 } else {
                     // No attempts
                     setStats({
@@ -131,6 +147,8 @@ export function useDashboardData(user: User | null, authLoading: boolean) {
         activeAttempt,
         activeAttemptTest,
         loading,
-        insights
+        insights,
+        heroConfig,
+        daysSinceLastTest
     };
 }

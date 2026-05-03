@@ -3,6 +3,7 @@ import React from 'react';
 import { JSONContent } from '@tiptap/react';
 import 'katex/dist/katex.min.css';
 import { BlockMath, InlineMath } from 'react-katex';
+import { normalizeContent } from '@/utils/normalizeContent';
 
 interface RenderContentProps {
   content: JSONContent | null | undefined;
@@ -24,9 +25,13 @@ export const RenderContent: React.FC<RenderContentProps> = ({ content, fallback,
     return null;
   }
 
+  // Apply read-time normalisation: collapse consecutive empty paragraphs
+  // (legacy workaround for the old double-spacing bug) → no Firestore writes.
+  const normalizedContent = normalizeContent(content);
+
   const renderNode = (node: JSONContent | null | undefined, index: number): React.ReactNode => {
     if (!node) return null;
-    
+
     switch (node.type) {
       case 'doc':
         return (
@@ -35,14 +40,28 @@ export const RenderContent: React.FC<RenderContentProps> = ({ content, fallback,
           </div>
         );
 
-      case 'paragraph':
+      case 'paragraph': {
+        // Empty paragraph → render as a single blank-line spacer (no extra margin stacking)
+        const isEmpty =
+          !node.content ||
+          node.content.length === 0 ||
+          node.content.every(
+            (c) => c.type === 'text' && (!c.text || c.text.trim() === '')
+          );
+
+        if (isEmpty) {
+          // h-5 ≈ 1 text line height, giving a clean single-line visual gap
+          return <div key={index} className="h-5" />;
+        }
+
         return (
-          <p key={index} className="mb-2 last:mb-0">
-            {node.content ? node.content.map((child, i) => renderNode(child, i)) : <br />}
+          <p key={index} className="mb-0 leading-relaxed">
+            {node.content?.map((child, i) => renderNode(child, i))}
           </p>
         );
+      }
 
-      case 'text':
+      case 'text': {
         let elem: React.ReactNode = node.text || '';
 
         if (node.marks) {
@@ -68,6 +87,7 @@ export const RenderContent: React.FC<RenderContentProps> = ({ content, fallback,
           });
         }
         return <React.Fragment key={index}>{elem}</React.Fragment>;
+      }
 
       case 'image':
         return (
@@ -129,5 +149,5 @@ export const RenderContent: React.FC<RenderContentProps> = ({ content, fallback,
     }
   };
 
-  return renderNode(content, 0);
+  return renderNode(normalizedContent, 0);
 };

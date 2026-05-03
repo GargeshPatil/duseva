@@ -181,7 +181,7 @@ export function RichTextEditor({ value, onChange, compact = false, placeholder, 
         },
         editorProps: {
             attributes: {
-                class: `prose prose-sm dark:prose-invert max-w-none focus:outline-none p-3 overflow-y-auto w-full h-full ${
+                class: `prose prose-sm dark:prose-invert max-w-none focus:outline-none p-3 overflow-y-auto w-full h-full [&_p]:mb-0 [&_p]:leading-relaxed ${
                     compact ? 'min-h-[60px]' : 'min-h-[120px]'
                 } outline-none`,
             },

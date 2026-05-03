@@ -19,7 +19,7 @@ import {
     writeBatch
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { User, Test, Question, CMSContent, SiteSettings, AuditLog, DashboardStats, Transaction, TestAttempt, TestResult } from "@/types/admin";
+import { User, Test, Question, CMSContent, SiteSettings, DashboardHeroConfig, AuditLog, DashboardStats, Transaction, TestAttempt, TestResult } from "@/types/admin";
 import { UserData } from "@/context/AuthContext";
 
 // Helper to remove undefined fields recursively
@@ -926,5 +926,59 @@ export const firestoreService = {
 
     async deleteMediaAsset(id: string): Promise<void> {
         await deleteDoc(doc(db, 'mediaAssets', id));
+    },
+
+    // --- Dashboard Hero Config (stored in CMS content collection, section='dashboard-hero') ---
+    async getDashboardHeroConfig(): Promise<DashboardHeroConfig> {
+        try {
+            const contentRef = collection(db, "content");
+            const q = query(contentRef, where("section", "==", "dashboard-hero"));
+            const snapshot = await getDocs(q);
+            const config: DashboardHeroConfig = {};
+            snapshot.docs.forEach(d => {
+                const { key, value } = d.data();
+                if (key === 'trustBadges') {
+                    config.trustBadges = value ? value.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+                } else {
+                    (config as Record<string, string>)[key] = value;
+                }
+            });
+            return config;
+        } catch {
+            return {};
+        }
+    },
+
+    async updateDashboardHeroConfig(config: DashboardHeroConfig): Promise<boolean> {
+        try {
+            const contentRef = collection(db, "content");
+            const q = query(contentRef, where("section", "==", "dashboard-hero"));
+            const snapshot = await getDocs(q);
+
+            // Build a map of existing docs: key -> docId
+            const existing = new Map<string, string>();
+            snapshot.docs.forEach(d => existing.set(d.data().key, d.id));
+
+            const fields: Record<string, string> = {
+                headline: config.headline ?? '',
+                subtext: config.subtext ?? '',
+                ctaLabel: config.ctaLabel ?? '',
+                overrideMessage: config.overrideMessage ?? '',
+                trustBadges: (config.trustBadges ?? []).join(', '),
+            };
+
+            const { setDoc } = await import("firebase/firestore");
+            for (const [key, value] of Object.entries(fields)) {
+                if (existing.has(key)) {
+                    await updateDoc(doc(db, "content", existing.get(key)!), { value, updatedAt: Timestamp.now() });
+                } else {
+                    await setDoc(doc(contentRef), { section: 'dashboard-hero', key, value, editableBy: 'admin', updatedAt: Timestamp.now() });
+                }
+            }
+            return true;
+        } catch (error) {
+            console.error("Error updating dashboard hero config:", error);
+            return false;
+        }
     }
 };
