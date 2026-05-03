@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             createdAt: Timestamp.now(),
             lastLoginAt: Timestamp.now(),
             purchasedTests: {},
-            credits: 10,
+            credits: 5,
             totalCreditsPurchased: 0,
             performanceSummary: {},
         };
@@ -181,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             createdAt: Timestamp.now(),
             lastLoginAt: Timestamp.now(),
             purchasedTests: {},
-            credits: 10,
+            credits: 5,
             totalCreditsPurchased: 0,
             performanceSummary: {},
         };
