@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DU Seva (CUET Mock Test Platform)
 
-## Getting Started
+Welcome to **DU Seva**, India's sweetest, most powerful mock test platform designed specifically to calm student nerves and boost their percentile for the Common University Entrance Test (CUET).
 
-First, run the development server:
+This project is a full-featured, responsive Next.js application integrated with Firebase for database, authentication, storage, and Razorpay for payment processing.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🚀 Key Features
+
+* **Beautiful & Aesthetic UI**: Modern dark theme with smooth Framer Motion animations, custom ambient backgrounds, and glassmorphic designs.
+* **CUET Practice Mocks**: Rich simulation environment mimicking actual test patterns, supporting complex mathematical equations (rendered using KaTeX) and media support.
+* **Detailed Analytics**: Comprehensive performance reports, scorecard breakdowns, and insights for students to identify weak spots.
+* **Robust Admin Dashboard**: Complete administrative panel for mock creation, managing CSV imports of questions via PapaParse, and processing student records.
+* **Secure Payments**: Smooth checkouts integrated with Razorpay.
+* **Firebase Integration**: Authenticated student login, real-time Firestore database storage, and secure Cloud Storage.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Framework**: Next.js (App Router, Tailwind CSS, TypeScript)
+* **Animations**: Framer Motion
+* **Database & Auth**: Firebase / Firebase Admin SDK
+* **Rich Text Editing**: TipTap (Starter Kit with Subscript, Superscript, Underline, and Image extensions)
+* **Equations & Rendering**: KaTeX & React Markdown
+* **Payments**: Razorpay
+* **Parsing**: PapaParse
+
+---
+
+## ⚙️ Environment Variables
+
+Create a `.env.local` file in the root directory and add the following:
+
+```env
+# Client-side Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+
+# Client-side Razorpay Configuration
+NEXT_PUBLIC_RAZORPAY_KEY_ID=your_razorpay_key_id
+
+# Server-side Firebase Admin (Service Account JSON)
+FIREBASE_SERVICE_ACCOUNT_KEY={"type": "service_account", ...}
+
+# Server-side Razorpay Keys
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🏁 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Install Dependencies
+```bash
+npm install
+```
 
-## Learn More
+### 2. Run the Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application in action.
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Build for Production
+```bash
+npm run build
+npm run start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Code Quality & Linting
+To check and fix code issues, run:
+```bash
+npm run lint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
