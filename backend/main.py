@@ -12,7 +12,7 @@ app = FastAPI(
 )
 
 # CORS Configuration
-# Allow local Next.js development server (port 3000) and Vercel domains
+# Allow local Next.js development server, Vercel/production domains, and Render preview URLs
 CORS_ORIGIN = os.getenv("CORS_ORIGIN", "http://localhost:3000")
 origins = [
     CORS_ORIGIN,
@@ -25,6 +25,7 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

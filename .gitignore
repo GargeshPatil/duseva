@@ -51,3 +51,9 @@ build_log.txt
 
 .vercel
 .env*.local
+
+# python
+backend/venv/
+__pycache__/
+*.pyc
+.pytest_cache/
