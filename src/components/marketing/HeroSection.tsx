@@ -52,10 +52,10 @@ export function HeroSection({ heroContent, fadeUpVariants }: HeroSectionProps) {
                 <motion.div variants={fadeUpVariants} className="flex flex-col items-center gap-4 w-full">
                     <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                         <Link
-                            href="/auth/signup"
+                            href="/score-checker"
                             className="group inline-flex items-center justify-center gap-3 bg-white text-slate-900 px-8 py-4 rounded-[2rem] font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.25)] active:scale-95"
                         >
-                            <span>Start Your CUET Prep</span>
+                            <span>Score Calculator</span>
                             <BookOpen className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
                         </Link>
                         <a
